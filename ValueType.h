@@ -1,14 +1,16 @@
-#pragma once
+#ifndef VALUETYPE_H
+#define VALUETYPE_H
 #include "ReadingClass.h"
 #include <stdint.h>
 #include <fstream>
 
-class ValueType: public ReadingClass{
+class ValueType{
 public:
 	ValueType(){}
-	ValueType(std::ifstream& data, int&dlc);
+	ValueType(ReadingClass& reading_class, int& dlc);
 	bool checkingBits(uint8_t feature, unsigned char bit);
 	void print();
+	void writeToBinary(std::ofstream& data);
 
 private:
 	bool m_singed_type;			
@@ -16,5 +18,6 @@ private:
 	bool m_on_off_flag_type;
 	bool m_flag_type;
 	bool m_custom_type;
-
 };
+
+#endif // VALUETYPE_H
