@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="agh_racing_logo_small">images/agh_racing_logo.png</file>
+    </qresource>
+</RCC>
