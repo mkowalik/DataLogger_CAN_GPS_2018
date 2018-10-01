@@ -84,9 +84,6 @@ void HAL_MspInit(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 
   /* Peripheral interrupt init */
-  /* RCC_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(RCC_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(RCC_IRQn);
 
   /* USER CODE BEGIN MspInit 1 */
 

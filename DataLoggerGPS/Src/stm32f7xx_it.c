@@ -249,6 +249,20 @@ void CAN1_RX1_IRQHandler(void)
 }
 
 /**
+* @brief This function handles CAN1 SCE interrupt.
+*/
+void CAN1_SCE_IRQHandler(void)
+{
+  /* USER CODE BEGIN CAN1_SCE_IRQn 0 */
+
+  /* USER CODE END CAN1_SCE_IRQn 0 */
+  HAL_CAN_IRQHandler(&hcan1);
+  /* USER CODE BEGIN CAN1_SCE_IRQn 1 */
+
+  /* USER CODE END CAN1_SCE_IRQn 1 */
+}
+
+/**
 * @brief This function handles SDMMC1 global interrupt.
 */
 void SDMMC1_IRQHandler(void)
