@@ -2,6 +2,7 @@
 #define DOWNLOADDATASD_DIALOG_H
 
 #include <QDialog>
+#include "downloadfiles_dialog.h"
 
 namespace Ui {
 class DownloadDataSDDialog;
@@ -19,8 +20,11 @@ private slots:
     void on_openDataDirButton_clicked();
     void on_openDestDirButton_clicked();
 
+    void on_downloadAndConvertButton_clicked();
+
 private:
     Ui::DownloadDataSDDialog *ui;
+    DownloadFilesDialog * downloadFilesDialog;
 };
 
 #endif // DOWNLOADDATASD_DIALOG_H

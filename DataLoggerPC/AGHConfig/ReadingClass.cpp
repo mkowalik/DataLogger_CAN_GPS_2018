@@ -35,7 +35,7 @@ string ReadingClass::reading_string(unsigned int length){
 
     unsigned int bytesLeft = length+1;
 	string retString;
-
+    static const unsigned int BUFFER_SIZE = 128;
 	while (bytesLeft > 0){
         data.read(buffer, static_cast<streamsize>(min(bytesLeft, BUFFER_SIZE)));
         bytesLeft -= static_cast<unsigned int>(data.gcount());

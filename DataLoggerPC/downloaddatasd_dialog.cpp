@@ -1,5 +1,6 @@
 #include "downloaddatasd_dialog.h"
 #include "ui_downloaddatasd_dialog.h"
+#include "downloadfiles_dialog.h"
 
 #include <QFileDialog>
 #include <QDebug>
@@ -12,6 +13,7 @@ DownloadDataSDDialog::DownloadDataSDDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+
 }
 
 DownloadDataSDDialog::~DownloadDataSDDialog()
@@ -21,7 +23,7 @@ DownloadDataSDDialog::~DownloadDataSDDialog()
 
 void DownloadDataSDDialog::on_openDataDirButton_clicked()
 {
-    QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Data Directoy");
+    QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Data Directory");
     ui->dataDirComboBox->addItem(dirPath);
     ui->dataDirComboBox->setCurrentText(dirPath);
 
@@ -32,10 +34,16 @@ void DownloadDataSDDialog::on_openDataDirButton_clicked()
 
 void DownloadDataSDDialog::on_openDestDirButton_clicked()
 {
-    QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Destination Directoy");
+    QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Destination Directory");
 
     ui->destinationDirComboBox->addItem(dirPath);
     ui->destinationDirComboBox->setCurrentText(dirPath);
 
 
+}
+
+void DownloadDataSDDialog::on_downloadAndConvertButton_clicked()
+{
+    downloadFilesDialog = new DownloadFilesDialog(this);
+    downloadFilesDialog->exec();
 }
