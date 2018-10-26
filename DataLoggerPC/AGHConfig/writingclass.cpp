@@ -3,6 +3,8 @@
 
 using namespace std;
 
+const unsigned int WritingClass::BUFFER_SIZE;
+
 WritingClass::WritingClass(string nameOfFile) : fileStream(nameOfFile.c_str(), ios_base::binary){ }
 
 void WritingClass::write_uint8(unsigned int aValue){

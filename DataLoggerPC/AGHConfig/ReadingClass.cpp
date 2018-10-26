@@ -4,6 +4,8 @@
 
 using namespace std;
 
+const unsigned int ReadingClass::BUFFER_SIZE;
+
 ReadingClass::ReadingClass(string name_of_file) : data(name_of_file.c_str(), ios_base::binary) {}
 
 unsigned int ReadingClass::reading_uint32(){
