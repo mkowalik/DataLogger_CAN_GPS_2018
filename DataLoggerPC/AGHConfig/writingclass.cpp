@@ -5,20 +5,28 @@ using namespace std;
 
 const unsigned int WritingClass::BUFFER_SIZE;
 
-WritingClass::WritingClass(string nameOfFile) : fileStream(nameOfFile.c_str(), ios_base::binary){ }
+WritingClass::WritingClass(string nameOfFile, RawDataParser& dataParser) : fileStream(nameOfFile.c_str(), ios_base::binary), dataParser(dataParser){ }
 
 void WritingClass::write_uint8(unsigned int aValue){
-    write_little_endian(aValue, 1);
+    clear_buffer(4);
+    dataParser.write_unsigned_int(aValue, buffer, 1);
+    fileStream.write(buffer, 1);
 }
 void WritingClass::write_uint16(unsigned int aValue){
-    write_little_endian(aValue, 2);
+    clear_buffer(4);
+    dataParser.write_unsigned_int(aValue, buffer, 4);
+    fileStream.write(buffer, 2);
 }
 void WritingClass::write_uint32(unsigned int aValue){
-    write_little_endian(aValue, 4);
+    clear_buffer(4);
+    dataParser.write_unsigned_int(aValue, buffer, 4);
+    fileStream.write(buffer, 4);
 }
 
 void WritingClass::write_int16(int aValue){
-    write_little_endian(static_cast<unsigned int>(aValue), 2); //TODO do przetestowania
+    clear_buffer(4);
+    dataParser.write_signed_int(aValue, buffer, 2);
+    fileStream.write(buffer, 2);
 }
 
 void WritingClass::write_string(string aStr, int aLength){
@@ -40,20 +48,10 @@ void WritingClass::write_string(string aStr, int aLength){
         bytesLeft -= toCopy;
         bytesWritten += toCopy;
     }
-
 }
 
 void WritingClass::clear_buffer(size_t length){
     memset(buffer, 0, length);
-}
-
-void WritingClass::write_little_endian(unsigned int aValue, unsigned int number_of_bytes){
-    number_of_bytes = min(number_of_bytes, 4u);
-    clear_buffer(4);
-    for(unsigned int i=0; i<number_of_bytes; i++) {
-        buffer[i] = static_cast<char>((aValue << number_of_bytes) & 0xFF); //TODO do sprawdzenia!!!
-    }
-    fileStream.write(buffer, static_cast<int>(number_of_bytes));
 }
 
 WritableToBin::~WritableToBin(){ }

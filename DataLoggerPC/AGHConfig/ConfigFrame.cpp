@@ -35,10 +35,6 @@ void ConfigFrame::set_moduleName(string aModuleName){
     moduleName.resize(MODULE_NAME_LENGTH);
 }
 
-//vector <ConfigChannel> ConfigFrame::get_channels() const {
-//	return channels;
-//}
-
 vector <ConfigChannel>::const_iterator ConfigFrame::get_channels_begin_iterator() const {
     return channels.cbegin();
 }

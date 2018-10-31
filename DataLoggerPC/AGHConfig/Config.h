@@ -14,7 +14,7 @@ private:
     unsigned int            version;
     unsigned int            subVersion;
     vector<ConfigFrame>     frames;
-    unordered_map <unsigned int, vector<ConfigFrame>::const_iterator>   frames_map;
+    unordered_map <unsigned int, vector<ConfigFrame>::const_iterator> frames_map;
 public:
     void                                set_version(unsigned int sVersion);
     void                                set_subVersion(unsigned int sSubVersion);
