@@ -1,86 +1,98 @@
 #include "Config.h"
 #include <iostream>
 #include <algorithm>
+#include <functional>
 
 using namespace std;
 
-unsigned int Config::get_version(){
+unsigned int Config::get_version() const {
 	return version;
 }
 
-unsigned int Config::get_subVersion(){
+unsigned int Config::get_subVersion() const {
 	return subVersion;
 }
 
-unsigned int Config::get_numOfFrames(){
+unsigned int Config::get_numOfFrames() const {
 	return frames.size();
 }
 
 void Config::set_version(unsigned int sVersion){
-    version = min(sVersion, static_cast<unsigned int>(UINT16_MAX));
+    version = min(sVersion, static_cast<unsigned int>(UINT16_MAX)); //TODO rzucić wyjątkiem
 }
+
 void Config::set_subVersion(unsigned int sSubVersion){
-    subVersion = min(sSubVersion, static_cast<unsigned int>(UINT16_MAX));
+    subVersion = min(sSubVersion, static_cast<unsigned int>(UINT16_MAX)); //TODO rzucić wyjątkiem
 }
 
-vector <ConfigFrame> Config::get_frames(){
-	return frames;
+vector <ConfigFrame>::const_iterator Config::get_frames_begin_iterator() const {
+    return frames.cbegin();
 }
 
-vector <ConfigFrame>::iterator Config::get_frames_begin_iterator(){
-	return frames.begin();
+vector <ConfigFrame>::const_iterator Config::get_frames_end_iterator() const {
+    return frames.cend();
 }
 
-vector <ConfigFrame>::iterator Config::get_frames_end_iterator(){
-	return frames.end();
+ConfigFrame& Config::get_frame_by_id(unsigned int id) const{
+    return const_cast<ConfigFrame&>(*(frames_map.at(id)));
 }
 
-void Config::add_frame(ConfigFrame aChannel){
-	frames.push_back(aChannel);
+
+vector<reference_wrapper<const ConfigChannel>> Config::get_all_channels() const {
+
+    vector<reference_wrapper<const ConfigChannel> > ret;
+
+    for (vector <ConfigFrame>::const_iterator frameIt=get_frames_begin_iterator() ; frameIt!=get_frames_end_iterator(); frameIt++){
+        for(vector <ConfigChannel>::const_iterator channelIt = frameIt->get_channels_begin_iterator(); channelIt!=frameIt->get_channels_end_iterator(); channelIt++){
+            ret.push_back(ref(*channelIt));
+        }
+    }
+    return ret;
 }
 
-void Config::write_bin(WritingClass& writer){
+
+void Config::add_frame(ConfigFrame aFrame){
+    frames.push_back(aFrame);
+
+    frames_map.insert({aFrame.get_ID(), frames.cend()-1});
+}
+
+void Config::write_to_bin(WritingClass& writer){
 
     writer.write_uint16(get_version());
     writer.write_uint16(get_subVersion());
     writer.write_uint16(get_numOfFrames());
 
     for (vector<ConfigFrame>::iterator it=frames.begin(); it!=frames.end(); it++){
-        it->write_bin(writer);
+        it->write_to_bin(writer);
     }
 
 }
 
-void Config::read_bin(ReadingClass& reader){
+void Config::read_from_bin(ReadingClass& reader){
     set_version(reader.reading_uint16());
     set_subVersion(reader.reading_uint16());
     unsigned int framesNumber = reader.reading_uint16();
 
     for(unsigned int i=0; i<framesNumber; ++i){
         ConfigFrame frame;
-        frame.read_bin(reader);
+        frame.read_from_bin(reader);
         add_frame(frame);
     }
 }
 
+void Config::write_to_csv(FileTimingMode mode, WritingClass& writer){
 
-/*void Config::print(){
-	std::cout << "Version: " << m_version;
-	std::cout << "\tSubversion: " << m_subversion;
-	std::cout << "\tNumber of frames: " << m_num_of_frames << std::endl << std::endl << std::endl;
-	for (unsigned int i=0; i<m_frames.size(); i++){
-		m_frames[i].print();
-	}
-}
+    vector<reference_wrapper<const ConfigChannel> > allChannels = get_all_channels();
 
-void Config::writeToBinary(ofstream& data){
-	data.write(reinterpret_cast<char*>(&m_version),sizeof(m_version));
-	data.write(reinterpret_cast<char*>(&m_subversion),sizeof(m_subversion));
-	data.write(reinterpret_cast<char*>(&m_num_of_frames),sizeof(m_num_of_frames));
-	
-	for(int i=0; i<m_num_of_frames; ++i){
-		m_frames[i].writeToBinary(data);
-	}
+    for(vector<reference_wrapper<const ConfigChannel> >::iterator channelIt = allChannels.begin(); \
+        channelIt!=allChannels.end(); \
+        channelIt++){
+
+        const ConfigChannel& tmp = *channelIt;
+        writer.write_string(tmp.get_channelName() + " [" + tmp.get_unitName() + "]");
+        writer.write_string(";");
+    }
+    writer.write_string("\r\n");
 
 }
-*/

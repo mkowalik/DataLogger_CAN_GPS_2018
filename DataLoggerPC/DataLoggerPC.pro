@@ -35,7 +35,9 @@ SOURCES += \
     AGHConfig/ConfigFrame.cpp \
     AGHConfig/ReadingClass.cpp \
     AGHConfig/ValueType.cpp \
-    AGHConfig/WritingClass.cpp
+    AGHConfig/WritingClass.cpp \
+    AGHData/data_file_class.cpp \
+    AGHData/raw_data_parser.cpp
 
 HEADERS += \
     configureloggersd_dialog.h \
@@ -54,7 +56,9 @@ HEADERS += \
     AGHConfig/ConfigFrame.h \
     AGHConfig/ReadingClass.h \
     AGHConfig/ValueType.h \
-    AGHConfig/WritingClass.h
+    AGHConfig/WritingClass.h \
+    AGHData/data_file_class.h \
+    AGHData/raw_data_parser.h
 
 FORMS += \
         mainwindow.ui \

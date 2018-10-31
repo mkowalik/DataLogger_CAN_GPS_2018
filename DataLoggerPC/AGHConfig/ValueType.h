@@ -9,14 +9,15 @@ private:
     unsigned int feature;
 public:
 	ValueType(unsigned char feature);
-	unsigned int channelDLC();
-	bool isSignedType();
-	bool is16BitLength();
-	bool isOnOffType();
-	bool isFlagType();
-	bool isCustomType();
-    void write_bin(WritingClass& writer) override;
-    void read_bin(ReadingClass& reader) override;
+    unsigned int    channelDLC() const;
+    bool            isSignedType() const;
+    bool            is16BitLength() const ;
+    bool            isOnOffType() const;
+    bool            isFlagType() const;
+    bool            isCustomType() const;
+
+    void            write_to_bin(WritingClass& writer) override;
+    void            read_from_bin(ReadingClass& reader) override;
 };
 
 #endif // VALUETYPE_H

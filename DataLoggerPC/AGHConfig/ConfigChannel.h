@@ -18,26 +18,28 @@ private:
 	string			comment;
 public:
     ConfigChannel();
-	unsigned int get_DLC();
 
-	ValueType get_valueType();
-	unsigned int get_multiplier();
-	unsigned int get_divider();
-	int get_offset();
-	string get_channelName();
-	string get_unitName();
-	string get_comment();
+    unsigned int    get_DLC() const ;
+    ValueType       get_valueType() const ;
+    unsigned int    get_multiplier() const ;
+    unsigned int    get_divider() const ;
+    int             get_offset() const ;
+    string          get_channelName() const ;
+    string          get_unitName() const ;
+    string          get_comment() const ;
 
-	void set_valueType(ValueType);
-	void set_multiplier(unsigned int);
-	void set_divider(unsigned int);
-	void set_offset(int);
-	void set_channelName(string);
-	void set_unitName(string);
-	void set_comment(string);
+    void    set_valueType(ValueType);
+    void    set_multiplier(unsigned int);
+    void    set_divider(unsigned int);
+    void    set_offset(int);
+    void    set_channelName(string);
+    void    set_unitName(string);
+    void    set_comment(string);
 
-    void write_bin(WritingClass& writer) override;
-    void read_bin(ReadingClass& reader) override;
+    void    write_to_bin(WritingClass& writer) override;
+    void    read_from_bin(ReadingClass& reader) override;
+
+    bool    operator<(const ConfigChannel& rhs) const {return this->channelName < rhs.channelName;}
 };
 
 #endif // CONFIGCHANNEL_H

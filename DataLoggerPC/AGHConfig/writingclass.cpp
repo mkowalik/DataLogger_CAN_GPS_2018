@@ -55,3 +55,7 @@ void WritingClass::write_little_endian(unsigned int aValue, unsigned int number_
     }
     fileStream.write(buffer, static_cast<int>(number_of_bytes));
 }
+
+WritableToBin::~WritableToBin(){ }
+
+WritableToCSV::~WritableToCSV(){ }

@@ -12,6 +12,8 @@ INPUT(
 ./release\ReadingClass.o
 ./release\ValueType.o
 ./release\WritingClass.o
+./release\data_file_class.o
+./release\raw_data_parser.o
 ./release\qrc_images.o
 ./release\moc_configureloggersd_dialog.o
 ./release\moc_downloaddatasd_dialog.o

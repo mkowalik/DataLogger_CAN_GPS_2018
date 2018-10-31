@@ -7,27 +7,22 @@ static const unsigned int MAX_DLC_VALUE = 8;
 
 static const unsigned int MODULE_NAME_LENGTH = 20;
 
-ConfigFrame::ConfigFrame(){
-
-}
-
-unsigned int ConfigFrame::get_ID(){
+unsigned int ConfigFrame::get_ID() const {
 	return ID;
 }
 
-unsigned int ConfigFrame::get_DLC(){
+unsigned int ConfigFrame::get_DLC() const {
 	
 	unsigned int dlc = 0;
 
-	for (vector<ConfigChannel>::iterator it = channels.begin(); it != channels.end(); it++){
+    for (vector<ConfigChannel>::const_iterator it = get_channels_begin_iterator(); it != get_channels_end_iterator(); it++){
 		dlc += it->get_DLC();
 	}
 
 	return dlc;
-
 }
 
-string ConfigFrame::get_moduleName(){
+string ConfigFrame::get_moduleName() const {
 	return moduleName;
 }
 
@@ -40,33 +35,33 @@ void ConfigFrame::set_moduleName(string aModuleName){
     moduleName.resize(MODULE_NAME_LENGTH);
 }
 
-vector <ConfigChannel> ConfigFrame::get_channels(){
-	return channels;
+//vector <ConfigChannel> ConfigFrame::get_channels() const {
+//	return channels;
+//}
+
+vector <ConfigChannel>::const_iterator ConfigFrame::get_channels_begin_iterator() const {
+    return channels.cbegin();
 }
 
-vector <ConfigChannel>::iterator ConfigFrame::get_channels_begin_iterator(){
-	return channels.begin();
-}
-
-vector <ConfigChannel>::iterator ConfigFrame::get_channels_end_iterator(){
-	return channels.end();
+vector <ConfigChannel>::const_iterator ConfigFrame::get_channels_end_iterator() const {
+    return channels.cend();
 }
 
 void ConfigFrame::add_channel(ConfigChannel aChannel){
 	channels.push_back(aChannel);
 }
 
-void ConfigFrame::write_bin(WritingClass& writer){
+void ConfigFrame::write_to_bin(WritingClass& writer){
 
     writer.write_uint16(ID);
     writer.write_uint8(get_DLC());
     writer.write_string(moduleName, MODULE_NAME_LENGTH);
     for (vector <ConfigChannel>::iterator it=channels.begin(); it!=channels.end(); it++){
-        it->write_bin(writer);
+        it->write_to_bin(writer);
     }
 }
 
-void ConfigFrame::read_bin(ReadingClass& reader){
+void ConfigFrame::read_from_bin(ReadingClass& reader){
 
     set_ID(reader.reading_uint16());
     unsigned int readDLC = min(MAX_DLC_VALUE, reader.reading_uint8());
@@ -76,7 +71,7 @@ void ConfigFrame::read_bin(ReadingClass& reader){
 
     while(iteratorDLC < readDLC){
         ConfigChannel channel;
-        channel.read_bin(reader);
+        channel.read_from_bin(reader);
         add_channel(channel);
 
         iteratorDLC += channel.get_DLC();

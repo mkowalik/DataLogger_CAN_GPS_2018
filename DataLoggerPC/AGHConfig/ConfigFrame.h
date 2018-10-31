@@ -14,22 +14,20 @@ private:
 	string			moduleName;
 	vector <ConfigChannel> channels;
 public:
-    ConfigFrame();
-
-	unsigned int get_ID();
-	unsigned int get_DLC();
-	string get_moduleName();
+    unsigned int    get_ID() const; //TODO const
+    unsigned int    get_DLC() const; //TODO const
+    string          get_moduleName() const; //TODO const
 
     void set_ID(unsigned int aID);
 	void set_moduleName(string aModuleName);
 
-	vector <ConfigChannel> get_channels();
-	vector <ConfigChannel>::iterator get_channels_begin_iterator();
-	vector <ConfigChannel>::iterator get_channels_end_iterator();
+//    vector <ConfigChannel> get_channels() const;
+    vector <ConfigChannel>::const_iterator get_channels_begin_iterator() const;
+    vector <ConfigChannel>::const_iterator get_channels_end_iterator() const;
 	void add_channel(ConfigChannel aChannel);
 
-    void write_bin(WritingClass& writer) override;
-    void read_bin(ReadingClass& reader) override;
+    void write_to_bin(WritingClass& writer) override;
+    void read_from_bin(ReadingClass& reader) override;
 };
 
 #endif // CONFIGFRAME_H

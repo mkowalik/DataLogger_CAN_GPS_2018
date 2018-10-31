@@ -10,35 +10,35 @@ ConfigChannel::ConfigChannel() : valueType(0){
 
 }
 
-unsigned int ConfigChannel::get_DLC(){
+unsigned int ConfigChannel::get_DLC() const {
 	return valueType.channelDLC();
 }
 
-ValueType ConfigChannel::get_valueType(){
+ValueType ConfigChannel::get_valueType() const {
     return valueType;
 }
 
-unsigned int ConfigChannel::get_multiplier(){
+unsigned int ConfigChannel::get_multiplier() const {
 	return multiplier;
 }
 
-unsigned int ConfigChannel::get_divider(){
+unsigned int ConfigChannel::get_divider() const {
 	return divider;
 }
 
-int ConfigChannel::get_offset(){
+int ConfigChannel::get_offset() const {
 	return offset;
 }
 
-string ConfigChannel::get_channelName(){
+string ConfigChannel::get_channelName() const {
 	return channelName;
 }
 
-string ConfigChannel::get_unitName(){
+string ConfigChannel::get_unitName() const {
 	return unitName;
 }
 
-string ConfigChannel::get_comment(){
+string ConfigChannel::get_comment() const {
 	return comment;
 }
 
@@ -73,9 +73,9 @@ void ConfigChannel::set_comment(string aComment){
     comment.resize(COMMENT_LENGTH);
 }
 
-void ConfigChannel::write_bin(WritingClass& writer){
+void ConfigChannel::write_to_bin(WritingClass& writer){
 
-    get_valueType().write_bin(writer);
+    get_valueType().write_to_bin(writer);
 
     writer.write_uint16(get_multiplier());
     writer.write_uint16(get_divider());
@@ -87,9 +87,9 @@ void ConfigChannel::write_bin(WritingClass& writer){
 }
 
 
-void ConfigChannel::read_bin(ReadingClass& reader){
+void ConfigChannel::read_from_bin(ReadingClass& reader){
 
-    valueType.read_bin(reader);
+    valueType.read_from_bin(reader);
 
     set_multiplier(reader.reading_uint16());
     set_multiplier(reader.reading_uint16());

@@ -12,6 +12,8 @@ INPUT(
 ./debug\ReadingClass.o
 ./debug\ValueType.o
 ./debug\WritingClass.o
+./debug\data_file_class.o
+./debug\raw_data_parser.o
 ./debug\qrc_images.o
 ./debug\moc_configureloggersd_dialog.o
 ./debug\moc_downloaddatasd_dialog.o

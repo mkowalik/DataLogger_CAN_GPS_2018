@@ -6,31 +6,28 @@ using namespace std;
 
 const unsigned int ReadingClass::BUFFER_SIZE;
 
-ReadingClass::ReadingClass(string name_of_file) : data(name_of_file.c_str(), ios_base::binary) {}
+ReadingClass::ReadingClass(string nameOfFile, RawDataParser& dataParser) : dataParser(dataParser), data(nameOfFile.c_str(), ios_base::binary) {
+    clear_buffer(BUFFER_SIZE);
+}
 
 unsigned int ReadingClass::reading_uint32(){
-    clear_buffer(4);
     data.read(buffer, 4);
-    return parse_little_endian(buffer);
+    return dataParser.interpret_unsigned_int(buffer, 4);
 }
 
 unsigned int ReadingClass::reading_uint16(){
-    clear_buffer(4);
     data.read(buffer, 2);
-    return parse_little_endian(buffer);
+    return dataParser.interpret_unsigned_int(buffer, 2);
 }
 
 unsigned int ReadingClass::reading_uint8(){
-    clear_buffer(4);
     data.read(buffer, 1);
-    return parse_little_endian(buffer);
+    return dataParser.interpret_unsigned_int(buffer, 1);
 }
 
-int ReadingClass::reading_int16(){ //TODO mocno przetestować!
-    clear_buffer(4);
+int ReadingClass::reading_int16(){
     data.read(buffer, 2);
-    short* shortPtr = reinterpret_cast<short*>(buffer);
-    return static_cast<int>(*shortPtr);
+    return dataParser.interpret_signed_int(buffer, 2);
 }
 
 string ReadingClass::reading_string(unsigned int length){
@@ -48,21 +45,29 @@ string ReadingClass::reading_string(unsigned int length){
 	return retString;
 }
 
-unsigned int ReadingClass::parse_little_endian(char* aNumberToParse){
-    unsigned int retNumber = 0;
-    retNumber |= static_cast<unsigned int>(aNumberToParse[0]);
-    retNumber |= static_cast<unsigned int>(aNumberToParse[1] << 8);
-    retNumber |= static_cast<unsigned int>(aNumberToParse[2] << 16);
-    retNumber |= static_cast<unsigned int>(aNumberToParse[3] << 24);
-
-    return retNumber;
-}
-
 void ReadingClass::clear_buffer(size_t length){
     memset(buffer, 0, length);
 }
-/*
-void ReadingClass::whereIsPtr(){
-	cout << "Pointer is " << data.tellg() << endl;
+
+void ReadingClass::reading_bytes(char* aBuffer, unsigned int bytesNumber){
+
+    unsigned int bytesLeft = bytesNumber+1;
+    unsigned int bytesRead = 0;
+
+    while (bytesLeft > 0){
+        data.read(aBuffer, static_cast<streamsize>(bytesLeft));
+        bytesLeft -= static_cast<unsigned int>(data.gcount());
+        bytesRead += static_cast<unsigned int>(data.gcount());
+    }
 }
-*/
+
+bool ReadingClass::eof() const{
+    return data.eof();
+}
+
+const RawDataParser& ReadingClass::get_dataParser() const {
+    return const_cast<RawDataParser&>(dataParser);
+}
+
+ReadableFromBin::~ReadableFromBin(){ }
+

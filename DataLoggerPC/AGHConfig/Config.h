@@ -3,32 +3,35 @@
 #include "ReadingClass.h"
 #include "WritingClass.h"
 #include "ConfigFrame.h"
+#include "ConfigChannel.h"
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
-class Config : public WritableToBin, public ReadableFromBin {
+class Config : public WritableToBin, public ReadableFromBin, public WritableToCSV {
 private:
-	unsigned int version;
-	unsigned int subVersion;
-    vector <ConfigFrame> frames;
+    unsigned int            version;
+    unsigned int            subVersion;
+    vector<ConfigFrame>     frames;
+    unordered_map <unsigned int, vector<ConfigFrame>::const_iterator>   frames_map;
 public:
-    Config();
+    void                                set_version(unsigned int sVersion);
+    void                                set_subVersion(unsigned int sSubVersion);
 
-	unsigned int get_version();
-	unsigned int get_subVersion();
-	unsigned int get_numOfFrames();
+    unsigned int                        get_version() const;
+    unsigned int                        get_subVersion() const;
+    unsigned int                        get_numOfFrames() const;
+    vector<ConfigFrame>::const_iterator get_frames_begin_iterator() const;
+    vector<ConfigFrame>::const_iterator get_frames_end_iterator() const;
+    void                                add_frame(ConfigFrame aFrame);
+    ConfigFrame&                        get_frame_by_id(unsigned int id) const;
+    vector<reference_wrapper<const ConfigChannel>> get_all_channels() const;
 
-	void set_version(unsigned int sVersion);
-	void set_subVersion(unsigned int sSubVersion);
+    void                                write_to_bin(WritingClass& writer) override;
+    void                                write_to_csv(FileTimingMode mode, WritingClass& writer) override;
+    void                                read_from_bin(ReadingClass& reader) override;
 
-	vector <ConfigFrame> get_frames();
-	vector <ConfigFrame>::iterator get_frames_begin_iterator();
-	vector <ConfigFrame>::iterator get_frames_end_iterator();
-	void add_frame(ConfigFrame aChannel);
-
-    void write_bin(WritingClass& writer) override;
-    void read_bin(ReadingClass& reader) override;
 };
 
 #endif // CONFIG_H
