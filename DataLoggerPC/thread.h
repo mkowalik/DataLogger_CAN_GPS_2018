@@ -11,8 +11,12 @@ public:
     void run();
     bool Cancel;
 signals:
+    void getData(const int& number, QString name);
     void Changed();
 public slots:
+
+private slots:
+    void on_click();
 };
 
 #endif // THREAD_H

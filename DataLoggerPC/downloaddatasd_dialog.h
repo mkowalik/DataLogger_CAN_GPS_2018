@@ -2,7 +2,7 @@
 #define DOWNLOADDATASD_DIALOG_H
 
 #include <QDialog>
-#include "downloadfiles_dialog.h"
+#include "filesdownload_dialog.h"
 
 namespace Ui {
 class DownloadDataSDDialog;
@@ -24,7 +24,7 @@ private slots:
 
 private:
     Ui::DownloadDataSDDialog *ui;
-    DownloadFilesDialog * downloadFilesDialog;
+    FilesDownloadDialog * filesDownloadDialog;
 };
 
 #endif // DOWNLOADDATASD_DIALOG_H

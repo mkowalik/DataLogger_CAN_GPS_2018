@@ -1,6 +1,6 @@
 #include "downloaddatasd_dialog.h"
 #include "ui_downloaddatasd_dialog.h"
-#include "downloadfiles_dialog.h"
+#include "filesdownload_dialog.h"
 
 #include <QFileDialog>
 #include <QDebug>
@@ -44,6 +44,6 @@ void DownloadDataSDDialog::on_openDestDirButton_clicked()
 
 void DownloadDataSDDialog::on_downloadAndConvertButton_clicked()
 {
-    downloadFilesDialog = new DownloadFilesDialog(this);
-    downloadFilesDialog->exec();
+    filesDownloadDialog = new FilesDownloadDialog(this);
+    filesDownloadDialog->exec();
 }

@@ -36,8 +36,8 @@ SOURCES += \
     AGHConfig/ReadingClass.cpp \
     AGHConfig/ValueType.cpp \
     AGHConfig/WritingClass.cpp \
-    downloadfiles_dialog.cpp \
-    thread.cpp
+    thread.cpp \
+    filesdownload_dialog.cpp
 
 HEADERS += \
     configureloggersd_dialog.h \
@@ -57,8 +57,8 @@ HEADERS += \
     AGHConfig/ReadingClass.h \
     AGHConfig/ValueType.h \
     AGHConfig/WritingClass.h \
-    downloadfiles_dialog.h \
-    thread.h
+    thread.h \
+    filesdownload_dialog.h
 
 FORMS += \
         mainwindow.ui \
@@ -67,7 +67,7 @@ FORMS += \
     newframe_dialog.ui \
     newchannel_dialog.ui \
     downloading_dialog.ui \
-    downloadfiles_dialog.ui
+    filesdownload_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
