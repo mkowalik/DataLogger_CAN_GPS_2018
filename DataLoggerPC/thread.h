@@ -10,13 +10,9 @@ public:
     explicit Thread(QObject *parent = nullptr);
     void run();
     bool Cancel;
+    void jakasMagicznaFunkcja();
 signals:
-    void getData(const int& number, QString name);
-    void Changed();
-public slots:
-
-private slots:
-    void on_click();
+    void dataChanged(const int& number, QString name);
 };
 
 #endif // THREAD_H

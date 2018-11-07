@@ -7,14 +7,8 @@ FilesDownloadDialog::FilesDownloadDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     mThread = new Thread(this);
-    connect(mThread, SIGNAL(Changed()),this,SLOT(onChanged));
-
-
-    connect(mThread, &Thread::getData, this, &FilesDownloadDialog::onMessageSent);
-
+    connect(mThread, SIGNAL(dataChanged(const int&, QString)),this,SLOT(onMessageSent(const int&, QString)));
     mThread->start();
-
-
 }
 
 void FilesDownloadDialog::onMessageSent(const int& message, QString name){
@@ -22,19 +16,12 @@ void FilesDownloadDialog::onMessageSent(const int& message, QString name){
     ui->listWidget->addItem(name);
 }
 
-
-
 FilesDownloadDialog::~FilesDownloadDialog(){
     delete ui;
 }
 
-
-void FilesDownloadDialog::onChanged(){
-    QString text("Threadd");
-    ui->label->setText(text);
-}
-
-
 void FilesDownloadDialog::on_buttonBox_rejected(){
     mThread->Cancel = true;
+    //tu ubijamy watek mThread
+    //TODO trzeba dobrze ubic watek
 }

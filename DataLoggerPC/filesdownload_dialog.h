@@ -16,13 +16,9 @@ public:
     explicit FilesDownloadDialog(QWidget *parent = nullptr);
     ~FilesDownloadDialog();
     Thread *mThread;
-
 private:
     Ui::FilesDownloadDialog *ui;
-
 public slots:
-    void onChanged();
-private slots:
     void onMessageSent(const int &, QString);
     void on_buttonBox_rejected();
 };
