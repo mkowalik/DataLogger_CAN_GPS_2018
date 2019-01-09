@@ -39,7 +39,7 @@ void WritingClass::write_string(string aStr, int aLength){
     } else {
         bytesLeft = aStr.length() + 1;
     }
-
+    static const unsigned int BUFFER_SIZE = 128;
     while (bytesLeft > 0){
         clear_buffer(BUFFER_SIZE);
         unsigned int toCopy = min(bytesLeft, BUFFER_SIZE);
