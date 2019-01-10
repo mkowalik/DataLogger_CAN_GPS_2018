@@ -25,7 +25,6 @@ CONFIG += c++11
 SOURCES += \
     configureloggersd_dialog.cpp \
     downloaddatasd_dialog.cpp \
-    downloading_dialog.cpp \
     main.cpp \
     mainwindow.cpp \
     newchannel_dialog.cpp \
@@ -42,7 +41,6 @@ SOURCES += \
 HEADERS += \
     configureloggersd_dialog.h \
     downloaddatasd_dialog.h \
-    downloading_dialog.h \
     mainwindow.h \
     newchannel_dialog.h \
     newframe_dialog.h \
@@ -65,8 +63,7 @@ FORMS += \
     downloaddatasd_dialog.ui \
     configureloggersd_dialog.ui \
     newframe_dialog.ui \
-    newchannel_dialog.ui \
-    downloading_dialog.ui
+    newchannel_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
