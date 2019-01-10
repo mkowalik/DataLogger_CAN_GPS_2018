@@ -36,7 +36,9 @@ SOURCES += \
     AGHConfig/ValueType.cpp \
     AGHConfig/WritingClass.cpp \
     AGHData/data_file_class.cpp \
-    AGHData/raw_data_parser.cpp
+    AGHData/raw_data_parser.cpp \
+    thread.cpp \
+    filesdownload_dialog.cpp
 
 HEADERS += \
     configureloggersd_dialog.h \
@@ -44,11 +46,6 @@ HEADERS += \
     mainwindow.h \
     newchannel_dialog.h \
     newframe_dialog.h \
-    ui_configureloggersd_dialog.h \
-    ui_downloaddatasd_dialog.h \
-    ui_mainwindow.h \
-    ui_newchannel_dialog.h \
-    ui_newframe_dialog.h \
     AGHConfig/Config.h \
     AGHConfig/ConfigChannel.h \
     AGHConfig/ConfigFrame.h \
@@ -56,14 +53,17 @@ HEADERS += \
     AGHConfig/ValueType.h \
     AGHConfig/WritingClass.h \
     AGHData/data_file_class.h \
-    AGHData/raw_data_parser.h
+    AGHData/raw_data_parser.h \
+    thread.h \
+    filesdownload_dialog.h
 
 FORMS += \
-        mainwindow.ui \
+    mainwindow.ui \
     downloaddatasd_dialog.ui \
     configureloggersd_dialog.ui \
     newframe_dialog.ui \
-    newchannel_dialog.ui
+    newchannel_dialog.ui \
+    filesdownload_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
