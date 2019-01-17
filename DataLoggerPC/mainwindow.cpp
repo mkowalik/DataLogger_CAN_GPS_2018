@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <iostream>
+
 static const QString authors("AGH Racing: M. Kowalik, A. Morzywołek");
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -30,4 +32,14 @@ void MainWindow::on_configureSDButton_clicked()
 {
     configureDialog = new ConfigureLoggerSDDialog(this);
     configureDialog->exec();
+}
+
+void MainWindow::on_actionTest_triggered()
+{
+    NewChannelDialog channelDialog(this);
+
+
+    if (channelDialog.exec() != 0){
+        std::cout << "DUPA\n";
+    }
 }

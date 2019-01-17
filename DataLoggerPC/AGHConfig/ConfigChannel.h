@@ -10,8 +10,8 @@ using namespace std;
 class ConfigChannel : public WritableToBin, public ReadableFromBin {
 private:
 	ValueType		valueType;
-	unsigned int	multiplier;
-	unsigned int	divider;
+    int             multiplier;
+    int             divider;
 	int				offset;
 	string			channelName;
 	string			unitName;
@@ -21,16 +21,16 @@ public:
 
     unsigned int    get_DLC() const ;
     ValueType       get_valueType() const ;
-    unsigned int    get_multiplier() const ;
-    unsigned int    get_divider() const ;
+    int             get_multiplier() const ;
+    int             get_divider() const ;
     int             get_offset() const ;
     string          get_channelName() const ;
     string          get_unitName() const ;
     string          get_comment() const ;
 
     void    set_valueType(ValueType);
-    void    set_multiplier(unsigned int);
-    void    set_divider(unsigned int);
+    void    set_multiplier(int);
+    void    set_divider(int);
     void    set_offset(int);
     void    set_channelName(string);
     void    set_unitName(string);

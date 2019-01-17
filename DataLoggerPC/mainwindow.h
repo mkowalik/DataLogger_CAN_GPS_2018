@@ -20,6 +20,8 @@ public:
 private slots:
     void on_downloadSDButton_clicked();
     void on_configureSDButton_clicked();
+    void on_actionTest_triggered();
+
 private:
     Ui::MainWindow *ui;
     DownloadDataSDDialog *downloadDialog;

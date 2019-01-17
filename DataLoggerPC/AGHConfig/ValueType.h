@@ -8,7 +8,9 @@ class ValueType : public WritableToBin, public ReadableFromBin {
 private:
     unsigned int feature;
 public:
+    ValueType();
 	ValueType(unsigned char feature);
+    ValueType(bool setSigned, bool set16bit, bool setOnOffType, bool setFlagType, bool setCustomType);
     unsigned int    channelDLC() const;
     bool            isSignedType() const;
     bool            is16BitLength() const ;

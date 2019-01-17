@@ -43,6 +43,10 @@ vector <ConfigChannel>::const_iterator ConfigFrame::get_channels_end_iterator() 
     return channels.cend();
 }
 
+ConfigChannel& ConfigFrame::get_channel_by_position(int position) {
+    return channels[position];  //TODO sprawdzic czy poprawne
+}
+
 void ConfigFrame::add_channel(ConfigChannel aChannel){
 	channels.push_back(aChannel);
 }

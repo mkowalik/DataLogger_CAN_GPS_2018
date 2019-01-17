@@ -18,11 +18,11 @@ ValueType ConfigChannel::get_valueType() const {
     return valueType;
 }
 
-unsigned int ConfigChannel::get_multiplier() const {
+int ConfigChannel::get_multiplier() const {
 	return multiplier;
 }
 
-unsigned int ConfigChannel::get_divider() const {
+int ConfigChannel::get_divider() const {
 	return divider;
 }
 
@@ -46,12 +46,13 @@ void ConfigChannel::set_valueType(ValueType aValueType){
 	valueType = aValueType;
 }
 
-void ConfigChannel::set_multiplier(unsigned int aMultiplier){
-    multiplier = min(aMultiplier, static_cast<unsigned int>(UINT16_MAX));
+void ConfigChannel::set_multiplier(int aMultiplier){
+    multiplier = min(aMultiplier, static_cast<int>(INT16_MAX));
+    multiplier = max(aMultiplier, static_cast<int>(INT16_MAX));
 }
 
-void ConfigChannel::set_divider(unsigned int aDivider){
-    divider = min(aDivider, static_cast<unsigned int>(UINT16_MAX));
+void ConfigChannel::set_divider(int aDivider){
+    divider = min(aDivider, static_cast<int>(UINT16_MAX));
 }
 
 void ConfigChannel::set_offset(int aOffset){

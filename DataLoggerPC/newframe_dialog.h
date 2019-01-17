@@ -13,7 +13,10 @@ class NewFrameDialog : public QDialog
 
 public:
     explicit NewFrameDialog(QWidget *parent = nullptr);
+    explicit NewFrameDialog(int id, QString moduleName, QWidget *parent = nullptr);
     ~NewFrameDialog();
+    int getID();
+    QString getModuleName();
 
 private:
     Ui::NewFrameDialog *ui;

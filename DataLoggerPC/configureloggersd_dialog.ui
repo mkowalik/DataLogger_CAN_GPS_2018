@@ -225,6 +225,20 @@
    </item>
    <item>
     <widget class="QTreeWidget" name="framesTreeWidget">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <attribute name="headerCascadingSectionResizes">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>Name</string>
+      </property>
+      <property name="textAlignment">
+       <set>AlignLeading|AlignVCenter</set>
+      </property>
+     </column>
      <column>
       <property name="text">
        <string>Multiplier</string>
@@ -238,11 +252,6 @@
      <column>
       <property name="text">
        <string>Offset</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Name</string>
       </property>
      </column>
      <column>
@@ -313,6 +322,22 @@
     </layout>
    </item>
   </layout>
+  <action name="actionEdit">
+   <property name="text">
+    <string>Edit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

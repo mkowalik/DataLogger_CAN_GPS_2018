@@ -25,24 +25,35 @@ void Config::set_subVersion(unsigned int sSubVersion){
     subVersion = min(sSubVersion, static_cast<unsigned int>(UINT16_MAX)); //TODO rzucić wyjątkiem
 }
 
-vector <ConfigFrame>::const_iterator Config::get_frames_begin_iterator() const {
+vector <ConfigFrame>::const_iterator Config::get_frames_begin_citerator() const {
     return frames.cbegin();
 }
 
-vector <ConfigFrame>::const_iterator Config::get_frames_end_iterator() const {
+vector <ConfigFrame>::const_iterator Config::get_frames_end_citerator() const {
     return frames.cend();
 }
 
-ConfigFrame& Config::get_frame_by_id(unsigned int id) const{
+vector <ConfigFrame>::iterator Config::get_frames_begin_iterator() {
+    return frames.begin();
+}
+
+vector <ConfigFrame>::iterator Config::get_frames_end_iterator() {
+    return frames.end();
+}
+
+ConfigFrame& Config::get_frame_by_id(unsigned int id) {
     return const_cast<ConfigFrame&>(*(frames_map.at(id)));
 }
 
+ConfigFrame& Config::get_frame_by_position(unsigned int position) {
+    return frames[position];
+}
 
 vector<reference_wrapper<const ConfigChannel>> Config::get_all_channels() const {
 
     vector<reference_wrapper<const ConfigChannel> > ret;
 
-    for (vector <ConfigFrame>::const_iterator frameIt=get_frames_begin_iterator() ; frameIt!=get_frames_end_iterator(); frameIt++){
+    for (vector <ConfigFrame>::const_iterator frameIt=get_frames_begin_citerator() ; frameIt!=get_frames_end_citerator(); frameIt++){
         for(vector <ConfigChannel>::const_iterator channelIt = frameIt->get_channels_begin_iterator(); channelIt!=frameIt->get_channels_end_iterator(); channelIt++){
             ret.push_back(ref(*channelIt));
         }

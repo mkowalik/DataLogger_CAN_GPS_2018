@@ -4,6 +4,7 @@
 #include <QDialog>
 #include "newframe_dialog.h"
 #include "newchannel_dialog.h"
+#include "AGHConfig/Config.h"
 
 namespace Ui {
 class ConfigureLoggerSDDialog;
@@ -16,7 +17,8 @@ class ConfigureLoggerSDDialog : public QDialog
 public:
     explicit ConfigureLoggerSDDialog(QWidget *parent = nullptr);
     ~ConfigureLoggerSDDialog();
-
+private:
+    void reloadFramesTreeWidget();
 private slots:
     void on_newFrameButton_clicked();
 
@@ -24,10 +26,17 @@ private slots:
 
     void on_selectPrototypeFileButton_clicked();
 
+    void on_framesTreeWidget_customContextMenuRequested(const QPoint &pos);
+
+    void on_actionEdit_triggered();
+
+    void on_addChannelButton_clicked();
+
 private:
     Ui::ConfigureLoggerSDDialog *ui;
-    NewFrameDialog *newFrameDialog;
-    NewChannelDialog *newChannelDialog;
+
+    RawDataParser rawDataParser;
+    Config config;
 };
 
 #endif // CONFIGURELOGGERSD_DIALOG_H
