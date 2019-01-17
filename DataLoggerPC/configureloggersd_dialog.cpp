@@ -1,6 +1,5 @@
 #include "configureloggersd_dialog.h"
 #include "ui_configureloggersd_dialog.h"
-#include "dialogtest.h"
 
 #include <QFileDialog>
 #include <QDebug>
@@ -34,10 +33,8 @@ void ConfigureLoggerSDDialog::on_newFrameButton_clicked()
 
 void ConfigureLoggerSDDialog::on_addChannelButton_clicked()
 {
-//    NewChannelDialog newChannelDialog(this);
-//    newChannelDialog.exec();
-    DialogTest test(this);
-    test.exec();
+    NewChannelDialog newChannelDialog(this);
+    newChannelDialog.exec();
 }
 
 void ConfigureLoggerSDDialog::on_selectOutputFileButton_clicked()

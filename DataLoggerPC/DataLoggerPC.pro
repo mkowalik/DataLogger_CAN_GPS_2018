@@ -25,10 +25,12 @@ CONFIG += c++11
 SOURCES += \
     configureloggersd_dialog.cpp \
     downloaddatasd_dialog.cpp \
+    filesdownload_dialog.cpp \
     main.cpp \
     mainwindow.cpp \
     newchannel_dialog.cpp \
     newframe_dialog.cpp \
+    thread.cpp \
     AGHConfig/Config.cpp \
     AGHConfig/ConfigChannel.cpp \
     AGHConfig/ConfigFrame.cpp \
@@ -36,16 +38,16 @@ SOURCES += \
     AGHConfig/ValueType.cpp \
     AGHConfig/WritingClass.cpp \
     AGHData/data_file_class.cpp \
-    AGHData/raw_data_parser.cpp \
-    thread.cpp \
-    filesdownload_dialog.cpp
+    AGHData/raw_data_parser.cpp
 
 HEADERS += \
     configureloggersd_dialog.h \
     downloaddatasd_dialog.h \
+    filesdownload_dialog.h \
     mainwindow.h \
     newchannel_dialog.h \
     newframe_dialog.h \
+    thread.h \
     AGHConfig/Config.h \
     AGHConfig/ConfigChannel.h \
     AGHConfig/ConfigFrame.h \
@@ -53,17 +55,15 @@ HEADERS += \
     AGHConfig/ValueType.h \
     AGHConfig/WritingClass.h \
     AGHData/data_file_class.h \
-    AGHData/raw_data_parser.h \
-    thread.h \
-    filesdownload_dialog.h
+    AGHData/raw_data_parser.h
 
 FORMS += \
-    mainwindow.ui \
-    downloaddatasd_dialog.ui \
     configureloggersd_dialog.ui \
-    newframe_dialog.ui \
+    downloaddatasd_dialog.ui \
+    filesdownload_dialog.ui \
+    mainwindow.ui \
     newchannel_dialog.ui \
-    filesdownload_dialog.ui
+    newframe_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
