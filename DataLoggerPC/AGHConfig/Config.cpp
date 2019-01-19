@@ -14,7 +14,7 @@ unsigned int Config::get_subVersion() const {
 }
 
 unsigned int Config::get_numOfFrames() const {
-	return frames.size();
+    return static_cast<unsigned int>(frames.size());
 }
 
 void Config::set_version(unsigned int sVersion){
@@ -41,11 +41,11 @@ vector <ConfigFrame>::iterator Config::get_frames_end_iterator() {
     return frames.end();
 }
 
-ConfigFrame& Config::get_frame_by_id(unsigned int id) {
+ConfigFrame& Config::get_frame_by_id(int id) {
     return const_cast<ConfigFrame&>(*(frames_map.at(id)));
 }
 
-ConfigFrame& Config::get_frame_by_position(unsigned int position) {
+ConfigFrame& Config::get_frame_by_position(int position) {
     return frames[position];
 }
 
@@ -72,8 +72,8 @@ void Config::add_frame(ConfigFrame aFrame){
     frames_map.insert({aFrame.get_ID(), frames.cend()-1});
 }
 
-void Config::remove_frame_by_position(unsigned int position){
-    if (frames.size() > position){
+void Config::remove_frame_by_position(int position){
+    if (static_cast<int>(frames.size()) > position){
         int id = frames[position].get_ID();
         frames_map.erase(id);
         frames.erase(frames.begin() + position);
@@ -119,16 +119,20 @@ void Config::read_from_bin(ReadingClass& reader){
 
 void Config::write_to_csv(FileTimingMode mode, WritingClass& writer){
 
-    vector<reference_wrapper<const ConfigChannel> > allChannels = get_all_channels();
+    if (mode==EventMode){
+        vector<reference_wrapper<const ConfigChannel> > allChannels = get_all_channels();
 
-    for(vector<reference_wrapper<const ConfigChannel> >::iterator channelIt = allChannels.begin(); \
-        channelIt!=allChannels.end(); \
-        channelIt++){
+        for(vector<reference_wrapper<const ConfigChannel> >::iterator channelIt = allChannels.begin(); \
+            channelIt!=allChannels.end(); \
+            channelIt++){
 
-        const ConfigChannel& tmp = *channelIt;
-        writer.write_string(tmp.get_channelName() + " [" + tmp.get_unitName() + "]");
-        writer.write_string(";");
+            const ConfigChannel& tmp = *channelIt;
+            writer.write_string(tmp.get_channelName() + " [" + tmp.get_unitName() + "]");
+            writer.write_string(";");
+        }
+        writer.write_string("\r\n");
+    } else {
+        throw "Not implemented yet";
     }
-    writer.write_string("\r\n");
 
 }

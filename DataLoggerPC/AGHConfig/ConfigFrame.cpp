@@ -1,13 +1,13 @@
 #include "ConfigFrame.h"
 #include <cstdint>
 
-static const unsigned int MAX_ID_BITS = 11;
-static const unsigned int MAX_ID_VALUE = (1<<MAX_ID_BITS)-1;
-static const unsigned int MAX_DLC_VALUE = 8;
+static const int MAX_ID_BITS = 11;
+static const int MAX_ID_VALUE = (1<<MAX_ID_BITS)-1;
+static const int MAX_DLC_VALUE = 8;
 
 static const unsigned int MODULE_NAME_LENGTH = 20;
 
-unsigned int ConfigFrame::get_ID() const {
+int ConfigFrame::get_ID() const {
 	return ID;
 }
 
@@ -26,8 +26,9 @@ string ConfigFrame::get_moduleName() const {
 	return moduleName;
 }
 
-void ConfigFrame::set_ID(unsigned int aID){
+void ConfigFrame::set_ID(int aID){
 	ID = min(aID, MAX_ID_VALUE);
+    ID = max(aID, 0);
 }
 
 void ConfigFrame::set_moduleName(string aModuleName){
@@ -44,7 +45,7 @@ vector <ConfigChannel>::const_iterator ConfigFrame::get_channels_end_iterator() 
 }
 
 ConfigChannel& ConfigFrame::get_channel_by_position(int position) {
-    return channels[position];  //TODO sprawdzic czy poprawne
+    return channels[position];  //TODO sprawdzic czy poprawny argument
 }
 
 void ConfigFrame::add_channel(ConfigChannel aChannel){
@@ -52,7 +53,7 @@ void ConfigFrame::add_channel(ConfigChannel aChannel){
 }
 
 void ConfigFrame::remove_channel_by_position(int position){
-    if (position < channels.size()){
+    if (position < static_cast<int>(channels.size())){
         channels.erase(channels.begin() + position);
     }
 }
@@ -70,10 +71,10 @@ void ConfigFrame::write_to_bin(WritingClass& writer){
 void ConfigFrame::read_from_bin(ReadingClass& reader){
 
     set_ID(reader.reading_uint16());
-    unsigned int readDLC = min(MAX_DLC_VALUE, reader.reading_uint8());
+    int readDLC = min(MAX_DLC_VALUE, static_cast<int>(reader.reading_uint8()));
     set_moduleName(reader.reading_string(MODULE_NAME_LENGTH));
 
-    unsigned int iteratorDLC = 0;
+    int iteratorDLC = 0;
 
     while(iteratorDLC < readDLC){
         ConfigChannel channel;

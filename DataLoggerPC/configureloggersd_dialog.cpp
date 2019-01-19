@@ -136,17 +136,12 @@ void ConfigureLoggerSDDialog::reloadFramesTreeWidget(){
     for (auto it = config.get_frames_begin_citerator(); it!=config.get_frames_end_citerator(); it++){
 
         QTreeWidgetItem* item = new QTreeWidgetItem(ui->framesTreeWidget);
-
         prepareFrameWidget(*it, item);
-
         ui->framesTreeWidget->addTopLevelItem(item);
 
         for (auto itCh = it->get_channels_begin_iterator(); itCh != it->get_channels_end_iterator(); itCh++){
-
             QTreeWidgetItem* itemInner = new QTreeWidgetItem(item);
-
             prepareChannelWidget(*itCh, itemInner);
-
         }
     }
 }
@@ -195,17 +190,13 @@ void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(con
 void ConfigureLoggerSDDialog::on_actionEdit_triggered()
 {
     QTreeWidgetItem *clickedItem = ui->framesTreeWidget->itemAt(ui->actionDelete->data().toPoint());
-
     QTreeWidgetItem *parent = clickedItem->parent();
-
     editGivenItem(clickedItem, parent);
-
 }
 
 void ConfigureLoggerSDDialog::on_framesTreeWidget_itemDoubleClicked(QTreeWidgetItem *clickedItem, int column)
 {
     QTreeWidgetItem *parent = clickedItem->parent();
-
     editGivenItem(clickedItem, parent);
 }
 
@@ -253,9 +244,7 @@ void ConfigureLoggerSDDialog::editGivenItem(QTreeWidgetItem *clickedItem, QTreeW
         }
 
         prepareFrameWidget(fr, parent);
-
         prepareChannelWidget(ch, clickedItem);
-
     }
 
 }
@@ -282,7 +271,6 @@ void ConfigureLoggerSDDialog::on_actionDelete_triggered()
         if (QMessageBox::question(this, "Delete channel", "Do you relly want to delete this channel?") == QMessageBox::StandardButton::Yes){
             fr.remove_channel_by_position(channelIndex);
             parent->removeChild(clickedItem);
-
             prepareFrameWidget(fr, parent);
         }
     }

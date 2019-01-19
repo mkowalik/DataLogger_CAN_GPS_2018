@@ -14,7 +14,7 @@ private:
     unsigned int            version;
     unsigned int            subVersion;
     vector<ConfigFrame>     frames;
-    unordered_map <unsigned int, vector<ConfigFrame>::const_iterator> frames_map;
+    unordered_map <int, vector<ConfigFrame>::const_iterator> frames_map;
 public:
     void                                set_version(unsigned int sVersion);
     void                                set_subVersion(unsigned int sSubVersion);
@@ -22,8 +22,8 @@ public:
     unsigned int                        get_version() const;
     unsigned int                        get_subVersion() const;
     unsigned int                        get_numOfFrames() const;
-    ConfigFrame&                        get_frame_by_id(unsigned int id);
-    ConfigFrame&                        get_frame_by_position(unsigned int position);
+    ConfigFrame&                        get_frame_by_id(int id);
+    ConfigFrame&                        get_frame_by_position(int position);
     vector<reference_wrapper<const ConfigChannel>> get_all_channels() const;
     vector<ConfigFrame>::const_iterator get_frames_begin_citerator() const;
     vector<ConfigFrame>::const_iterator get_frames_end_citerator() const;
@@ -33,7 +33,7 @@ public:
     bool                                has_frame_with_id(int id) const;
 
     void                                add_frame(ConfigFrame aFrame);
-    void                                remove_frame_by_position(unsigned int position);
+    void                                remove_frame_by_position(int position);
     void                                remove_frame_by_id(int id);
     void                                reset();
 
