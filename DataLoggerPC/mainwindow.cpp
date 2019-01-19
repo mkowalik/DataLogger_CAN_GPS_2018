@@ -33,13 +33,3 @@ void MainWindow::on_configureSDButton_clicked()
     configureDialog = new ConfigureLoggerSDDialog(this);
     configureDialog->exec();
 }
-
-void MainWindow::on_actionTest_triggered()
-{
-    NewChannelDialog channelDialog(this);
-
-
-    if (channelDialog.exec() != 0){
-        std::cout << "DUPA\n";
-    }
-}

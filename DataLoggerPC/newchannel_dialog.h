@@ -13,10 +13,10 @@ class NewChannelDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit NewChannelDialog(QWidget *parent = nullptr);
+    explicit NewChannelDialog(ConfigFrame& frame, ConfigChannel* pPreviousChannel, QWidget *parent = nullptr);
     explicit NewChannelDialog(ValueType valueType, int multipilier, int divider, int offset,
                               QString channelName, QString unitName, QString comment,
-                              QWidget *parent = nullptr);
+                              ConfigFrame& frame, ConfigChannel* pPreviousChannel, QWidget *parent = nullptr);
     ~NewChannelDialog();
 
     bool getIsSigned();
@@ -33,8 +33,13 @@ public:
     QString getUnit();
     QString getComment();
 
+private slots:
+    void on_buttonBox_accepted();
+
 private:
     Ui::NewChannelDialog *ui;
+    ConfigFrame& frame;
+    ConfigChannel* pPreviousChannel;
 };
 
 #endif // NEWCHANNEL_DIALOG_H

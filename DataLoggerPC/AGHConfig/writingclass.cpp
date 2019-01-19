@@ -43,7 +43,7 @@ void WritingClass::write_string(string aStr, int aLength){
     while (bytesLeft > 0){
         clear_buffer(BUFFER_SIZE);
         unsigned int toCopy = min(bytesLeft, BUFFER_SIZE);
-        memcpy(buffer, aStr.c_str() + bytesWritten, bytesLeft);
+        memcpy(buffer, aStr.c_str() + bytesWritten, min(bytesLeft, static_cast<unsigned int>(aStr.length())));
         fileStream.write(buffer, static_cast<streamsize>(toCopy));
         bytesLeft -= toCopy;
         bytesWritten += toCopy;

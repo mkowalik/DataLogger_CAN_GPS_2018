@@ -2,19 +2,24 @@
 #include "ui_newchannel_dialog.h"
 
 #include <iostream>
+#include <QMessageBox>
 
-NewChannelDialog::NewChannelDialog(QWidget *parent) :
+NewChannelDialog::NewChannelDialog(ConfigFrame& frame, ConfigChannel* pPreviousChannel, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::NewChannelDialog)
+    ui(new Ui::NewChannelDialog),
+    frame(frame),
+    pPreviousChannel(pPreviousChannel)
 {
     ui->setupUi(this);
 }
 
 NewChannelDialog::NewChannelDialog(ValueType valueType, int multipilier, int divider, int offset,
                           QString channelName, QString unitName, QString comment,
-                          QWidget *parent) :
+                          ConfigFrame& frame, ConfigChannel* pPreviousChannel, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::NewChannelDialog)
+    ui(new Ui::NewChannelDialog),
+    frame(frame),
+    pPreviousChannel(pPreviousChannel)
 {
     ui->setupUi(this);
 
@@ -26,6 +31,12 @@ NewChannelDialog::NewChannelDialog(ValueType valueType, int multipilier, int div
         ui->custom_radioButton->setChecked(true);
     } else {
         ui->integer_radioButton->setChecked(true);
+    }
+    if (valueType.is16BitLength()){
+        ui->bit16_checkBox->setChecked(true);
+    }
+    if (valueType.isSignedType()){
+        ui->signed_checkBox->setChecked(true);
     }
 
     ui->multiplier_spinBox->setValue(multipilier);
@@ -88,4 +99,20 @@ QString NewChannelDialog::getComment(){
 NewChannelDialog::~NewChannelDialog()
 {
     delete ui;
+}
+
+void NewChannelDialog::on_buttonBox_accepted()
+{
+    int thisDLC = frame.get_DLC();
+    thisDLC += ui->bit16_checkBox->isChecked() ? 2 : 1;
+    if (pPreviousChannel != nullptr){
+        thisDLC -= pPreviousChannel->get_DLC();
+    }
+
+    if (thisDLC <= 8){
+        accept();
+    } else {
+        QMessageBox::warning(this, "Frame length error", "Frame must not have more than 8 bytes.");
+    }
+
 }

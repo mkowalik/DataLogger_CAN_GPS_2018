@@ -25,6 +25,7 @@ public:
     vector <ConfigChannel>::const_iterator get_channels_end_iterator() const;
     ConfigChannel&          get_channel_by_position(int position);
     void                    add_channel(ConfigChannel aChannel);
+    void                    remove_channel_by_position(int position);
 
     void                    write_to_bin(WritingClass& writer) override;
     void                    read_from_bin(ReadingClass& reader) override;

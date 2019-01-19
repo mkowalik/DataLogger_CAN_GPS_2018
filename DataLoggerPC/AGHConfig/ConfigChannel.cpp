@@ -48,7 +48,7 @@ void ConfigChannel::set_valueType(ValueType aValueType){
 
 void ConfigChannel::set_multiplier(int aMultiplier){
     multiplier = min(aMultiplier, static_cast<int>(INT16_MAX));
-    multiplier = max(aMultiplier, static_cast<int>(INT16_MAX));
+    multiplier = max(aMultiplier, static_cast<int>(INT16_MIN));
 }
 
 void ConfigChannel::set_divider(int aDivider){
@@ -60,25 +60,34 @@ void ConfigChannel::set_offset(int aOffset){
 }
 
 void ConfigChannel::set_channelName(string aChannelName){
+    if (aChannelName.length() > CHANNEL_NAME_LENGHT){
+        aChannelName.resize(CHANNEL_NAME_LENGHT);
+    }
+    aChannelName.resize(aChannelName.find_first_of(static_cast<char>(0)));
     channelName = aChannelName;
-    channelName.resize(CHANNEL_NAME_LENGHT);
 }
 
 void ConfigChannel::set_unitName(string aUnitName){
+    if (aUnitName.length() > UNIT_LENGTH){
+        aUnitName.resize(UNIT_LENGTH);
+    }
+    aUnitName.resize(aUnitName.find_first_of(static_cast<char>(0)));
     unitName = aUnitName;
-    unitName.resize(UNIT_LENGTH);
 }
 
 void ConfigChannel::set_comment(string aComment){
+    if (aComment.length() > COMMENT_LENGTH){
+        aComment.resize(COMMENT_LENGTH);
+    }
+    aComment.resize(aComment.find_first_of(static_cast<char>(0)));
     comment = aComment;
-    comment.resize(COMMENT_LENGTH);
 }
 
 void ConfigChannel::write_to_bin(WritingClass& writer){
 
     get_valueType().write_to_bin(writer);
 
-    writer.write_uint16(get_multiplier());
+    writer.write_int16(get_multiplier());
     writer.write_uint16(get_divider());
     writer.write_int16(get_offset());
 
@@ -92,8 +101,8 @@ void ConfigChannel::read_from_bin(ReadingClass& reader){
 
     valueType.read_from_bin(reader);
 
-    set_multiplier(reader.reading_uint16());
-    set_multiplier(reader.reading_uint16());
+    set_multiplier(reader.reading_int16());
+    set_divider(reader.reading_uint16());
     set_offset(reader.reading_int16());
 
     set_channelName(reader.reading_string(CHANNEL_NAME_LENGHT));

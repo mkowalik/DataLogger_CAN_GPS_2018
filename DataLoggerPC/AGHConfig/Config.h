@@ -30,7 +30,12 @@ public:
     vector<ConfigFrame>::iterator       get_frames_begin_iterator();
     vector<ConfigFrame>::iterator       get_frames_end_iterator();
 
+    bool                                has_frame_with_id(int id) const;
+
     void                                add_frame(ConfigFrame aFrame);
+    void                                remove_frame_by_position(unsigned int position);
+    void                                remove_frame_by_id(int id);
+    void                                reset();
 
     void                                write_to_bin(WritingClass& writer) override;
     void                                write_to_csv(FileTimingMode mode, WritingClass& writer) override;

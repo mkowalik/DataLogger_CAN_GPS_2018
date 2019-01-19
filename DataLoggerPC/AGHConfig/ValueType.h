@@ -18,6 +18,8 @@ public:
     bool            isFlagType() const;
     bool            isCustomType() const;
 
+    unsigned char   getHexValue() const;
+
     void            write_to_bin(WritingClass& writer) override;
     void            read_from_bin(ReadingClass& reader) override;
 };

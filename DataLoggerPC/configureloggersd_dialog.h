@@ -5,6 +5,7 @@
 #include "newframe_dialog.h"
 #include "newchannel_dialog.h"
 #include "AGHConfig/Config.h"
+#include <QTreeWidgetItem>
 
 namespace Ui {
 class ConfigureLoggerSDDialog;
@@ -19,6 +20,9 @@ public:
     ~ConfigureLoggerSDDialog();
 private:
     void reloadFramesTreeWidget();
+    void editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent);
+    void prepareFrameWidget(const ConfigFrame& frame, QTreeWidgetItem* pWidget);
+    void prepareChannelWidget(const ConfigChannel& channel, QTreeWidgetItem* pWidget);
 private slots:
     void on_newFrameButton_clicked();
 
@@ -31,6 +35,14 @@ private slots:
     void on_actionEdit_triggered();
 
     void on_addChannelButton_clicked();
+
+    void on_framesTreeWidget_itemDoubleClicked(QTreeWidgetItem *clickedItem, int column);
+
+    void on_actionDelete_triggered();
+
+    void on_resetButton_clicked();
+
+    void on_saveConfigButton_clicked();
 
 private:
     Ui::ConfigureLoggerSDDialog *ui;

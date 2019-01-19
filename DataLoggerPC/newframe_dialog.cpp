@@ -1,16 +1,20 @@
 #include "newframe_dialog.h"
 #include "ui_newframe_dialog.h"
 
-NewFrameDialog::NewFrameDialog(QWidget *parent) :
+#include <QMessageBox>
+
+NewFrameDialog::NewFrameDialog(Config& config, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::NewFrameDialog)
+    ui(new Ui::NewFrameDialog),
+    config(config)
 {
     ui->setupUi(this);
 }
 
-NewFrameDialog::NewFrameDialog(int id, QString moduleName, QWidget *parent) :
+NewFrameDialog::NewFrameDialog(int id, QString moduleName, Config& config, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::NewFrameDialog)
+    ui(new Ui::NewFrameDialog),
+    config(config)
 {
     ui->setupUi(this);
     ui->id_SpinBox->setValue(id);
@@ -28,4 +32,13 @@ QString NewFrameDialog::getModuleName(){
 NewFrameDialog::~NewFrameDialog()
 {
     delete ui;
+}
+
+void NewFrameDialog::on_buttonBox_accepted()
+{
+    if (!config.has_frame_with_id(ui->id_SpinBox->value())){
+        accept();
+    } else {
+        QMessageBox::warning(this, "Wrong ID Error", "Frame with given ID Exists in configuration. Choose other ID.");
+    }
 }

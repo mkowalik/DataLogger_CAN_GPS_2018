@@ -51,6 +51,12 @@ void ConfigFrame::add_channel(ConfigChannel aChannel){
 	channels.push_back(aChannel);
 }
 
+void ConfigFrame::remove_channel_by_position(int position){
+    if (position < channels.size()){
+        channels.erase(channels.begin() + position);
+    }
+}
+
 void ConfigFrame::write_to_bin(WritingClass& writer){
 
     writer.write_uint16(ID);
@@ -77,25 +83,3 @@ void ConfigFrame::read_from_bin(ReadingClass& reader){
         iteratorDLC += channel.get_DLC();
     }
 }
-
-/*
-
-void ConfigFrame::print(){
-	std::cout << "ID of frame: " << m_ID;
-	std::cout << "\tDLC: " << (int) m_DLC;
-	std::cout << "\tModule name: " << m_module_name << std::endl << std::endl;
-
-	for(uint32_t i=0; i<m_channels.size(); i++){
-		m_channels[i].print();
-	}
-}
-
-void ConfigFrame::writeToBinary(std::ofstream& data){
-	data.write(reinterpret_cast<char*>(&m_ID),sizeof(m_ID));
-	data.write(reinterpret_cast<char*>(&m_DLC),sizeof(m_DLC));
-	data.write(reinterpret_cast<char*>(&m_module_name),21);
-	for(uint32_t i=0; i<m_channels.size(); i++){
-		m_channels[i].writeToBinary(data);
-	}
-}
-*/

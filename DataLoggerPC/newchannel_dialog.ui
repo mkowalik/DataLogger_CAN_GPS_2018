@@ -196,21 +196,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>NewChannelDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>110</x>
-     <y>285</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>376</x>
-     <y>345</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
 </ui>

@@ -58,6 +58,10 @@ bool ValueType::isCustomType() const {
 	return feature&CONFIG_CUSTOM_TYPE_flag;
 }
 
+unsigned char ValueType::getHexValue() const {
+    return static_cast<unsigned char>(feature);
+}
+
 void ValueType::write_to_bin(WritingClass& writer){
 
     unsigned int valueToWriteToFile = 0;

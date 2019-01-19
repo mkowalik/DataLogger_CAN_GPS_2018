@@ -61,11 +61,36 @@ vector<reference_wrapper<const ConfigChannel>> Config::get_all_channels() const 
     return ret;
 }
 
+bool Config::has_frame_with_id(int id) const {
+    return (frames_map.find(id) != frames_map.end());
+}
+
 
 void Config::add_frame(ConfigFrame aFrame){
     frames.push_back(aFrame);
 
     frames_map.insert({aFrame.get_ID(), frames.cend()-1});
+}
+
+void Config::remove_frame_by_position(unsigned int position){
+    if (frames.size() > position){
+        int id = frames[position].get_ID();
+        frames_map.erase(id);
+        frames.erase(frames.begin() + position);
+    }
+}
+
+void Config::remove_frame_by_id(int id){
+    if (frames_map.find(id) != frames_map.cend()) {
+        vector<ConfigFrame>::const_iterator it = frames_map.at(id);
+        frames.erase(it);
+        frames_map.erase(id);
+    }
+}
+
+void Config::reset(){
+    frames.clear();
+    frames_map.clear();
 }
 
 void Config::write_to_bin(WritingClass& writer){

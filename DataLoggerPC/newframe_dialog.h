@@ -2,6 +2,7 @@
 #define NEWFRAME_DIALOG_H
 
 #include <QDialog>
+#include <AGHConfig/Config.h>
 
 namespace Ui {
 class NewFrameDialog;
@@ -12,14 +13,18 @@ class NewFrameDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit NewFrameDialog(QWidget *parent = nullptr);
-    explicit NewFrameDialog(int id, QString moduleName, QWidget *parent = nullptr);
+    explicit NewFrameDialog(Config& config, QWidget *parent = nullptr);
+    explicit NewFrameDialog(int id, QString moduleName, Config& config, QWidget *parent = nullptr);
     ~NewFrameDialog();
     int getID();
     QString getModuleName();
 
+private slots:
+    void on_buttonBox_accepted();
+
 private:
     Ui::NewFrameDialog *ui;
+    Config config;
 };
 
 #endif // NEWFRAME_DIALOG_H
