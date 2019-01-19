@@ -11,9 +11,9 @@ int ConfigFrame::get_ID() const {
 	return ID;
 }
 
-unsigned int ConfigFrame::get_DLC() const {
+int ConfigFrame::get_DLC() const {
 	
-	unsigned int dlc = 0;
+    int dlc = 0;
 
     for (vector<ConfigChannel>::const_iterator it = get_channels_begin_iterator(); it != get_channels_end_iterator(); it++){
 		dlc += it->get_DLC();
@@ -60,8 +60,8 @@ void ConfigFrame::remove_channel_by_position(int position){
 
 void ConfigFrame::write_to_bin(WritingClass& writer){
 
-    writer.write_uint16(ID);
-    writer.write_uint8(get_DLC());
+    writer.write_uint16(static_cast<unsigned int>(ID));
+    writer.write_uint8(static_cast<unsigned int>(get_DLC()));
     writer.write_string(moduleName, MODULE_NAME_LENGTH);
     for (vector <ConfigChannel>::iterator it=channels.begin(); it!=channels.end(); it++){
         it->write_to_bin(writer);
@@ -70,7 +70,7 @@ void ConfigFrame::write_to_bin(WritingClass& writer){
 
 void ConfigFrame::read_from_bin(ReadingClass& reader){
 
-    set_ID(reader.reading_uint16());
+    set_ID(static_cast<int>(reader.reading_uint16()));
     int readDLC = min(MAX_DLC_VALUE, static_cast<int>(reader.reading_uint8()));
     set_moduleName(reader.reading_string(MODULE_NAME_LENGTH));
 

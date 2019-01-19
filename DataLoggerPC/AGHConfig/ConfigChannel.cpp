@@ -63,7 +63,7 @@ void ConfigChannel::set_channelName(string aChannelName){
     if (aChannelName.length() > CHANNEL_NAME_LENGHT){
         aChannelName.resize(CHANNEL_NAME_LENGHT);
     }
-    aChannelName.resize(aChannelName.find_first_of(static_cast<char>(0)));
+    aChannelName.resize(aChannelName.find_first_of(static_cast<char>(0)) + 1);
     channelName = aChannelName;
 }
 
@@ -71,7 +71,7 @@ void ConfigChannel::set_unitName(string aUnitName){
     if (aUnitName.length() > UNIT_LENGTH){
         aUnitName.resize(UNIT_LENGTH);
     }
-    aUnitName.resize(aUnitName.find_first_of(static_cast<char>(0)));
+    aUnitName.resize(aUnitName.find_first_of(static_cast<char>(0)) + 1);
     unitName = aUnitName;
 }
 
@@ -79,7 +79,7 @@ void ConfigChannel::set_comment(string aComment){
     if (aComment.length() > COMMENT_LENGTH){
         aComment.resize(COMMENT_LENGTH);
     }
-    aComment.resize(aComment.find_first_of(static_cast<char>(0)));
+    aComment.resize(aComment.find_first_of(static_cast<char>(0)) + 1);
     comment = aComment;
 }
 

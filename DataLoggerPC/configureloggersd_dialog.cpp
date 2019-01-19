@@ -92,14 +92,13 @@ void ConfigureLoggerSDDialog::on_addChannelButton_clicked()
         ch.set_channelName(newChannelDialog.getChannelName().toStdString());
         ch.set_unitName(newChannelDialog.getUnit().toStdString());
         ch.set_comment(newChannelDialog.getComment().toStdString());
+
+        fr.add_channel(ch);
+        QTreeWidgetItem* itemInner = new QTreeWidgetItem(selectedItem);
+
+        prepareChannelWidget(ch, itemInner);
+        prepareFrameWidget(fr, selectedItem);
     }
-    fr.add_channel(ch);
-
-    QTreeWidgetItem* itemInner = new QTreeWidgetItem(selectedItem);
-
-    prepareChannelWidget(ch, itemInner);
-
-    prepareFrameWidget(fr, selectedItem);
 }
 
 void ConfigureLoggerSDDialog::on_selectOutputFileButton_clicked()
