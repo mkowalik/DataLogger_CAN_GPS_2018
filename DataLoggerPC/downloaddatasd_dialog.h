@@ -13,7 +13,7 @@ class DownloadDataSDDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit DownloadDataSDDialog(QWidget *parent = nullptr);
+    explicit DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget *parent = nullptr);
     ~DownloadDataSDDialog();
 
 private slots:
@@ -22,9 +22,21 @@ private slots:
 
     void on_downloadAndConvertButton_clicked();
 
+    void on_selectAllButton_clicked();
+
+    void on_deselectAll_clicked();
+
 private:
     Ui::DownloadDataSDDialog *ui;
     FilesDownloadDialog * filesDownloadDialog;
+    ConvertFileThread * convertFileThread;
+
+    QString sourceDir;
+    RawDataParser rawDataParser;
+
+    static const unsigned int threadWaitTimeout = 1000;
+
+    void sourcePathChanged(QString dirPath);
 };
 
 #endif // DOWNLOADDATASD_DIALOG_H

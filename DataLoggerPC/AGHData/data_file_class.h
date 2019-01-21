@@ -17,11 +17,13 @@ using namespace std;
 class SingleChannelData {
     const ConfigChannel&    channel;
     int                     value;
+
 public:
     SingleChannelData(const ConfigChannel& channel, int value);
 
     const ConfigChannel&    get_channel() const;
-    int                     get_value() const;
+    int                     get_value_numeric() const;
+    bool                    get_value_flag(int position) const;
 };
 
 /*****      DataRow       *****/
@@ -62,7 +64,6 @@ private:
                                    set<reference_wrapper<const ConfigChannel>, WrapperLess>& valueChangedSet, \
                                    WritingClass& writer);//TODO zamienic na unordered_set
 public:
-    DataFileClass();
 
     const Config&                             get_config() const;
     tm                                        get_start_time() const;

@@ -11,8 +11,13 @@ SingleChannelData::SingleChannelData(const ConfigChannel& channel, int value) : 
 const ConfigChannel& SingleChannelData::get_channel() const{
     return channel;
 }
-int SingleChannelData::get_value() const{
+int SingleChannelData::get_value_numeric() const{
     return value;
+}
+bool SingleChannelData::get_value_flag(int position) const {
+    position = max(0, position);
+    position = min(position, static_cast<int>(channel.get_DLC()*8));
+    return (value & (1 << position)) != 0;
 }
 
 /***************      DataRow       ***************/
@@ -23,6 +28,7 @@ SingleFrameData::SingleFrameData(unsigned int msTime, const ConfigFrame& frame, 
     for (vector<ConfigChannel>::const_iterator it=frame.get_channels_begin_iterator(); it!=frame.get_channels_end_iterator(); it++){
         int value = dataParser.interpret_signed_int(rawValues+i, it->get_DLC());
         data.push_back(SingleChannelData(*it, value));
+        i += it->get_DLC();
     }
 
 };
@@ -98,7 +104,7 @@ void DataFileClass::write_to_csv_static_period_mode(vector<reference_wrapper<con
             actualMsTime += periodMs;
         }
         for(auto&& singleData : row.getData()){
-            channelValueMap[singleData.get_channel()] = singleData.get_value();
+            channelValueMap[singleData.get_channel()] = singleData.get_value_numeric();
             valueChangedSet.insert(singleData.get_channel());
         }
     }
@@ -118,7 +124,7 @@ void DataFileClass::write_to_csv_event_mode(vector<reference_wrapper<const Confi
 
     for (auto&& row : data){
         for(auto&& singleData : row.getData()){
-            channelValueMap[singleData.get_channel()] = singleData.get_value();
+            channelValueMap[singleData.get_channel()] = singleData.get_value_numeric();
             valueChangedSet.insert(singleData.get_channel());
         }
         write_single_csv_data_row(row.getMsTime(),
@@ -178,15 +184,20 @@ void DataFileClass::read_from_bin(ReadingClass& reader) {
     startTime.tm_min  = static_cast<int>(reader.reading_uint8());
     startTime.tm_sec  = static_cast<int>(reader.reading_uint8());
 
-    while(reader.eof()){
-        char            buffer[8];
-        unsigned int    msTime   = reader.reading_uint32();
-        unsigned int    frameID  = reader.reading_uint16();
-        ConfigFrame& configFrame = config.get_frame_by_id(frameID);
-        reader.reading_bytes(buffer, configFrame.get_DLC());
-        SingleFrameData dataRow(msTime, configFrame, buffer, reader.get_dataParser());
+//    try {
+        while(!reader.eof()){
+            char            buffer[8];
+            unsigned int    msTime   = reader.reading_uint32();
+            int             frameID  = reader.reading_uint16();
+            ConfigFrame& configFrame = config.get_frame_by_id(frameID);
+            reader.reading_bytes(buffer, configFrame.get_DLC());
+            SingleFrameData dataRow(msTime, configFrame, buffer, reader.get_dataParser());
 
-        data.push_back(dataRow);
-    }
+            data.push_back(dataRow);
+        }
+//    } catch (std::exception& e) {
+//        while (1){
+//        }
+//    }
 
 }

@@ -1,7 +1,7 @@
 #ifndef FILESDOWNLOAD_DIALOG_H
 #define FILESDOWNLOAD_DIALOG_H
 
-#include "thread.h"
+#include "convertfile_thread.h"
 #include <QDialog>
 
 namespace Ui {
@@ -15,11 +15,11 @@ class FilesDownloadDialog : public QDialog
 public:
     explicit FilesDownloadDialog(QWidget *parent = nullptr);
     ~FilesDownloadDialog();
-    Thread *mThread;
 private:
     Ui::FilesDownloadDialog *ui;
 public slots:
-    void onMessageSent(const int &, QString);
+    void updateProgressBar(int);
+    void addFileToList(QString fileName);
     void on_buttonBox_rejected();
 };
 

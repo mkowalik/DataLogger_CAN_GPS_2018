@@ -51,8 +51,8 @@ void ReadingClass::clear_buffer(size_t length){
 
 void ReadingClass::reading_bytes(char* aBuffer, unsigned int bytesNumber){
 
-    unsigned int bytesLeft = bytesNumber+1;
-    unsigned int bytesRead = 0;
+    int bytesLeft = bytesNumber;
+    int bytesRead = 0;
 
     while (bytesLeft > 0){
         data.read(aBuffer, static_cast<streamsize>(bytesLeft));

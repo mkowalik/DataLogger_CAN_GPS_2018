@@ -16,7 +16,7 @@ class ConfigureLoggerSDDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigureLoggerSDDialog(QWidget *parent = nullptr);
+    explicit ConfigureLoggerSDDialog(RawDataParser& rawDataParser, QWidget *parent = nullptr);
     ~ConfigureLoggerSDDialog();
 private:
     void reloadFramesTreeWidget();
@@ -37,7 +37,7 @@ private slots:
 private:
     Ui::ConfigureLoggerSDDialog *ui;
 
-    RawDataParser rawDataParser;
+    RawDataParser& rawDataParser;
     Config config;
 };
 

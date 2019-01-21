@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>620</width>
+    <width>525</width>
     <height>520</height>
    </rect>
   </property>
@@ -63,13 +63,40 @@
        <property name="text">
         <string>Select Data Directory:</string>
        </property>
-       <property name="buddy">
-        <cstring>dataDirComboBox</cstring>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>68</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="3">
+      <widget class="QPushButton" name="openDataDirButton">
+       <property name="text">
+        <string>Open Directory</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QComboBox" name="dataDirComboBox">
+     <item row="1" column="3">
+      <widget class="QPushButton" name="openDestDirButton">
+       <property name="text">
+        <string>Open Directory</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QComboBox" name="destinationDirComboBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="minimumSize">
         <size>
          <width>200</width>
@@ -81,7 +108,7 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
+     <item row="0" column="4">
       <spacer name="horizontalSpacer_5">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -104,46 +131,10 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="destinationDirComboBox">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>200</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>68</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="2">
-      <widget class="QPushButton" name="openDestDirButton">
-       <property name="text">
-        <string>Open Directory</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="2">
-      <widget class="QPushButton" name="openDataDirButton">
-       <property name="text">
-        <string>Open Directory</string>
+      <widget class="QLineEdit" name="dataDirLineEdit">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -295,21 +286,52 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="filesLabel">
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="locale">
-      <locale language="English" country="UnitedKingdom"/>
-     </property>
-     <property name="text">
-      <string>Files:</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="filesLabel">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="locale">
+        <locale language="English" country="UnitedKingdom"/>
+       </property>
+       <property name="text">
+        <string>Files:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deselectAll">
+       <property name="text">
+        <string>Deselect All</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="selectAllButton">
+       <property name="text">
+        <string>Select All</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QListWidget" name="dataFilesListWidget">
@@ -352,7 +374,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>dataDirComboBox</tabstop>
   <tabstop>destinationDirComboBox</tabstop>
   <tabstop>outputDataLayoutComboBox</tabstop>
   <tabstop>frequencySinBox</tabstop>

@@ -25,6 +25,7 @@ private:
     Ui::MainWindow *ui;
     DownloadDataSDDialog *downloadDialog;
     ConfigureLoggerSDDialog *configureDialog;
+    RawDataParser rawDataParser;
 };
 
 #endif // MAINWINDOW_H

@@ -7,7 +7,8 @@ static const QString authors("AGH Racing: M. Kowalik, A. Morzywołek");
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    rawDataParser(RawDataParser::LittleEndian)
 {
     ui->setupUi(this);
 
@@ -24,12 +25,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_downloadSDButton_clicked()
 {
-    downloadDialog = new DownloadDataSDDialog(this);
+    downloadDialog = new DownloadDataSDDialog(rawDataParser, this);
     downloadDialog->exec();
 }
 
 void MainWindow::on_configureSDButton_clicked()
 {
-    configureDialog = new ConfigureLoggerSDDialog(this);
+    configureDialog = new ConfigureLoggerSDDialog(rawDataParser, this);
     configureDialog->exec();
 }

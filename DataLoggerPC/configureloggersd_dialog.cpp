@@ -12,10 +12,10 @@
 
 #include <iostream>
 
-ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(QWidget *parent) :
+ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConfigureLoggerSDDialog),
-    rawDataParser(RawDataParser::LittleEndian)
+    rawDataParser(rawDataParser)
 {
     ui->setupUi(this);
     ui->framesTreeWidget->header()->resizeSection(0, 220);

@@ -20,7 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += c++11 -o0 -g
 
 SOURCES += \
     configureloggersd_dialog.cpp \
@@ -30,7 +30,6 @@ SOURCES += \
     mainwindow.cpp \
     newchannel_dialog.cpp \
     newframe_dialog.cpp \
-    thread.cpp \
     AGHConfig/Config.cpp \
     AGHConfig/ConfigChannel.cpp \
     AGHConfig/ConfigFrame.cpp \
@@ -38,7 +37,8 @@ SOURCES += \
     AGHConfig/ValueType.cpp \
     AGHConfig/WritingClass.cpp \
     AGHData/data_file_class.cpp \
-    AGHData/raw_data_parser.cpp
+    AGHData/raw_data_parser.cpp \
+    convertfile_thread.cpp
 
 HEADERS += \
     configureloggersd_dialog.h \
@@ -47,7 +47,6 @@ HEADERS += \
     mainwindow.h \
     newchannel_dialog.h \
     newframe_dialog.h \
-    thread.h \
     AGHConfig/Config.h \
     AGHConfig/ConfigChannel.h \
     AGHConfig/ConfigFrame.h \
@@ -55,7 +54,8 @@ HEADERS += \
     AGHConfig/ValueType.h \
     AGHConfig/WritingClass.h \
     AGHData/data_file_class.h \
-    AGHData/raw_data_parser.h
+    AGHData/raw_data_parser.h \
+    convertfile_thread.h
 
 FORMS += \
     configureloggersd_dialog.ui \
