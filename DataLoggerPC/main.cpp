@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include <QApplication>
 
+#include "AGHData/data_file_class.h"
+#include <iostream>
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

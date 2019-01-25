@@ -25,6 +25,7 @@ private slots:
 private:
     Ui::NewFrameDialog *ui;
     Config config;
+    int editingId;
 };
 
 #endif // NEWFRAME_DIALOG_H

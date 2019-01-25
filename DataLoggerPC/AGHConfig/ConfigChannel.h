@@ -7,6 +7,8 @@
 
 using namespace std;
 
+class ConfigFrame;
+
 class ConfigChannel : public WritableToBin, public ReadableFromBin {
 private:
 	ValueType		valueType;
@@ -15,11 +17,11 @@ private:
 	int				offset;
 	string			channelName;
 	string			unitName;
-	string			comment;
+    string			comment;
 public:
     ConfigChannel();
 
-    unsigned int    get_DLC() const ;
+    int             get_DLC() const ;
     ValueType       get_valueType() const ;
     int             get_multiplier() const ;
     int             get_divider() const ;

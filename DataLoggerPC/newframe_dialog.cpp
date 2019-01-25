@@ -3,10 +3,13 @@
 
 #include <QMessageBox>
 
+static const int NEW_FRAME_CONSTANT = -1;
+
 NewFrameDialog::NewFrameDialog(Config& config, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewFrameDialog),
-    config(config)
+    config(config),
+    editingId(NEW_FRAME_CONSTANT)
 {
     ui->setupUi(this);
 }
@@ -14,7 +17,8 @@ NewFrameDialog::NewFrameDialog(Config& config, QWidget *parent) :
 NewFrameDialog::NewFrameDialog(int id, QString moduleName, Config& config, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewFrameDialog),
-    config(config)
+    config(config),
+    editingId(id)
 {
     ui->setupUi(this);
     ui->id_SpinBox->setValue(id);
@@ -36,7 +40,8 @@ NewFrameDialog::~NewFrameDialog()
 
 void NewFrameDialog::on_buttonBox_accepted()
 {
-    if (!config.has_frame_with_id(ui->id_SpinBox->value())){
+    if (((editingId != NEW_FRAME_CONSTANT) && (editingId == ui->id_SpinBox->value())) ||
+            (!config.has_frame_with_id(ui->id_SpinBox->value()))){
         accept();
     } else {
         QMessageBox::warning(this, "Wrong ID Error", "Frame with given ID Exists in configuration. Choose other ID.");

@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include "filesdownload_dialog.h"
+#include <QString>
+#include <AGHConfig/WritingClass.h>
 
 namespace Ui {
 class DownloadDataSDDialog;
@@ -19,14 +21,13 @@ public:
 private slots:
     void on_openDataDirButton_clicked();
     void on_openDestDirButton_clicked();
-
     void on_downloadAndConvertButton_clicked();
-
     void on_selectAllButton_clicked();
-
     void on_deselectAll_clicked();
 
 private:
+    static const QStringList outputDataLayoutOptionsString;
+    static const QList<WritableToCSV::FileTimingMode> outputDataLayoutOptionsTimingMode;
     Ui::DownloadDataSDDialog *ui;
     FilesDownloadDialog * filesDownloadDialog;
     ConvertFileThread * convertFileThread;

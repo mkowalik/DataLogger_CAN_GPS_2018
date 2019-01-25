@@ -10,6 +10,7 @@ using namespace std;
 class WritingClass {
 private:
     static const unsigned int BUFFER_SIZE = 128;
+    char            decimalSeparator;
     ofstream        fileStream;
     RawDataParser   dataParser;
     char            buffer[BUFFER_SIZE];
@@ -20,7 +21,10 @@ public:
     void            write_uint16(unsigned int aValue);
     void            write_uint32(unsigned int aValue);
     void            write_int16(int aValue);
-    void            write_string(string aStr, int aLength = -1);
+    void            write_string(string aStr, bool writeTerminatingZero, int aLength = -1);
+
+    void            write_double_to_string(double value, int decimal_figures, char decimalSeparator, bool writeTerminatingZero);
+    void            write_int_to_string(int value, bool writeTerminatingZero);
 };
 
 class WritableToBin {
@@ -40,7 +44,7 @@ public:
         StaticPeriod1000HzMode
     };
 
-    virtual void    write_to_csv(FileTimingMode mode, WritingClass& writer) = 0;
+    virtual void    write_to_csv(FileTimingMode mode, WritingClass& writer, char decimalSeparator) = 0;
     virtual         ~WritableToCSV() = 0;
 };
 

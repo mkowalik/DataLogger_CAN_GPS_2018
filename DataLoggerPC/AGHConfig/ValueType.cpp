@@ -31,7 +31,7 @@ ValueType::ValueType(bool setSigned, bool set16bit, bool setOnOffType, bool setF
     }
 }
 
-unsigned int ValueType::channelDLC() const{
+int ValueType::channelDLC() const{
 	if (is16BitLength()){
 		return 2;
 	} 

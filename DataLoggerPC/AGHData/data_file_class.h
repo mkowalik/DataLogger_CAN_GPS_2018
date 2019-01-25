@@ -5,7 +5,6 @@
 #include <map>
 #include <set>
 #include <ctime>
-#include <functional>
 #include "AGHConfig/ReadingClass.h"
 #include "AGHConfig/Config.h"
 #include "AGHData/raw_data_parser.h"
@@ -23,7 +22,6 @@ public:
 
     const ConfigChannel&    get_channel() const;
     int                     get_value_numeric() const;
-    bool                    get_value_flag(int position) const;
 };
 
 /*****      DataRow       *****/
@@ -48,33 +46,66 @@ private:
     vector<SingleFrameData> data;
 
     struct WrapperLess {
-        bool operator()(const ConfigChannel& arg1, const ConfigChannel& arg2) const {return arg1 < arg2;}
+        bool operator()(const ConfigChannel* arg1, const ConfigChannel* arg2) const {return arg1 < arg2;}
     };
 
-    void write_to_csv_static_period_mode(vector<reference_wrapper<const ConfigChannel>>& allChannelsVector, \
-                                         map<reference_wrapper<const ConfigChannel>, int, WrapperLess>& channelValueMap,
+    void write_to_csv_static_period_mode(map<const ConfigChannel*, int, WrapperLess>& channelValueMap,
                                          WritingClass& writer,
-                                         unsigned int periodMs);
-    void write_to_csv_event_mode(vector<reference_wrapper<const ConfigChannel>>& allChannelsVector, \
-                                 map<reference_wrapper<const ConfigChannel>, int, WrapperLess>& channelValueMap,
-                                 WritingClass& writer);
+                                         unsigned int periodMs,
+                                         char decimalSeparator);
+    void write_to_csv_event_mode(map<const ConfigChannel*, int, WrapperLess>& channelValueMap,
+                                 WritingClass& writer, char decimalSeparator);
     void write_single_csv_data_row(unsigned int msTime, \
-                                   const vector<reference_wrapper<const ConfigChannel>>& allChannelsVector, \
-                                   const map<reference_wrapper<const ConfigChannel>, int, WrapperLess>& channelValueMap, \
-                                   set<reference_wrapper<const ConfigChannel>, WrapperLess>& valueChangedSet, \
-                                   WritingClass& writer);//TODO zamienic na unordered_set
+                                   const map<const ConfigChannel*, int, WrapperLess>& channelValueMap, \
+                                   set<const ConfigChannel*, WrapperLess>& valueChangedSet, \
+                                   char decimalSeparator, \
+                                   WritingClass& writer);
 public:
 
-    const Config&                             get_config() const;
-    tm                                        get_start_time() const;
-    const vector<SingleFrameData>&            get_data() const;
-    vector <SingleFrameData>::const_iterator  get_data_begin_iterator() const;
-    vector <SingleFrameData>::const_iterator  get_data_end_iterator() const;
+    class iterator : public std::iterator<std::forward_iterator_tag, SingleFrameData> {
+        friend class DataFileClass;
+    private:
+       vector<SingleFrameData>::iterator innerIterator;
+       DataFileClass& dataFileReference;
+    public:
+       iterator(vector<SingleFrameData>::iterator it, DataFileClass& dataFileRef);
+       bool operator==(const DataFileClass::iterator& second) const;
+       bool operator!=(const DataFileClass::iterator& second) const;
+       SingleFrameData& operator*();
+       SingleFrameData* operator->();
+       iterator& operator++();
+       iterator operator++(int);
+    };
 
-    void                                      add_data_row(SingleFrameData dataRow);
+    class const_iterator : public std::iterator<std::forward_iterator_tag, SingleFrameData> {
+        friend class DataFileClass;
+    private:
+       vector<SingleFrameData>::const_iterator innerIterator;
+       const DataFileClass& dataFileReference;
+    public:
+       const_iterator(vector<SingleFrameData>::const_iterator it, const DataFileClass& dataFileRef);
+       bool operator==(const DataFileClass::const_iterator& second) const;
+       bool operator!=(const DataFileClass::const_iterator& second) const;
+       const SingleFrameData& operator*();
+       const SingleFrameData* operator->();
+       const_iterator& operator++();
+       const_iterator operator++(int);
+    };
 
-    void                                      write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer) override;
-    void                                      read_from_bin(ReadingClass& reader) override;
+    const Config&                       get_config() const;
+    tm                                  get_start_time() const;
+    const vector<SingleFrameData>&      get_data() const;
+
+    void                                append_data_row(SingleFrameData dataRow);
+
+    iterator                            begin();
+    iterator                            end();
+    const_iterator                      cbegin() const;
+    const_iterator                      cend() const;
+
+
+    void                                write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator) override;
+    void                                read_from_bin(ReadingClass& reader) override;
 
 };
 

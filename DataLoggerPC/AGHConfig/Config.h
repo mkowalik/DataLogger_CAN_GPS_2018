@@ -5,42 +5,75 @@
 #include "ConfigFrame.h"
 #include "ConfigChannel.h"
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 using namespace std;
 
-class Config : public WritableToBin, public ReadableFromBin, public WritableToCSV {
+class Config : public WritableToBin, public ReadableFromBin {
 private:
-    unsigned int            version;
-    unsigned int            subVersion;
-    vector<ConfigFrame>     frames;
-    unordered_map <int, vector<ConfigFrame>::const_iterator> frames_map;
+    int             version;
+    int             subVersion;
+    map <int, ConfigFrame> frames_map;
+    static const int DEFAULT_VERSION = 1;
+    static const int DEFAULT_SUB_VERSION = 2;
 public:
-    void                                set_version(unsigned int sVersion);
-    void                                set_subVersion(unsigned int sSubVersion);
 
-    unsigned int                        get_version() const;
-    unsigned int                        get_subVersion() const;
-    unsigned int                        get_numOfFrames() const;
-    ConfigFrame&                        get_frame_by_id(int id);
-    ConfigFrame&                        get_frame_by_position(int position);
-    vector<reference_wrapper<const ConfigChannel>> get_all_channels() const;
-    vector<ConfigFrame>::const_iterator get_frames_begin_citerator() const;
-    vector<ConfigFrame>::const_iterator get_frames_end_citerator() const;
-    vector<ConfigFrame>::iterator       get_frames_begin_iterator();
-    vector<ConfigFrame>::iterator       get_frames_end_iterator();
+    class iterator : public std::iterator<std::forward_iterator_tag, ConfigFrame> {
+        friend class Config;
+    private:
+       map <int, ConfigFrame>::iterator innerIterator;
+       Config& configReference;
+    public:
+       iterator(map <int, ConfigFrame>::iterator it, Config& configRef);
+       bool operator==(const Config::iterator& second) const;
+       bool operator!=(const Config::iterator& second) const;
+       ConfigFrame& operator*();
+       ConfigFrame* operator->();
+       iterator& operator++();
+       iterator operator++(int);
+    };
 
-    bool                                has_frame_with_id(int id) const;
+    class const_iterator : public std::iterator<std::forward_iterator_tag, const ConfigFrame> {
+        friend class Config;
+    private:
+       map <int, ConfigFrame>::const_iterator innerIterator;
+       const Config& configReference;
+    public:
+       const_iterator(map <int, ConfigFrame>::const_iterator it, const Config& configRef);
+       bool operator==(const Config::const_iterator& second) const;
+       bool operator!=(const Config::const_iterator& second) const;
+       const ConfigFrame& operator*();
+       const ConfigFrame* operator->();
+       const_iterator& operator++();
+       const_iterator operator++(int);
+    };
 
-    void                                add_frame(ConfigFrame aFrame);
-    void                                remove_frame_by_position(int position);
-    void                                remove_frame_by_id(int id);
-    void                                reset();
+    Config();
 
-    void                                write_to_bin(WritingClass& writer) override;
-    void                                write_to_csv(FileTimingMode mode, WritingClass& writer) override;
-    void                                read_from_bin(ReadingClass& reader) override;
+    void            set_version(int sVersion);
+    void            set_subVersion(int sSubVersion);
+
+    int             get_version() const;
+    int             get_subVersion() const;
+    int             get_numOfFrames() const;
+    ConfigFrame&    get_frame_by_id(int id);
+
+    iterator        begin();
+    iterator        end();
+    const_iterator  cbegin();
+    const_iterator  cend();
+
+    bool            has_frame_with_id(int id) const;
+
+    void            add_frame(ConfigFrame& aFrame);
+    void            remove_frame_by_id(int id);
+    void            reset();
+
+    void            write_to_bin(WritingClass& writer) override;
+    void            read_from_bin(ReadingClass& reader) override;
+
 
 };
+
 
 #endif // CONFIG_H

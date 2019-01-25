@@ -7,7 +7,12 @@
 #include <AGHConfig/WritingClass.h>
 #include <iostream>
 
-ConvertFileThread::ConvertFileThread(RawDataParser& parser, QObject *parent) : QThread(parent), Cancel(false), rawDataParser(parser)
+ConvertFileThread::ConvertFileThread(RawDataParser& parser, QObject *parent) :
+    QThread(parent),
+    Cancel(false),
+    rawDataParser(parser),
+    decimalSeparator(DEFAULT_DECIMAL_SEPARATOR),
+    timingMode(DEFAULT_TIMING_MODE)
 {
 
 }
@@ -38,7 +43,7 @@ void ConvertFileThread::run(){
 
         WritingClass writer(csvFilename.toStdString(), rawDataParser);
 
-        dataFile.write_to_csv(WritableToCSV::EventMode, writer);
+        dataFile.write_to_csv(this->timingMode, writer, decimalSeparator);
 
         std::cout << "DONE!" << std::endl;
 
@@ -57,6 +62,17 @@ void ConvertFileThread::addFilesToConvert(QList<QFileInfo> filesList){
 
 void ConvertFileThread::setDestinationDirectory(QString destination){
     this->destinationDirectory = destination;
+}
+
+void ConvertFileThread::setDecimaleSeparator(char aDecimalSeparaotr){
+    if (aDecimalSeparaotr != ',' && aDecimalSeparaotr != '.'){
+        throw invalid_argument("Decimal separator must be ',' or '.'.");
+    }
+    decimalSeparator = aDecimalSeparaotr;
+}
+
+void ConvertFileThread::setFileTimingMode(WritableToCSV::FileTimingMode mode){
+    this->timingMode = mode;
 }
 
 /*Thread::~Thread(){

@@ -8,10 +8,11 @@ using namespace std;
 
 class ReadingClass{
 private:
-    static const unsigned int   BUFFER_SIZE = 128;
+    static const int            BUFFER_SIZE = 128;
     RawDataParser&              dataParser;
     char                        buffer[BUFFER_SIZE];
     ifstream                    data;
+    streamoff                   fileSize;
 
     void                        clear_buffer(size_t length);
 public:
@@ -20,10 +21,13 @@ public:
     unsigned int                reading_uint16();
     unsigned int                reading_uint8();
     int                         reading_int16();
-    string                      reading_string(unsigned int length);
-    void                        reading_bytes(char* buffer, unsigned int bytesNumber);
+    string                      reading_string(int length, bool readTerminatingZero);
+    void                        reading_bytes(char* buffer, int bytesNumber);
 
-    bool                        eof() const;
+    bool                        eof();
+    int                         file_size() const;
+    int                         current_pos();
+    int                         bytes_left();
 
     const RawDataParser&        get_dataParser() const;
 };

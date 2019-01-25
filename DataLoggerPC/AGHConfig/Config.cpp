@@ -5,134 +5,164 @@
 
 using namespace std;
 
-unsigned int Config::get_version() const {
+Config::Config() : version(DEFAULT_VERSION), subVersion(DEFAULT_SUB_VERSION)
+{
+}
+
+int Config::get_version() const {
 	return version;
 }
 
-unsigned int Config::get_subVersion() const {
+int Config::get_subVersion() const {
 	return subVersion;
 }
 
-unsigned int Config::get_numOfFrames() const {
-    return static_cast<unsigned int>(frames.size());
+int Config::get_numOfFrames() const {
+    return static_cast<int>(frames_map.size());
 }
 
-void Config::set_version(unsigned int sVersion){
-    version = min(sVersion, static_cast<unsigned int>(UINT16_MAX)); //TODO rzucić wyjątkiem
+void Config::set_version(int sVersion){
+    if (sVersion < 0 || sVersion > UINT16_MAX){
+        throw std::invalid_argument("Version should be between 0 and UINT16_MAX");
+    }
+    version = sVersion;
 }
 
-void Config::set_subVersion(unsigned int sSubVersion){
-    subVersion = min(sSubVersion, static_cast<unsigned int>(UINT16_MAX)); //TODO rzucić wyjątkiem
-}
-
-vector <ConfigFrame>::const_iterator Config::get_frames_begin_citerator() const {
-    return frames.cbegin();
-}
-
-vector <ConfigFrame>::const_iterator Config::get_frames_end_citerator() const {
-    return frames.cend();
-}
-
-vector <ConfigFrame>::iterator Config::get_frames_begin_iterator() {
-    return frames.begin();
-}
-
-vector <ConfigFrame>::iterator Config::get_frames_end_iterator() {
-    return frames.end();
+void Config::set_subVersion(int sSubVersion){
+    if (sSubVersion < 0 || sSubVersion > UINT16_MAX){
+        throw std::invalid_argument("SubVersion should be between 0 and UINT16_MAX");
+    }
+    subVersion = sSubVersion;
 }
 
 ConfigFrame& Config::get_frame_by_id(int id) {
-    return const_cast<ConfigFrame&>(*(frames_map.at(id)));
-}
-
-ConfigFrame& Config::get_frame_by_position(int position) {
-    return frames[position];
-}
-
-vector<reference_wrapper<const ConfigChannel>> Config::get_all_channels() const {
-
-    vector<reference_wrapper<const ConfigChannel> > ret;
-
-    for (vector <ConfigFrame>::const_iterator frameIt=get_frames_begin_citerator() ; frameIt!=get_frames_end_citerator(); frameIt++){
-        for(vector <ConfigChannel>::const_iterator channelIt = frameIt->get_channels_begin_iterator(); channelIt!=frameIt->get_channels_end_iterator(); channelIt++){
-            ret.push_back(ref(*channelIt));
-        }
+    if (frames_map.find(id) == frames_map.end()){
+        throw std::out_of_range("Frame with given id does not exist");
     }
-    return ret;
+    return frames_map.at(id);
 }
 
 bool Config::has_frame_with_id(int id) const {
     return (frames_map.find(id) != frames_map.end());
 }
 
-
-void Config::add_frame(ConfigFrame aFrame){
-    frames.push_back(aFrame);
-
-    frames_map.insert({aFrame.get_ID(), frames.cend()-1});
-}
-
-void Config::remove_frame_by_position(int position){
-    if (static_cast<int>(frames.size()) > position){
-        int id = frames[position].get_ID();
-        frames_map.erase(id);
-        frames.erase(frames.begin() + position);
-    }
+void Config::add_frame(ConfigFrame& aFrame){
+    frames_map.insert({aFrame.get_ID(), aFrame});
 }
 
 void Config::remove_frame_by_id(int id){
-    if (frames_map.find(id) != frames_map.cend()) {
-        vector<ConfigFrame>::const_iterator it = frames_map.at(id);
-        frames.erase(it);
-        frames_map.erase(id);
+    if (frames_map.find(id) == frames_map.end()){
+        throw std::out_of_range("Frame with given id does not exist");
     }
+    frames_map.erase(id);
 }
 
 void Config::reset(){
-    frames.clear();
     frames_map.clear();
+}
+
+Config::iterator Config::begin(){
+    return iterator(frames_map.begin(), *this);
+}
+
+Config::iterator Config::end(){
+    return iterator(frames_map.end(), *this);
+}
+
+Config::const_iterator Config::cbegin(){
+    return const_iterator(frames_map.cbegin(), *this);
+}
+
+Config::const_iterator Config::cend(){
+    return const_iterator(frames_map.cend(), *this);
 }
 
 void Config::write_to_bin(WritingClass& writer){
 
-    writer.write_uint16(get_version());
-    writer.write_uint16(get_subVersion());
-    writer.write_uint16(get_numOfFrames());
+    writer.write_uint16(static_cast<unsigned int>(get_version()));
+    writer.write_uint16(static_cast<unsigned int>(get_subVersion()));
+    writer.write_uint16(static_cast<unsigned int>(get_numOfFrames()));
 
-    for (vector<ConfigFrame>::iterator it=frames.begin(); it!=frames.end(); it++){
-        it->write_to_bin(writer);
+    for (map<int, ConfigFrame>::iterator it=frames_map.begin(); it!=frames_map.end(); it++){
+        it->second.write_to_bin(writer);
     }
 
 }
 
 void Config::read_from_bin(ReadingClass& reader){
-    set_version(reader.reading_uint16());
-    set_subVersion(reader.reading_uint16());
-    unsigned int framesNumber = reader.reading_uint16();
+    set_version(static_cast<int>(reader.reading_uint16()));
+    set_subVersion(static_cast<int>(reader.reading_uint16()));
+    int framesNumber = static_cast<int>(reader.reading_uint16());
 
-    for(unsigned int i=0; i<framesNumber; ++i){
+    for(int i=0; i<framesNumber; i++){
         ConfigFrame frame;
         frame.read_from_bin(reader);
         add_frame(frame);
     }
 }
 
-void Config::write_to_csv(FileTimingMode mode, WritingClass& writer){
+Config::iterator::iterator(map <int, ConfigFrame>::iterator it, Config& configRef) :
+    innerIterator(it),
+    configReference(configRef)
+{
+}
 
-    if (mode==EventMode){
-        vector<reference_wrapper<const ConfigChannel> > allChannels = get_all_channels();
+bool Config::iterator::operator==(const Config::iterator &second) const {
+    return innerIterator == second.innerIterator;
+}
 
-        for(vector<reference_wrapper<const ConfigChannel> >::iterator channelIt = allChannels.begin(); \
-            channelIt!=allChannels.end(); \
-            channelIt++){
+bool Config::iterator::operator!=(const Config::iterator &second) const {
+    return innerIterator != second.innerIterator;
+}
 
-            const ConfigChannel& tmp = *channelIt;
-            writer.write_string(tmp.get_channelName() + " [" + tmp.get_unitName() + "]");
-            writer.write_string(";");
-        }
-        writer.write_string("\r\n");
-    } else {
-        throw "Not implemented yet";
-    }
+ConfigFrame& Config::iterator::operator*(){
+    return innerIterator->second;
+}
 
+ConfigFrame* Config::iterator::operator->(){
+    return &(innerIterator->second);
+}
+
+Config::iterator& Config::iterator::operator++(){
+    ++innerIterator;
+    return *this;
+}
+
+Config::iterator Config::iterator::operator++(int){
+    iterator ret(*this);
+    ++innerIterator;
+    return ret;
+}
+
+Config::const_iterator::const_iterator(map <int, ConfigFrame>::const_iterator it, const Config& configRef) :
+    innerIterator(it),
+    configReference(configRef)
+{
+}
+
+bool Config::const_iterator::operator==(const Config::const_iterator &second) const {
+    return innerIterator == second.innerIterator;
+}
+
+bool Config::const_iterator::operator!=(const Config::const_iterator &second) const {
+    return innerIterator != second.innerIterator;
+}
+
+const ConfigFrame& Config::const_iterator::operator*(){
+    return innerIterator->second;
+}
+
+const ConfigFrame* Config::const_iterator::operator->(){
+    return &(innerIterator->second);
+}
+
+Config::const_iterator& Config::const_iterator::operator++(){
+    ++innerIterator;
+    return *this;
+}
+
+Config::const_iterator Config::const_iterator::operator++(int){
+    const_iterator ret(*this);
+    ++innerIterator;
+    return ret;
 }

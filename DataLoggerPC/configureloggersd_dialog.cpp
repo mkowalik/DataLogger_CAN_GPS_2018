@@ -19,7 +19,7 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
 {
     ui->setupUi(this);
     ui->framesTreeWidget->header()->resizeSection(0, 220);
-    ui->framesTreeWidget->header()->resizeSection(1, 50);
+    ui->framesTreeWidget->header()->resizeSection(1, 30);
     ui->framesTreeWidget->header()->resizeSection(2, 65);
     ui->framesTreeWidget->header()->resizeSection(3, 60);
     ui->framesTreeWidget->header()->resizeSection(4, 50);
@@ -31,6 +31,107 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
 ConfigureLoggerSDDialog::~ConfigureLoggerSDDialog()
 {
     delete ui;
+}
+
+void ConfigureLoggerSDDialog::on_selectOutputFileButton_clicked()
+{
+    //TODO przerobic na zwykle okno, zeby sprawdzic czy user nie kliknal cancel
+    QString outputFilePath = QFileDialog::getSaveFileName(this, "Choose Output File", "", "AGH Config (*.aghconf)");
+
+    if (!outputFilePath.endsWith(".aghconf")){
+        QMessageBox::warning(this, "Wrong file name", "Given file does not have \".aghconf\" extension. Choose proper file.");
+        return;
+    }
+
+    ui->selectOutputFileComboBox->addItem(outputFilePath);
+    ui->selectOutputFileComboBox->setCurrentText(outputFilePath);
+}
+
+void ConfigureLoggerSDDialog::on_selectPrototypeFileButton_clicked()
+{
+    QString prototypeFilePath = QFileDialog::getOpenFileName(this, "Choose Prototype File", "", tr("AGH Config/Log (*.aghconf *.aghlog)"));
+
+    if (!(prototypeFilePath.endsWith(".aghconf") || prototypeFilePath.endsWith(".aghlog"))){
+        QMessageBox::warning(this, "Wrong file name", "Given file does not have \".aghconf\" or \".aghlog\" extension. Choose proper file.");
+        return;
+    }
+
+    ReadingClass reader(prototypeFilePath.toStdString(), rawDataParser);
+    config.reset();
+    try {
+        config.read_from_bin(reader);
+    } catch(std::exception e){
+        QMessageBox::warning(this, "Prototype file problem.", QString("Problem with reading prototype file. "));
+        return;
+    }
+
+    ui->prototypeFileComboBox->addItem(prototypeFilePath);
+    ui->prototypeFileComboBox->setCurrentText(prototypeFilePath);
+
+    reloadFramesTreeWidget();
+}
+
+void ConfigureLoggerSDDialog::on_resetButton_clicked()
+{
+    if (QMessageBox::question(this, "Reset", "Do you really want to reset all frames and channels?") == QMessageBox::Yes){
+        ui->prototypeFileComboBox->setCurrentText("");
+        config.reset();
+    }
+    reloadFramesTreeWidget();
+}
+
+void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(const QPoint &pos)
+{
+    QMenu menu(this); // add menu items
+    menu.addAction(ui->actionEdit);
+    menu.addAction(ui->actionDelete);
+
+    ui->actionDelete->setData(QVariant(pos)); // if you will need the position data save it to the action
+    ui->actionEdit->setData(QVariant(pos)); // if you will need the position data save it to the action
+
+    menu.exec(ui->framesTreeWidget->mapToGlobal(pos));
+}
+
+void ConfigureLoggerSDDialog::on_actionEdit_triggered()
+{
+    QTreeWidgetItem *clickedItem = ui->framesTreeWidget->itemAt(ui->actionDelete->data().toPoint());
+    QTreeWidgetItem *parent = clickedItem->parent();
+    editGivenItem(clickedItem, parent);
+}
+
+void ConfigureLoggerSDDialog::on_actionDelete_triggered()
+{
+    QTreeWidgetItem *clickedItem = ui->framesTreeWidget->itemAt(ui->actionDelete->data().toPoint());
+
+    QTreeWidgetItem *parent = clickedItem->parent();
+
+    if (!parent){
+
+        int id = idMap.at(clickedItem);
+
+        if (QMessageBox::question(this, "Delete frame", "Do you relly want to delete this frame?") == QMessageBox::StandardButton::Yes){
+            config.remove_frame_by_id(id);
+            idMap.erase(clickedItem);
+            ui->framesTreeWidget->takeTopLevelItem(ui->framesTreeWidget->indexOfTopLevelItem(clickedItem));
+        }
+    } else {
+        int frameId = idMap.at(parent);
+        ConfigFrame& fr = config.get_frame_by_id(frameId);
+
+        int channelIndex = parent->indexOfChild(clickedItem);
+
+        if (QMessageBox::question(this, "Delete channel", "Do you relly want to delete this channel?") == QMessageBox::StandardButton::Yes){
+            fr.remove_channel_by_position(channelIndex);
+            parent->removeChild(clickedItem);
+            prepareFrameWidget(fr, parent);
+        }
+    }
+}
+
+void ConfigureLoggerSDDialog::on_framesTreeWidget_itemDoubleClicked(QTreeWidgetItem *clickedItem, int column)
+{
+    QTreeWidgetItem *parent = clickedItem->parent();
+    editGivenItem(clickedItem, parent);
 }
 
 void ConfigureLoggerSDDialog::on_newFrameButton_clicked()
@@ -48,9 +149,10 @@ void ConfigureLoggerSDDialog::on_newFrameButton_clicked()
 
         prepareFrameWidget(fr, item);
 
+        idMap.insert(make_pair(item, fr.get_ID()));
+
         ui->framesTreeWidget->addTopLevelItem(item);
     }
-
 }
 
 void ConfigureLoggerSDDialog::on_addChannelButton_clicked()
@@ -61,16 +163,15 @@ void ConfigureLoggerSDDialog::on_addChannelButton_clicked()
         return;
     }
     QTreeWidgetItem* selectedItem = selectedList[0];
-    int index = ui->framesTreeWidget->indexOfTopLevelItem(selectedItem);
-    if (index == -1){
+    if (ui->framesTreeWidget->indexOfTopLevelItem(selectedItem) == -1){
         selectedItem = selectedItem->parent();
-        index = ui->framesTreeWidget->indexOfTopLevelItem(selectedItem);
     }
-    if (index == -1){
+    if (ui->framesTreeWidget->indexOfTopLevelItem(selectedItem) == -1){
         QMessageBox::warning(this, "Select proper frame", "Select proper frame to which add the channel");
         return;
     }
-    ConfigFrame& fr = config.get_frame_by_position(index);
+    int id = idMap.at(selectedItem);
+    ConfigFrame& fr = config.get_frame_by_id(id);
     if (fr.get_DLC() == 8){
         QMessageBox::warning(this, "Frame is full", "Selected frame has 8 bytes defined. Remove channel or choose another frame.");
         return;
@@ -101,46 +202,94 @@ void ConfigureLoggerSDDialog::on_addChannelButton_clicked()
     }
 }
 
-void ConfigureLoggerSDDialog::on_selectOutputFileButton_clicked()
+void ConfigureLoggerSDDialog::on_saveConfigButton_clicked()
 {
-    QString outputFilePath = QFileDialog::getSaveFileName(this, "Choose Output File", "", "AGH Config (*.aghconf)");
-
-    if (!outputFilePath.endsWith(".aghconf")){
-        QMessageBox::warning(this, "Wrong file name", "Given file does not have \".aghconf\" extension. Choose proper file.");
+    QString filePath = ui->selectOutputFileComboBox->currentText();
+    if (filePath.isEmpty()){
+        QMessageBox::warning(this, "Choose file", "Choose file path to which you want to save config.");
         return;
     }
+    if (!filePath.endsWith(".aghconf")){
+        QMessageBox::warning(this, "Choose file", "Choose file with .aghconf extension.");
+        return;
+    }
+    QFileInfo file(filePath);
 
-    ui->selectOutputFileComboBox->addItem(outputFilePath);
-    ui->selectOutputFileComboBox->setCurrentText(outputFilePath);
-}
+    if (file.exists()){
+        if (QMessageBox::question(this, "File exists", "Chosen file exists. Do You want to overwrite it?") != QMessageBox::Yes){
+            return;
+        }
+    }
 
-void ConfigureLoggerSDDialog::on_selectPrototypeFileButton_clicked()
-{
-    QString prototypeFilePath = QFileDialog::getOpenFileName(this, "Choose Prototype File", "", "AGH Log (*.aghlog);AGH Config (*.aghconf)");
+    WritingClass writer(filePath.toStdString(), rawDataParser);
+    config.write_to_bin(writer);
 
-    ui->prototypeFileComboBox->addItem(prototypeFilePath);
-    ui->prototypeFileComboBox->setCurrentText(prototypeFilePath);
-
-    ReadingClass reader(prototypeFilePath.toStdString(), rawDataParser);
-    config.reset();
-    config.read_from_bin(reader);   //TODO sprawdzic czy sukces
-
-    reloadFramesTreeWidget();
+    QMessageBox::information(this, "Config export completed", "Your config has ben exported to \"" + filePath + "\" file.");
 }
 
 void ConfigureLoggerSDDialog::reloadFramesTreeWidget(){
 
     ui->framesTreeWidget->clear();
 
-    for (auto it = config.get_frames_begin_citerator(); it!=config.get_frames_end_citerator(); it++){
+    for (auto it = config.begin(); it!=config.end(); it++){
 
         QTreeWidgetItem* item = new QTreeWidgetItem(ui->framesTreeWidget);
         prepareFrameWidget(*it, item);
         ui->framesTreeWidget->addTopLevelItem(item);
 
-        for (auto itCh = it->get_channels_begin_iterator(); itCh != it->get_channels_end_iterator(); itCh++){
+        idMap.insert(make_pair(item, it->get_ID()));
+
+        for (auto itCh = it->begin(); itCh != it->end(); itCh++){
             QTreeWidgetItem* itemInner = new QTreeWidgetItem(item);
             prepareChannelWidget(*itCh, itemInner);
+        }
+    }
+}
+
+void ConfigureLoggerSDDialog::editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent){
+
+    if (!parent){
+
+        int id = idMap.at(clickedItem);
+        ConfigFrame& fr = config.get_frame_by_id(id);
+
+        NewFrameDialog frameDialog(fr.get_ID(), QString::fromStdString(fr.get_moduleName()), config, this);
+
+        if (frameDialog.exec() == QDialog::Accepted){
+            fr.set_ID(frameDialog.getID());
+            fr.set_moduleName(frameDialog.getModuleName().toStdString());
+        }
+
+        prepareFrameWidget(fr, clickedItem);
+
+    } else {
+
+        int id = idMap.at(parent);
+        ConfigFrame& fr = config.get_frame_by_id(id);
+
+        int channelIndex = parent->indexOfChild(clickedItem);
+        ConfigChannel& ch = fr.get_channel_by_position(channelIndex);
+
+        NewChannelDialog channelDialog(ch.get_valueType(), ch.get_multiplier(), ch.get_divider(), ch.get_offset(),
+                                       QString::fromStdString(ch.get_channelName()), QString::fromStdString(ch.get_unitName()),
+                                       QString::fromStdString(ch.get_comment()), fr, &ch, this);
+
+        if (channelDialog.exec() == QDialog::Accepted){
+            ValueType vt(channelDialog.getIsSigned(),
+                         channelDialog.getIs16Bit(),
+                         channelDialog.getIsOnOff(),
+                         channelDialog.getIsFlag(),
+                         channelDialog.getIsCustom());
+            ch.set_valueType(vt);
+            ch.set_multiplier(channelDialog.getMultiplier());
+            ch.set_divider(channelDialog.getDivider());
+            ch.set_offset(channelDialog.getOffset());
+            ch.set_channelName(channelDialog.getChannelName().toStdString());
+            ch.set_unitName(channelDialog.getUnit().toStdString());
+            ch.set_comment(channelDialog.getComment().toStdString());
+
+            prepareFrameWidget(fr, parent);
+            prepareChannelWidget(ch, clickedItem);
         }
     }
 }
@@ -172,140 +321,4 @@ void ConfigureLoggerSDDialog::prepareChannelWidget(const ConfigChannel& channel,
     pWidget->setText(6, QString::fromStdString(channel.get_unitName()));
     pWidget->setText(7, QString::fromStdString(channel.get_comment()));
 
-}
-
-void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(const QPoint &pos)
-{
-    QMenu menu(this); // add menu items
-    menu.addAction(ui->actionEdit);
-    menu.addAction(ui->actionDelete);
-
-    ui->actionDelete->setData(QVariant(pos)); // if you will need the position data save it to the action
-    ui->actionEdit->setData(QVariant(pos)); // if you will need the position data save it to the action
-
-    menu.exec(ui->framesTreeWidget->mapToGlobal(pos));
-}
-
-void ConfigureLoggerSDDialog::on_actionEdit_triggered()
-{
-    QTreeWidgetItem *clickedItem = ui->framesTreeWidget->itemAt(ui->actionDelete->data().toPoint());
-    QTreeWidgetItem *parent = clickedItem->parent();
-    editGivenItem(clickedItem, parent);
-}
-
-void ConfigureLoggerSDDialog::on_framesTreeWidget_itemDoubleClicked(QTreeWidgetItem *clickedItem, int column)
-{
-    QTreeWidgetItem *parent = clickedItem->parent();
-    editGivenItem(clickedItem, parent);
-}
-
-void ConfigureLoggerSDDialog::editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent){
-
-    if (!parent){
-
-        int frameIndex = ui->framesTreeWidget->indexOfTopLevelItem(clickedItem);
-        ConfigFrame& fr = config.get_frame_by_position(frameIndex);
-
-        NewFrameDialog frameDialog(fr.get_ID(), QString::fromStdString(fr.get_moduleName()), config, this);
-
-        if (frameDialog.exec() == QDialog::Accepted){
-            fr.set_ID(frameDialog.getID());
-            fr.set_moduleName(frameDialog.getModuleName().toStdString());
-        }
-
-        prepareFrameWidget(fr, clickedItem);
-
-    } else {
-
-        int frameIndex = ui->framesTreeWidget->indexOfTopLevelItem(parent);
-        ConfigFrame& fr = config.get_frame_by_position(frameIndex);
-
-        int channelIndex = parent->indexOfChild(clickedItem);
-        ConfigChannel& ch = fr.get_channel_by_position(channelIndex);
-
-        NewChannelDialog channelDialog(ch.get_valueType(), ch.get_multiplier(), ch.get_divider(), ch.get_offset(),
-                                       QString::fromStdString(ch.get_channelName()), QString::fromStdString(ch.get_unitName()),
-                                       QString::fromStdString(ch.get_comment()), fr, &ch, this);
-
-        if (channelDialog.exec() == QDialog::Accepted){
-            ValueType vt(channelDialog.getIsSigned(),
-                         channelDialog.getIs16Bit(),
-                         channelDialog.getIsOnOff(),
-                         channelDialog.getIsFlag(),
-                         channelDialog.getIsCustom());
-            ch.set_valueType(vt);
-            ch.set_multiplier(channelDialog.getMultiplier());
-            ch.set_divider(channelDialog.getDivider());
-            ch.set_offset(channelDialog.getOffset());
-            ch.set_channelName(channelDialog.getChannelName().toStdString());
-            ch.set_unitName(channelDialog.getUnit().toStdString());
-            ch.set_comment(channelDialog.getComment().toStdString());
-        }
-
-        prepareFrameWidget(fr, parent);
-        prepareChannelWidget(ch, clickedItem);
-    }
-
-}
-
-void ConfigureLoggerSDDialog::on_actionDelete_triggered()
-{
-    QTreeWidgetItem *clickedItem = ui->framesTreeWidget->itemAt(ui->actionDelete->data().toPoint());
-
-    QTreeWidgetItem *parent = clickedItem->parent();
-
-    if (!parent){
-        int frameIndex = ui->framesTreeWidget->indexOfTopLevelItem(clickedItem);
-
-        if (QMessageBox::question(this, "Delete frame", "Do you relly want to delete this frame?") == QMessageBox::StandardButton::Yes){
-            config.remove_frame_by_position(frameIndex);
-            ui->framesTreeWidget->takeTopLevelItem(frameIndex);
-        }
-    } else {
-        int frameIndex = ui->framesTreeWidget->indexOfTopLevelItem(parent);
-        ConfigFrame& fr = config.get_frame_by_position(frameIndex);
-
-        int channelIndex = parent->indexOfChild(clickedItem);
-
-        if (QMessageBox::question(this, "Delete channel", "Do you relly want to delete this channel?") == QMessageBox::StandardButton::Yes){
-            fr.remove_channel_by_position(channelIndex);
-            parent->removeChild(clickedItem);
-            prepareFrameWidget(fr, parent);
-        }
-    }
-
-}
-
-void ConfigureLoggerSDDialog::on_resetButton_clicked()
-{
-    if (QMessageBox::question(this, "Reset", "Do you really want to reset all frames and channels?") == QMessageBox::Yes){
-        ui->prototypeFileComboBox->setCurrentText("");
-        config.reset();
-    }
-    reloadFramesTreeWidget();
-}
-
-void ConfigureLoggerSDDialog::on_saveConfigButton_clicked()
-{
-    QString filePath = ui->selectOutputFileComboBox->currentText();
-    if (filePath.isEmpty()){
-        QMessageBox::warning(this, "Choose file", "Choose file path to which you want to save config.");
-        return;
-    }
-    if (!filePath.endsWith(".aghconf")){
-        QMessageBox::warning(this, "Choose file", "Choose file with .aghconf extension.");
-        return;
-    }
-    QFileInfo file(filePath);
-
-    if (file.exists()){
-        if (QMessageBox::question(this, "File exists", "Chosen file exists. Do You want to overwrite it?") != QMessageBox::Yes){
-            return;
-        }
-    }
-
-    WritingClass writer(filePath.toStdString(), rawDataParser);
-    config.write_to_bin(writer);
-
-    QMessageBox::information(this, "Config export completed", "Your config has ben exported to \"" + filePath + "\" file.");
 }

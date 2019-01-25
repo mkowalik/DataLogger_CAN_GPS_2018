@@ -10,6 +10,19 @@
 
 #include <iostream>
 
+const QStringList DownloadDataSDDialog::outputDataLayoutOptionsString = {"Event Timing Mode",
+                                                                         "Static Period - 10Hz Mode",
+                                                                         "Static Period - 100Hz Mode",
+                                                                         "Static Period - 250Hz Mode",
+                                                                         "Static Period - 500Hz Mode",
+                                                                         "Static Period - 1000Hz Mode"};
+const QList<WritableToCSV::FileTimingMode> DownloadDataSDDialog::outputDataLayoutOptionsTimingMode = {WritableToCSV::EventMode,
+                                                                                                      WritableToCSV::StaticPeriod10HzMode,
+                                                                                                      WritableToCSV::StaticPeriod100HzMode,
+                                                                                                      WritableToCSV::StaticPeriod250HzMode,
+                                                                                                      WritableToCSV::StaticPeriod500HzMode,
+                                                                                                      WritableToCSV::StaticPeriod1000HzMode};
+
 DownloadDataSDDialog::DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DownloadDataSDDialog),
@@ -18,6 +31,11 @@ DownloadDataSDDialog::DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget
     ui->setupUi(this);
     convertFileThread = new ConvertFileThread(rawDataParser, this);
     filesDownloadDialog = new FilesDownloadDialog(this);
+
+    ui->outputDataLayoutComboBox->clear();
+    for (auto& str: outputDataLayoutOptionsString){
+        ui->outputDataLayoutComboBox->addItem(str);
+    }
 
     connect(convertFileThread, &ConvertFileThread::actualProgress, filesDownloadDialog, &FilesDownloadDialog::updateProgressBar);
     connect(convertFileThread, SIGNAL(actualFileConverting(QString)), filesDownloadDialog, SLOT(addFileToList(QString)));
@@ -97,13 +115,15 @@ void DownloadDataSDDialog::on_downloadAndConvertButton_clicked()
         filesList.append(QFileInfo(this->sourceDir + "/" + pItem->text()));
     }
 
-    convertFileThread->addFilesToConvert(filesList);
-
     QDir dataDir(ui->destinationDirComboBox->currentText());
     if (ui->destinationDirComboBox->currentText().isEmpty() || !dataDir.exists()){
         QMessageBox::warning(this, "Given directory not exists.", "Givent destination directory doeas not exists. Choose proper directory path to save files.");
         return;
     }
+
+    convertFileThread->setFileTimingMode(outputDataLayoutOptionsTimingMode[ui->outputDataLayoutComboBox->currentIndex()]);
+    convertFileThread->addFilesToConvert(filesList);
+    convertFileThread->setDecimaleSeparator(ui->decimalSeparatorComboBox->currentText()[0].toLatin1());
 
     convertFileThread->setDestinationDirectory(ui->destinationDirComboBox->currentText());
     convertFileThread->start();

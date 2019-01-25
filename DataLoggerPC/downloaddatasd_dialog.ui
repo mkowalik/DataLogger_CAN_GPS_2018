@@ -172,6 +172,26 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout_2">
+     <item row="1" column="2" colspan="2">
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="1" colspan="2">
+      <widget class="QComboBox" name="outputDataLayoutComboBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="outputDataLayoutLabel">
        <property name="text">
@@ -183,28 +203,28 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="frequencyLabel">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Frequency</string>
-       </property>
-       <property name="buddy">
-        <cstring>frequencySinBox</cstring>
+        <string>Choose CSV file decimal separator:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1" colspan="2">
-      <widget class="QComboBox" name="outputDataLayoutComboBox">
-       <property name="enabled">
+     <item row="1" column="1">
+      <widget class="QComboBox" name="decimalSeparatorComboBox">
+       <property name="editable">
         <bool>false</bool>
+       </property>
+       <property name="maxVisibleItems">
+        <number>2</number>
        </property>
        <item>
         <property name="text">
-         <string>Event Timing</string>
+         <string>,</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Set Frequency Timing</string>
+         <string>.</string>
         </property>
        </item>
       </widget>
@@ -221,54 +241,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item row="1" column="2">
-      <spacer name="horizontalSpacer_6">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="3">
-      <spacer name="horizontalSpacer_7">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="1">
-      <widget class="QSpinBox" name="frequencySinBox">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="minimum">
-        <number>10</number>
-       </property>
-       <property name="maximum">
-        <number>1000</number>
-       </property>
-       <property name="singleStep">
-        <number>100</number>
-       </property>
-       <property name="value">
-        <number>1000</number>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
@@ -376,7 +348,6 @@
  <tabstops>
   <tabstop>destinationDirComboBox</tabstop>
   <tabstop>outputDataLayoutComboBox</tabstop>
-  <tabstop>frequencySinBox</tabstop>
  </tabstops>
  <resources/>
  <connections/>
