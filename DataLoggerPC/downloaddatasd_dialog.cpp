@@ -1,6 +1,6 @@
 #include "downloaddatasd_dialog.h"
 #include "ui_downloaddatasd_dialog.h"
-#include "filesdownload_dialog.h"
+#include "downloadingprogress_dialog.h"
 
 #include <QFileDialog>
 #include <QDebug>
@@ -37,8 +37,12 @@ DownloadDataSDDialog::DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget
         ui->outputDataLayoutComboBox->addItem(str);
     }
 
-    connect(convertFileThread, &ConvertFileThread::actualProgress, filesDownloadDialog, &FilesDownloadDialog::updateProgressBar);
-    connect(convertFileThread, SIGNAL(actualFileConverting(QString)), filesDownloadDialog, SLOT(addFileToList(QString)));
+    connect(convertFileThread, SIGNAL(actualProgress(int)), filesDownloadDialog, SLOT(updateProgressBar(int)));
+    connect(convertFileThread, SIGNAL(actualFileConverting(QString, QString)), filesDownloadDialog, SLOT(addFileToList(QString, QString)));
+    connect(convertFileThread, SIGNAL(errorWhileConvertingPreviousFile()), filesDownloadDialog, SLOT(errorInLastFile()));
+    connect(convertFileThread, SIGNAL(finished()), filesDownloadDialog, SLOT(downloadingComplete()));
+    connect(convertFileThread, SIGNAL(fatalErrorSignal()), this, SLOT(fatalErrorInConvertingThreadSlot()));
+    connect(convertFileThread, SIGNAL(started()), filesDownloadDialog, SLOT(convertingThreadStarted()));
 }
 
 DownloadDataSDDialog::~DownloadDataSDDialog()
@@ -46,6 +50,11 @@ DownloadDataSDDialog::~DownloadDataSDDialog()
     delete ui;
     delete filesDownloadDialog;
     delete convertFileThread;
+}
+
+void DownloadDataSDDialog::fatalErrorInConvertingThreadSlot(){
+    filesDownloadDialog->close();
+    QMessageBox::warning(this, "Converting error", "Fatal error while converting data files.");
 }
 
 void DownloadDataSDDialog::on_openDataDirButton_clicked()
@@ -108,11 +117,26 @@ void DownloadDataSDDialog::on_openDestDirButton_clicked()
 
 }
 
-void DownloadDataSDDialog::on_downloadAndConvertButton_clicked()
+void DownloadDataSDDialog::on_selectAllButton_clicked()
+{
+    ui->dataFilesListWidget->selectAll();
+}
+
+void DownloadDataSDDialog::on_deselectAll_clicked()
+{
+    ui->dataFilesListWidget->clearSelection();
+}
+
+void DownloadDataSDDialog::on_convertSelectedButton_clicked()
 {
     QList<QFileInfo> filesList;
     for (QListWidgetItem* pItem: ui->dataFilesListWidget->selectedItems()){
         filesList.append(QFileInfo(this->sourceDir + "/" + pItem->text()));
+    }
+
+    if (filesList.isEmpty()){
+        QMessageBox::warning(this, "Choose files to conver.", "List of files to copy/convert is empty. Choose files to proceed.");
+        return;
     }
 
     QDir dataDir(ui->destinationDirComboBox->currentText());
@@ -128,19 +152,9 @@ void DownloadDataSDDialog::on_downloadAndConvertButton_clicked()
     convertFileThread->setDestinationDirectory(ui->destinationDirComboBox->currentText());
     convertFileThread->start();
     if (!filesDownloadDialog->exec()){
-        convertFileThread->cancel();
+        convertFileThread->cancelExecution();
         convertFileThread->wait(threadWaitTimeout);
     }
 
-    convertFileThread->cancel();
-}
-
-void DownloadDataSDDialog::on_selectAllButton_clicked()
-{
-    ui->dataFilesListWidget->selectAll();
-}
-
-void DownloadDataSDDialog::on_deselectAll_clicked()
-{
-    ui->dataFilesListWidget->clearSelection();
+    convertFileThread->cancelExecution();
 }

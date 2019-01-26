@@ -27,9 +27,11 @@ public:
     void setFileTimingMode(WritableToCSV::FileTimingMode mode);
 signals:
     void actualProgress(int percentageProgress);
-    void actualFileConverting(QString name);
+    void actualFileConverting(QString sourceName, QString destinationName);
+    void errorWhileConvertingPreviousFile();
+    void fatalErrorSignal();
 public slots:
-    void cancel();
+    void cancelExecution();
 };
 
 #endif // THREAD_H

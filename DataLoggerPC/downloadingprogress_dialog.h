@@ -14,13 +14,15 @@ class FilesDownloadDialog : public QDialog
 
 public:
     explicit FilesDownloadDialog(QWidget *parent = nullptr);
-    ~FilesDownloadDialog();
+    ~FilesDownloadDialog() override;
 private:
     Ui::FilesDownloadDialog *ui;
 public slots:
     void updateProgressBar(int);
-    void addFileToList(QString fileName);
-    void on_buttonBox_rejected();
+    void addFileToList(QString sourceFileName, QString destinationFileName);
+    void errorInLastFile();
+    void downloadingComplete();
+    void convertingThreadStarted();
 };
 
 #endif // FILESDOWNLOAD_DIALOG_H

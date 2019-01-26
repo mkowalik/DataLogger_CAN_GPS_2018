@@ -315,16 +315,9 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="downloadAndConvertButton">
+      <widget class="QPushButton" name="convertSelectedButton">
        <property name="text">
-        <string>Download and Convert Selected</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="downloadSelectedButton">
-       <property name="text">
-        <string>Download Selected</string>
+        <string>Convert Selected files to CSV</string>
        </property>
       </widget>
      </item>

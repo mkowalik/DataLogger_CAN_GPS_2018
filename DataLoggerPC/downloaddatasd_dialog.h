@@ -2,7 +2,7 @@
 #define DOWNLOADDATASD_DIALOG_H
 
 #include <QDialog>
-#include "filesdownload_dialog.h"
+#include "downloadingprogress_dialog.h"
 #include <QString>
 #include <AGHConfig/WritingClass.h>
 
@@ -21,9 +21,10 @@ public:
 private slots:
     void on_openDataDirButton_clicked();
     void on_openDestDirButton_clicked();
-    void on_downloadAndConvertButton_clicked();
     void on_selectAllButton_clicked();
     void on_deselectAll_clicked();
+    void fatalErrorInConvertingThreadSlot();
+    void on_convertSelectedButton_clicked();
 
 private:
     static const QStringList outputDataLayoutOptionsString;

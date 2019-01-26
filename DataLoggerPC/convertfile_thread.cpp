@@ -5,7 +5,6 @@
 
 #include <AGHData/data_file_class.h>
 #include <AGHConfig/WritingClass.h>
-#include <iostream>
 
 ConvertFileThread::ConvertFileThread(RawDataParser& parser, QObject *parent) :
     QThread(parent),
@@ -19,40 +18,52 @@ ConvertFileThread::ConvertFileThread(RawDataParser& parser, QObject *parent) :
 
 void ConvertFileThread::run(){
 
+    Cancel = false;
+
+    QFileInfo file(destinationDirectory);
+
+    if(destinationDirectory.isEmpty() || !file.exists()){
+        emit fatalErrorSignal();
+        return;
+    }
+
     int filesToConvert = filesList.length();
     int filesConverted = 0;
 
-    while(!filesList.isEmpty()){
+    while(!filesList.isEmpty() && !this->Cancel){
 
-        QFileInfo actualFile = filesList.back();
-
-        emit actualProgress((filesConverted * 100) / filesToConvert);
-        emit actualFileConverting(actualFile.absoluteFilePath());
-
-        DataFileClass dataFile;
-        ReadingClass reader(actualFile.absoluteFilePath().toStdString(), rawDataParser);
-        dataFile.read_from_bin(reader);
+        QFileInfo actualFile = filesList.front();
 
         QString csvFilename = actualFile.fileName();
         csvFilename = csvFilename.remove(QRegExp("aghlog\\b"));
         csvFilename = csvFilename.append("csv");
-
         csvFilename = destinationDirectory + "/" + csvFilename;
 
-        std::cout << csvFilename.toStdString() << std::endl;
+        emit actualFileConverting(actualFile.absoluteFilePath(), csvFilename);
 
-        WritingClass writer(csvFilename.toStdString(), rawDataParser);
+        qDebug() << csvFilename;
 
-        dataFile.write_to_csv(this->timingMode, writer, decimalSeparator);
+        try {
+            DataFileClass dataFile;
+            ReadingClass reader(actualFile.absoluteFilePath().toStdString(), rawDataParser);
+            dataFile.read_from_bin(reader);
 
-        std::cout << "DONE!" << std::endl;
+            WritingClass writer(csvFilename.toStdString(), rawDataParser);
+            dataFile.write_to_csv(this->timingMode, writer, decimalSeparator);
 
-        filesList.pop_back();
+            qDebug() << "DONE!";
+        } catch (exception e){
+            emit errorWhileConvertingPreviousFile();
+            qDebug() << "EXCEPTION!";
+        }
+        filesList.pop_front();
         filesConverted++;
+
+        emit actualProgress((filesConverted * 100) / filesToConvert);
     }
 }
 
-void ConvertFileThread::cancel(){
+void ConvertFileThread::cancelExecution(){
     this->Cancel = true;
 }
 

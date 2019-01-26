@@ -216,15 +216,19 @@ void DataFileClass::read_from_bin(ReadingClass& reader) {
     startTime.tm_min  = static_cast<int>(reader.reading_uint8());
     startTime.tm_sec  = static_cast<int>(reader.reading_uint8());
 
-    while(!reader.eof()){
-        char            buffer[8];
-        unsigned int    msTime   = reader.reading_uint32();
-        int             frameID  = static_cast<int>(reader.reading_uint16());
-        ConfigFrame& configFrame = config.get_frame_by_id(frameID);
-        reader.reading_bytes(buffer, configFrame.get_DLC());
-        SingleFrameData dataRow(msTime, configFrame, buffer, reader.get_dataParser());
+    try {
+        while(!reader.eof()){
+            char            buffer[8];
+            unsigned int    msTime   = reader.reading_uint32();
+            int             frameID  = static_cast<int>(reader.reading_uint16());
+            ConfigFrame& configFrame = config.get_frame_by_id(frameID);
+            reader.reading_bytes(buffer, configFrame.get_DLC());
+            SingleFrameData dataRow(msTime, configFrame, buffer, reader.get_dataParser());
 
-        data.push_back(dataRow);
+            data.push_back(dataRow);
+        }
+    } catch (exception e){
+        throw e;    //TODO
     }
 }
 
