@@ -371,7 +371,6 @@ int main(void)
 	  Error_Handler();
   }
 
-
   if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &CANReceiver, &rtcDriver, &ledDebug1Driver) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }

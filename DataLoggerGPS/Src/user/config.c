@@ -10,7 +10,7 @@
 
 #define MIN(A,B)  (((A) < (B)) ? (A) : (B))
 
-uint8_t assertCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint8_t id, uint16_t dlc){
+uint8_t assertCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint16_t id, uint16_t dlc){
 
 	if (id >= CONFIG_ID_NUMBER){
 		return 0;
