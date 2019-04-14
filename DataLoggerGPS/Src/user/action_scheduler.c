@@ -30,7 +30,7 @@ ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSe
 	pSelf->pRTCDriver = pRTCDriver;
 	pSelf->pStatusLedDriver = pStatusLedDriver;
 
-	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON, ACTION_SCHEDULER_IDLE_LED_OFF) != LedDriver_Status_OK){
+	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
 	pSelf->state = ActionScheduler_State_Idle;
@@ -205,7 +205,7 @@ static ActionScheduler_Status_TypeDef ActionScheduler_logCloseState(ActionSchedu
 	if (DataSaver_stopLogging(pSelf->pDataSaver) != DataSaver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
-	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON, ACTION_SCHEDULER_IDLE_LED_OFF) != LedDriver_Status_OK){
+	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
 	pSelf->state = ActionScheduler_State_Idle;

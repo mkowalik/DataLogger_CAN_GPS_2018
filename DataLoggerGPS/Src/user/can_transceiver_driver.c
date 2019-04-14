@@ -13,13 +13,56 @@
 #define	CAN_BANKS_NUMBER			14 //TODO 14 czy 28? 14 bo przy uzyciu jednego CANA mozna tylko 14, ale moze odpalic 2-go CANa i go nie uzywac?
 #define CAN_ID_MASK_bp				5
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, CAN_HandleTypeDef* pHcan){
+#define	CAN_SYNC_JUMP_WIDTH		CAN_SJW_3TQ
+
+
+static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_HandleTypeDef* pHcan, uint32_t prescalerValue, CAN_TypeDef* pCANInstance, uint32_t timeSeg1, uint32_t timeSeg2){
+
+	/*pHcan->Instance = pCANInstance;
+	pHcan->Init.Prescaler = prescalerValue;
+	pHcan->Init.Mode = CAN_MODE_NORMAL;
+	pHcan->Init.SyncJumpWidth = CAN_SYNC_JUMP_WIDTH;
+	pHcan->Init.TimeSeg1 = timeSeg1;
+	pHcan->Init.TimeSeg2 = timeSeg2;
+	pHcan->Init.TimeTriggeredMode = DISABLE;
+	pHcan->Init.AutoBusOff = ENABLE;
+	pHcan->Init.AutoWakeUp = ENABLE;
+	pHcan->Init.AutoRetransmission = DISABLE;
+	pHcan->Init.ReceiveFifoLocked = DISABLE;
+	pHcan->Init.TransmitFifoPriority = DISABLE;*/
+
+	  hcan1.Instance = CAN1;
+	  hcan1.Init.Prescaler = 6;
+	  hcan1.Init.Mode = CAN_MODE_NORMAL;
+	  hcan1.Init.SyncJumpWidth = CAN_SJW_3TQ;
+	  hcan1.Init.TimeSeg1 = CAN_BS1_6TQ;
+	  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+	  hcan1.Init.TimeTriggeredMode = DISABLE;
+	  hcan1.Init.AutoBusOff = ENABLE;
+	  hcan1.Init.AutoWakeUp = ENABLE;
+	  hcan1.Init.AutoRetransmission = DISABLE;
+	  hcan1.Init.ReceiveFifoLocked = DISABLE;
+	  hcan1.Init.TransmitFifoPriority = DISABLE;
+	if (HAL_CAN_Init(&hcan1) != HAL_OK)
+	{
+		return CANTransceiverDriver_Status_Error;
+	}
+	return CANTransceiverDriver_Status_OK;
+
+}
+
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, Config_TypeDef* pConfig, CAN_HandleTypeDef* pHcan, CAN_TypeDef* pCANInstance){
 
 	if (pHcan == NULL){
 		return CANTransceiverDriver_Status_Error;
 	}
+	CANTransceiverDriver_Status_TypeDef ret = CANTransceiverDriver_Status_OK;
 
 	pSelf->pHcan = pHcan;
+
+	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, 24/4, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){//TODO pass proper prescaller
+		return ret;
+	}
 
 	for (uint16_t i=0; i<CAN_MAX_CALLBACK_NUMBER; i++){
 		pSelf->pRxCallbackFunctions[i] = NULL;
@@ -221,15 +264,12 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_start(CANTransceiverDri
 	return CANTransceiverDriver_Status_OK;
 
 }
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTransceiverDriver_TypeDef* pSelf, CANData_TypeDef* pData){
 	//TODO
 	UNUSED(pSelf);
 	UNUSED(pData);
 }
-#pragma GCC diagnostic pop
 
 /****************************** Implementations of stm32f7xx_hal_can.h __weak functions placeholders ******************************/
 
@@ -284,4 +324,3 @@ void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan){
 	}
 
 }
-

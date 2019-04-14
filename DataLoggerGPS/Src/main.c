@@ -1,61 +1,34 @@
-
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  * This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
+  * @attention
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
-  * All rights reserved.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
   *
-  * Redistribution and use in source and binary forms, with or without 
-  * modification, are permitted, provided that the following conditions are met:
-  *
-  * 1. Redistribution of source code must retain the above copyright notice, 
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * This software component is licensed by ST under Ultimate Liberty license
+  * SLA0044, the "License"; You may not use this file except in compliance with
+  * the License. You may obtain a copy of the License at:
+  *                             www.st.com/SLA0044
   *
   ******************************************************************************
   */
+/* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f7xx_hal.h"
 #include "can.h"
 #include "fatfs.h"
+#include "gfxsimulator.h"
 #include "rtc.h"
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
 
+/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include "user/config.h"
@@ -70,10 +43,24 @@
 
 /* USER CODE END Includes */
 
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
 
 ConfigDataManager_TypeDef		configDataManager;
 DataSaver_TypeDef				dataSaver;
@@ -96,194 +83,18 @@ LedDriver_TypeDef				ledDebug2Driver;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
-
 /* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
 
 /* USER CODE END PFP */
 
+/* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-
-void testConfig(){
-
-	  ConfigChannel_TypeDef channel0;
-	  channel0.divider = 1;
-	  channel0.multiplier = 1;
-	  channel0.offset = 0;
-	  channel0.valueType = UNSIGNED_16BIT;
-
-	  ConfigChannel_TypeDef channel1 = channel0;
-	  ConfigChannel_TypeDef channel2 = channel0;
-	  ConfigChannel_TypeDef channel3 = channel0;
-
-	  ConfigFrame_TypeDef configFrame;
-	  configFrame.ID = 0x600;
-	  configFrame.DLC = 8;
-
-	  configFrame.channels[0] = channel0;
-	  configFrame.channels[1] = channel1;
-	  configFrame.channels[2] = channel2;
-	  configFrame.channels[3] = channel3;
-
-	  Config_TypeDef config;
-	  config.version = CONFIG_FILE_USED_VERSION;
-	  config.subversion = CONFIG_FILE_USED_SUBVERSION;
-	  config.num_of_frames = 1;
-	  config.frames[0] = configFrame;
-
-	  //CANReceiver_init(&CANReceiver, &config);
-
-	  CANData_TypeDef logedFrames[1000];
-	  uint32_t i= 0;
-
-	  while (1)
-	  {
-		  CANData_TypeDef tmp;
-		  if (CANReceiver_pullLastFrame(&CANReceiver, &tmp) == CANReceiver_Status_OK){
-			  logedFrames[(i++)%1000] = tmp;
-			  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
-		  } else {
-			  HAL_GPIO_TogglePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin);
-		  }
-	  }
-}
-void SDTestFunction(){
-
-	  FRESULT res = f_mount(&SDFatFS, "", 1);
-
-	  FRESULT open_res = f_open(&SDFile, "/test240.txt", FA_READ | FA_WRITE | FA_OPEN_ALWAYS);
-
-	  char text[] = "aaaaaaaaaaaaaaaaaaahello uSD World";
-	  uint32_t length = strlen(text);
-
-	  unsigned int write_res;// = f_puts(text, &SDFile);
-	  f_write(&SDFile, text, length, &write_res);
-
-	  FRESULT sycc_res = f_sync(&SDFile);
-	  FRESULT close_res = f_close(&SDFile);
-
-	  HAL_SD_CardInfoTypeDef info;
-	  memset(&info, 0, sizeof(HAL_SD_CardInfoTypeDef));
-	  HAL_SD_GetCardInfo(&hsd1, &info);
-
-	  HAL_SD_CardCIDTypeDef cid;
-	  memset(&cid, 0, sizeof(HAL_SD_CardCIDTypeDef));
-	  HAL_SD_GetCardCID(&hsd1, &cid);
-
-}
-
-void RTCTestFunction(){
-
-	  RTCDriver_TypeDef	rtcDriver;
-	  RTCDriver_Status_TypeDef stat = RTCDriver_init(&rtcDriver, &hrtc);
-
-	  uint8_t prevSec = 0;
-	  while (1)
-	  {
-
-		  DateTime_TypeDef date;
-		  RTCDriver_getDateAndTime(&rtcDriver, &date);
-		  if (date.second != prevSec){
-			  prevSec = date.second;
-			  HAL_GPIO_TogglePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin);
-		  }
-		  HAL_GPIO_TogglePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin);
-		  HAL_Delay(1000);
-
-	  }
-}
-
-void ConfigTestFunction(){
-
-	  FileSystemWrapper_Status_TypeDef status;
-	  FileSystemWrapper_TypeDef fileSystem = (FileSystemWrapper_TypeDef){0};
-	  status = FileSystemWrapper_init(&fileSystem);
-
-	  FileSystemWrapper_File_TypeDef file;
-	  status = FileSystemWrapper_open(&fileSystem, &file, "logger.aghconf");
-
-	  FileReadingBuffer_Status_TypeDef status2;
-	  FileReadingBuffer_TypeDef readingBuffer = (FileReadingBuffer_TypeDef){0};
-	  status2 = FileReadingBuffer_init(&readingBuffer, &file);
-
-	  uint16_t ver, subver, frames_no, id;
-	  uint8_t dlc;
-	  status2 = FileReadingBuffer_readUInt16(&readingBuffer, &ver);
-	  status2 = FileReadingBuffer_readUInt16(&readingBuffer, &subver);
-	  status2 = FileReadingBuffer_readUInt16(&readingBuffer, &frames_no);
-	  status2 = FileReadingBuffer_readUInt16(&readingBuffer, &id);
-	  status2 = FileReadingBuffer_readUInt8(&readingBuffer, &dlc);
-
-}
-
-void FileReadWriteTest(){
-
-	//MUST BE GLOBAL!!!
-	FileSystemWrapper_TypeDef fileSystem;
-	FileSystemWrapper_File_TypeDef	file2;
-	FileWritingBuffer_TypeDef	writeBuffer;
-	//MUST BE GLOBAL!!! or zero'ed properly
-
-	  FileSystemWrapper_Status_TypeDef status;
-	  status = FileSystemWrapper_init(&fileSystem);
-
-	  ConfigDataManager_TypeDef	configManager = (ConfigDataManager_TypeDef){0};
-	  ConfigDataManager_init(&configManager, &fileSystem);
-
-	  Config_TypeDef* pConfig;
-	  ConfigDataManager_getConfigPointer(&configManager, &pConfig);
-
-	  status = FileSystemWrapper_open(&fileSystem, &file2, "/testtest2.out");
-
-	  FileWritingBuffer_init(&writeBuffer, &file2);
-
-	  for (uint16_t i=0; i<300; i++){
-		  FileWritingBuffer_writeUInt16(&writeBuffer, i);
-	  }
-	  FileWritingBuffer_flush(&writeBuffer);
-	  FileSystemWrapper_close(&file2);
-
-}
-
-void AllTogetherTest(){
-
-	  RTCDriver_Status_TypeDef statusRTC			= RTCDriver_init(&rtcDriver, &hrtc);
-	  FileSystemWrapper_Status_TypeDef statusFS		= FileSystemWrapper_init(&fileSystem);
-	  ConfigDataManager_Status_TypeDef statusCDM	= ConfigDataManager_init(&configDataManager, &fileSystem);
-//	  DataSaver_Status_TypeDef statusDS				= DataSaver_init(&dataSaver, &configDataManager, &fileSystem);
-
-	  DateTime_TypeDef dateTime;
-	  statusRTC = RTCDriver_getDateAndTime(&rtcDriver, &dateTime);
-
-	  CANData_TypeDef data;
-	  data.ID = 2;
-	  data.DLC = 3;
-	  data.msTime = 115;
-	  data.Data[0] = 15;
-	  data.Data[1] = 30;
-	  data.Data[2] = 60;
-
-
-//	  statusDS = DataSaver_startLogging(&dataSaver, dateTime);
-//	  statusDS = DataSaver_writeData(&dataSaver, &data);
-//	  statusDS = DataSaver_stopLogging(&dataSaver);
-}
-
-#pragma GCC diagnostic pop
-#pragma GCC diagnostic pop
-#pragma GCC diagnostic pop
 
 void HAL_SYSTICK_Callback(void){
 	if (LedDriver_1msElapsedCallbackHandler(&ledDebug1Driver) != LedDriver_Status_OK){
+		Error_Handler();
+	}
+	if (LedDriver_1msElapsedCallbackHandler(&ledDebug2Driver) != LedDriver_Status_OK){
 		Error_Handler();
 	}
 	/*if (ActionScheduler_1msElapsedCallbackHandler(&actionScheduler) != ActionScheduler_Status_OK){
@@ -295,8 +106,7 @@ void HAL_SYSTICK_Callback(void){
 
 /**
   * @brief  The application entry point.
-  *
-  * @retval None
+  * @retval int
   */
 int main(void)
 {
@@ -304,7 +114,7 @@ int main(void)
 
   /* USER CODE END 1 */
 
-  /* MCU Configuration----------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -324,8 +134,6 @@ int main(void)
   MX_GPIO_Init();
   MX_SDMMC1_SD_Init();
   MX_USART1_UART_Init();
-  MX_CAN1_Init();
-  MX_RTC_Init();
   MX_FATFS_Init();
 
   /* Initialize interrupts */
@@ -342,9 +150,6 @@ int main(void)
 	  Error_Handler();
   }
   if (RTCDriver_init(&rtcDriver, &hrtc) != RTCDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (CANTransceiverDriver_init(&canTransceiverDriver, &hcan1) != CANTransceiverDriver_Status_OK){
 	  Error_Handler();
   }
   if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
@@ -367,6 +172,9 @@ int main(void)
   if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
 	  Error_Handler();
   }
+  if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
+	  Error_Handler();
+  }
   if (CANReceiver_init(&CANReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
 	  Error_Handler();
   }
@@ -384,15 +192,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  return 1;
+    /* USER CODE END WHILE */
 
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-
+    /* USER CODE BEGIN 3 */
+	  Error_Handler();
   }
   /* USER CODE END 3 */
-
 }
 
 /**
@@ -401,19 +206,16 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-  RCC_OscInitTypeDef RCC_OscInitStruct;
-  RCC_ClkInitTypeDef RCC_ClkInitStruct;
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
-
-    /**Configure the main internal regulator output voltage 
-    */
+  /** Configure the main internal regulator output voltage 
+  */
   __HAL_RCC_PWR_CLK_ENABLE();
-
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
+  /** Initializes the CPU, AHB and APB busses clocks 
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
@@ -425,18 +227,16 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
-    /**Activate the Over-Drive mode 
-    */
+  /** Activate the Over-Drive mode 
+  */
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
+  /** Initializes the CPU, AHB and APB busses clocks 
+  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -446,9 +246,8 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART1
                               |RCC_PERIPHCLK_SDMMC1|RCC_PERIPHCLK_CLK48;
   PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
@@ -457,19 +256,8 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.Sdmmc1ClockSelection = RCC_SDMMC1CLKSOURCE_CLK48;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
-    /**Configure the Systick interrupt time 
-    */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-
-    /**Configure the Systick 
-    */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-
-  /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 /**
@@ -478,24 +266,27 @@ void SystemClock_Config(void)
   */
 static void MX_NVIC_Init(void)
 {
+  /* RCC_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(RCC_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(RCC_IRQn);
+  /* CAN1_TX_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(CAN1_TX_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
   /* CAN1_RX0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
   /* CAN1_RX1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
-  /* CAN1_TX_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(CAN1_TX_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
   /* CAN1_SCE_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(CAN1_SCE_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(CAN1_SCE_IRQn);
+  /* USART1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* SDMMC1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SDMMC1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(SDMMC1_IRQn);
-  /* RCC_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(RCC_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(RCC_IRQn);
 }
 
 /* USER CODE BEGIN 4 */
@@ -506,11 +297,9 @@ static uint16_t errorInCounter = 0;
 
 /**
   * @brief  This function is executed in case of error occurrence.
-  * @param  file: The file name as string.
-  * @param  line: The line in file as a number.
   * @retval None
   */
-void _Error_Handler(char *file, int line)
+void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
@@ -520,8 +309,10 @@ void _Error_Handler(char *file, int line)
   while(1)
   {
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
 	  HAL_Delay(50);
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
 	  HAL_Delay(50);
   }
   /* USER CODE END Error_Handler_Debug */
@@ -535,7 +326,7 @@ void _Error_Handler(char *file, int line)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(uint8_t* file, uint32_t line)
+void assert_failed(uint8_t *file, uint32_t line)
 { 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
@@ -543,13 +334,5 @@ void assert_failed(uint8_t* file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

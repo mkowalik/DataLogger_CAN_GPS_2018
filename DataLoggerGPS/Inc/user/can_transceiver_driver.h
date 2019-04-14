@@ -10,6 +10,7 @@
 
 #include "user/can_data.h"
 #include "can.h"
+#include "config.h"
 
 #define	CAN_MAX_CALLBACK_NUMBER	3
 
@@ -45,7 +46,7 @@ typedef struct {
 	void* pErrorCallbackArguemnts[CAN_MAX_CALLBACK_NUMBER];
 } CANTransceiverDriver_TypeDef;
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, CAN_HandleTypeDef* pHcan);
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, Config_TypeDef* pConfig, CAN_HandleTypeDef* pHcan, CAN_TypeDef* pCANInstance);
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTransceiverDriver_TypeDef* pSelf, uint16_t* pFilters, uint16_t filtersNumber);
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHandler(CANTransceiverDriver_TypeDef* pSelf, uint16_t ID, uint8_t DLC, uint8_t aData[8], uint16_t timestamp);

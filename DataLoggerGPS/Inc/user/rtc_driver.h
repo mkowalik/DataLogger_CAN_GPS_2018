@@ -23,6 +23,7 @@ typedef struct {
 typedef enum {
 	RTCDriver_Status_OK = 0,
 	RTCDriver_Status_NotInitialisedError,
+	RTCDriver_Status_TimeAndDateNotRestoredError,
 	RTCDriver_Status_Error
 } RTCDriver_Status_TypeDef;
 
@@ -30,6 +31,11 @@ typedef enum {
 	RTCDriver_State_UnInitialized = 0,
 	RTCDriver_State_Ready
 } RTCDriver_State_TypeDef;
+
+static const uint8_t  backupRegistersCount = 3;
+static const uint32_t backupRegistersIndexes[] = {0, 10, 12};
+static const uint32_t backupRegistersValues[] = {0x5678, 0x1345, 0x5678};
+
 
 typedef struct {
 	RTC_HandleTypeDef*		pRTCHandler;

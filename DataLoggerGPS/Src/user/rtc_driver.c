@@ -6,6 +6,77 @@
  */
 
 #include <user/rtc_driver.h>
+#include "rtc.h"
+
+
+
+static RTCDriver_Status_TypeDef RTCDriver_HALInit(RTCDriver_TypeDef* pSelf){
+
+	if (pSelf->pRTCHandler->State != HAL_RTC_STATE_RESET){
+		return RTCDriver_Status_Error;
+	}
+
+	pSelf->pRTCHandler->Instance = RTC;
+	pSelf->pRTCHandler->Init.HourFormat = RTC_HOURFORMAT_24;
+	pSelf->pRTCHandler->Init.AsynchPrediv = 127;
+	pSelf->pRTCHandler->Init.SynchPrediv = 255;
+	pSelf->pRTCHandler->Init.OutPut = RTC_OUTPUT_DISABLE;
+	pSelf->pRTCHandler->Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+	pSelf->pRTCHandler->Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+	if (HAL_RTC_Init(pSelf->pRTCHandler) != HAL_OK)
+	{
+		return RTCDriver_Status_Error;
+	}
+	return RTCDriver_Status_OK;
+}
+
+static RTCDriver_Status_TypeDef RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDef* pSelf ){
+
+	if (pSelf->pRTCHandler->State != HAL_RTC_STATE_READY){
+		return RTCDriver_Status_NotInitialisedError;
+	}
+
+	/*if (HAL_RTC_WaitForSynchro(pSelf->pRTCHandler) != HAL_OK){
+		return RTCDriver_Status_Error;
+	}*/
+	for (uint8_t i=0; i<backupRegistersCount; i++){
+		if (HAL_RTCEx_BKUPRead(pSelf->pRTCHandler, backupRegistersIndexes[i]) != backupRegistersValues[i]){
+			return RTCDriver_Status_TimeAndDateNotRestoredError;
+		}
+	}
+
+	RTC_TimeTypeDef sTime;
+	RTC_DateTypeDef sDate;
+	if (HAL_RTC_GetTime(pSelf->pRTCHandler, &sTime, RTC_FORMAT_BCD) != HAL_OK){
+		return RTCDriver_Status_TimeAndDateNotRestoredError;
+	}
+
+	if (HAL_RTC_GetDate(pSelf->pRTCHandler, &sDate, RTC_FORMAT_BCD) != HAL_OK){
+		return RTCDriver_Status_TimeAndDateNotRestoredError;
+	}
+
+	return RTCDriver_Status_OK;
+}
+
+static RTCDriver_Status_TypeDef RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, RTC_TimeTypeDef* pTime, RTC_DateTypeDef* pDate){
+
+
+	if (HAL_RTC_SetTime(pSelf->pRTCHandler, pTime, RTC_FORMAT_BIN) != HAL_OK) {
+		return RTCDriver_Status_Error;
+	}
+
+	if (HAL_RTC_SetDate(pSelf->pRTCHandler, pDate, RTC_FORMAT_BIN) != HAL_OK) {
+		return RTCDriver_Status_Error;
+	}
+
+	HAL_PWR_EnableBkUpAccess();
+	for (uint8_t i=0; i<backupRegistersCount; i++){
+		HAL_RTCEx_BKUPWrite(pSelf->pRTCHandler, backupRegistersIndexes[i], backupRegistersValues[i]);
+	}
+	HAL_PWR_DisableBkUpAccess();
+
+	return RTCDriver_Status_OK;
+}
 
 
 RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleTypeDef* pRTCHandler){
@@ -19,7 +90,36 @@ RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleType
 		return RTCDriver_Status_Error;
 	}
 
+	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
 	pSelf->pRTCHandler = pRTCHandler;
+
+	if ((ret = RTCDriver_HALInit(pSelf)) != RTCDriver_Status_OK){
+		return ret;
+	}
+
+	ret = RTCDriver_HALRestoreTimeAndDate(pSelf);
+	if (ret != RTCDriver_Status_OK && ret != RTCDriver_Status_TimeAndDateNotRestoredError){
+		return ret;
+	}
+	if (ret == RTCDriver_Status_TimeAndDateNotRestoredError){
+
+		RTC_TimeTypeDef sTime;
+		RTC_DateTypeDef sDate;
+
+		sTime.Hours = 0;
+		sTime.Minutes = 0;
+		sTime.Seconds = 0;
+		sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+		sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+		sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+		sDate.Month = RTC_MONTH_JANUARY;
+		sDate.Date = 1;
+		sDate.Year = 0;
+
+		if ((ret = RTCDriver_HALSetTimeAndDate(pSelf, &sTime, &sDate)) != RTCDriver_Status_OK){
+			return ret;
+		}
+	}
 
 	pSelf->state = RTCDriver_State_Ready;
 
@@ -27,6 +127,10 @@ RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleType
 }
 
 RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef* pRetDateTime){
+
+	if (pSelf->state == RTCDriver_State_UnInitialized){
+		return RTCDriver_Status_NotInitialisedError;
+	}
 
 	RTC_DateTypeDef date;
 	RTC_TimeTypeDef time;
