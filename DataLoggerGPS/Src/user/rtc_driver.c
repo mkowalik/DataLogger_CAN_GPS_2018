@@ -36,22 +36,19 @@ static RTCDriver_Status_TypeDef RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDe
 		return RTCDriver_Status_NotInitialisedError;
 	}
 
-	/*if (HAL_RTC_WaitForSynchro(pSelf->pRTCHandler) != HAL_OK){
-		return RTCDriver_Status_Error;
-	}*/
 	for (uint8_t i=0; i<backupRegistersCount; i++){
 		if (HAL_RTCEx_BKUPRead(pSelf->pRTCHandler, backupRegistersIndexes[i]) != backupRegistersValues[i]){
 			return RTCDriver_Status_TimeAndDateNotRestoredError;
 		}
 	}
 
-	RTC_TimeTypeDef sTime;
-	RTC_DateTypeDef sDate;
-	if (HAL_RTC_GetTime(pSelf->pRTCHandler, &sTime, RTC_FORMAT_BCD) != HAL_OK){
+	RTC_TimeTypeDef sTime = {0};
+	RTC_DateTypeDef sDate = {0};
+	if (HAL_RTC_GetTime(pSelf->pRTCHandler, &sTime, RTC_FORMAT_BIN) != HAL_OK){
 		return RTCDriver_Status_TimeAndDateNotRestoredError;
 	}
 
-	if (HAL_RTC_GetDate(pSelf->pRTCHandler, &sDate, RTC_FORMAT_BCD) != HAL_OK){
+	if (HAL_RTC_GetDate(pSelf->pRTCHandler, &sDate, RTC_FORMAT_BIN) != HAL_OK){
 		return RTCDriver_Status_TimeAndDateNotRestoredError;
 	}
 
@@ -81,7 +78,6 @@ static RTCDriver_Status_TypeDef RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* p
 
 RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleTypeDef* pRTCHandler){
 
-	//TODO trzeba sie tutaj upewnic, ze RTC nie ma nic w rejestrach backup (dzialala sobie na baterii), a jesli ma to trzeba to przepisac. Fajny przyklad wraz z Cube'owymi przykladami
 	if (pSelf->state != RTCDriver_State_UnInitialized){
 		return RTCDriver_Status_Error;
 	}
@@ -106,15 +102,15 @@ RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleType
 		RTC_TimeTypeDef sTime;
 		RTC_DateTypeDef sDate;
 
-		sTime.Hours = 0;
-		sTime.Minutes = 0;
+		sTime.Hours = 23;
+		sTime.Minutes = 56;
 		sTime.Seconds = 0;
 		sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
 		sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 		sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-		sDate.Month = RTC_MONTH_JANUARY;
-		sDate.Date = 1;
-		sDate.Year = 0;
+		sDate.Month = RTC_MONTH_APRIL;
+		sDate.Date = 17;
+		sDate.Year = (2019-RTC_DRIVER_YEAR_MIN_VALUE);
 
 		if ((ret = RTCDriver_HALSetTimeAndDate(pSelf, &sTime, &sDate)) != RTCDriver_Status_OK){
 			return ret;
@@ -145,7 +141,7 @@ RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, Date
 		return RTCDriver_Status_Error;
 	}
 
-	pRetDateTime->year = 	date.Year;
+	pRetDateTime->year = 	(uint16_t)(date.Year + RTC_DRIVER_YEAR_MIN_VALUE);
 	pRetDateTime->month = 	date.Month;
 	pRetDateTime->day = 	date.Date;
 	pRetDateTime->hour = 	time.Hours;
@@ -156,4 +152,32 @@ RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, Date
 
 }
 
+RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef dateTime){
+
+	if (pSelf->state == RTCDriver_State_UnInitialized){
+		return RTCDriver_Status_NotInitialisedError;
+	}
+
+	if ((dateTime.year > RTC_DRIVER_YEAR_MAX_VALUE) || (dateTime.year < RTC_DRIVER_YEAR_MIN_VALUE) ||
+			(dateTime.month > RTC_DRIVER_MONTH_MAX_VALUE) || (dateTime.month < RTC_DRIVER_MONTH_MIN_VALUE) ||
+			(dateTime.day > RTC_DRIVER_DAY_MAX_VALUE) || (dateTime.day < RTC_DRIVER_DAY_MIN_VALUE)) {
+		return RTCDriver_Status_WrongDateFormatError;
+	} else if ((dateTime.hour > RTC_DRIVER_HOUR_MAX_VALUE) || (dateTime.hour < RTC_DRIVER_HOUR_MIN_VALUE) ||
+			(dateTime.minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (dateTime.minute < RTC_DRIVER_MINUTE_MIN_VALUE) ||
+			(dateTime.second > RTC_DRIVER_SECOND_MAX_VALUE) || (dateTime.second < RTC_DRIVER_SECOND_MIN_VALUE)) {
+		return RTCDriver_Status_WrongTimeFormatError;
+	}
+
+	RTC_DateTypeDef date;
+	RTC_TimeTypeDef time;
+
+	date.Year =		(dateTime.year - RTC_DRIVER_YEAR_MIN_VALUE);
+	date.Month =	dateTime.month;
+	date.Date =		dateTime.day;
+	time.Hours = 	dateTime.hour;
+	time.Minutes =	dateTime.minute;
+	time.Seconds =	dateTime.second;
+
+	return RTCDriver_HALSetTimeAndDate(pSelf, &time, &date);
+}
 

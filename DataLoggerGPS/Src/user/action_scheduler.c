@@ -65,12 +65,12 @@ static ActionScheduler_Status_TypeDef ActionScheduler_mainLoop(ActionScheduler_T
 
 static uint8_t AcionScheduler_StartLogTrigger(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData){
 
-	if (pSelf->state == ActionScheduler_State_UnInitialized){
-		return ActionScheduler_Status_UnInitializedError;
-	}
+//	if (pSelf->state == ActionScheduler_State_UnInitialized){
+//		return ActionScheduler_Status_UnInitializedError;
+//	}
 
 	if ((pData->ID == 0x600) &&
-		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) > 50)){
+		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) > 50)){	//TODO make it not hardcoded
 		//(pData->Data[2] > 10)){
 			return 1;
 	}
@@ -78,11 +78,40 @@ static uint8_t AcionScheduler_StartLogTrigger(ActionScheduler_TypeDef* pSelf, CA
 
 }
 
-static uint8_t AcionScheduler_StopLogTrigger(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData){
+static ActionScheduler_Status_TypeDef ActionScheduler_SetDateAndTime(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData){
 
 	if (pSelf->state == ActionScheduler_State_UnInitialized){
 		return ActionScheduler_Status_UnInitializedError;
 	}
+
+	if ((pData->ID == ACTION_SCHEDULER_RTC_SETUP_FRAME_ID) && (pData->DLC == ACTION_SCHEDULER_RTC_SETUP_FRAME_DLC)){
+
+		DateTime_TypeDef dateAndTime = {0};
+		dateAndTime.year 	= (pData->Data[0] | ((pData->Data[1]) << 8));
+		dateAndTime.month	= pData->Data[2];
+		dateAndTime.day		= pData->Data[3];
+		dateAndTime.hour	= pData->Data[4];
+		dateAndTime.minute	= pData->Data[5];
+		dateAndTime.second	= pData->Data[6];
+
+		RTCDriver_Status_TypeDef ret = RTCDriver_setDateAndTime(pSelf->pRTCDriver, dateAndTime);
+
+		if ((ret == RTCDriver_Status_WrongDateFormatError) || (ret == RTCDriver_Status_WrongTimeFormatError)){
+			//TODO log wrong format warning
+			return ActionScheduler_Status_OK;
+		} else if (ret != RTCDriver_Status_OK){
+			return ActionScheduler_Status_Error;
+		}
+	}
+
+	return ActionScheduler_Status_OK;
+}
+
+static uint8_t AcionScheduler_StopLogTrigger(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData){
+
+//	if (pSelf->state == ActionScheduler_State_UnInitialized){
+//		return ActionScheduler_Status_UnInitializedError;
+//	}
 
 	if ((pData->ID == 0x600) &&
 		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) < 50)){
@@ -112,6 +141,8 @@ static ActionScheduler_Status_TypeDef ActionScheduler_idleState(ActionScheduler_
 				pSelf->state = ActionScheduler_State_LogInit;
 				pSelf->logStartMsTime = msg.msTime;
 				break;
+			} else {
+				ActionScheduler_SetDateAndTime(pSelf, &msg);
 			}
 
 		} else if (status ==  CANReceiver_Status_Empty) {

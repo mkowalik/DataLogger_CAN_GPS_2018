@@ -11,6 +11,19 @@
 #include "stdint.h"
 #include "rtc.h"
 
+#define RTC_DRIVER_YEAR_MIN_VALUE	1980
+#define RTC_DRIVER_YEAR_MAX_VALUE	2079 //< Difference betweend Year max and min no bigger than 100
+#define RTC_DRIVER_MONTH_MIN_VALUE	1
+#define RTC_DRIVER_MONTH_MAX_VALUE	12
+#define RTC_DRIVER_DAY_MIN_VALUE	1
+#define RTC_DRIVER_DAY_MAX_VALUE	31
+#define RTC_DRIVER_HOUR_MIN_VALUE	0
+#define RTC_DRIVER_HOUR_MAX_VALUE	23
+#define RTC_DRIVER_MINUTE_MIN_VALUE	0
+#define RTC_DRIVER_MINUTE_MAX_VALUE	59
+#define RTC_DRIVER_SECOND_MIN_VALUE	0
+#define RTC_DRIVER_SECOND_MAX_VALUE	59
+
 typedef struct {
 	uint16_t	year;
 	uint8_t		month;
@@ -24,6 +37,8 @@ typedef enum {
 	RTCDriver_Status_OK = 0,
 	RTCDriver_Status_NotInitialisedError,
 	RTCDriver_Status_TimeAndDateNotRestoredError,
+	RTCDriver_Status_WrongDateFormatError,
+	RTCDriver_Status_WrongTimeFormatError,
 	RTCDriver_Status_Error
 } RTCDriver_Status_TypeDef;
 
@@ -44,6 +59,7 @@ typedef struct {
 
 RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleTypeDef* pRTCHandler);
 RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef* pRetDateTime);
+RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef dateTime);
 
 
 #endif /* RTC_MIDDLEWARE_H_ */

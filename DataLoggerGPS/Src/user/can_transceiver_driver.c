@@ -18,31 +18,19 @@
 
 static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_HandleTypeDef* pHcan, uint32_t prescalerValue, CAN_TypeDef* pCANInstance, uint32_t timeSeg1, uint32_t timeSeg2){
 
-	/*pHcan->Instance = pCANInstance;
+	pHcan->Instance = pCANInstance;
 	pHcan->Init.Prescaler = prescalerValue;
 	pHcan->Init.Mode = CAN_MODE_NORMAL;
 	pHcan->Init.SyncJumpWidth = CAN_SYNC_JUMP_WIDTH;
 	pHcan->Init.TimeSeg1 = timeSeg1;
 	pHcan->Init.TimeSeg2 = timeSeg2;
 	pHcan->Init.TimeTriggeredMode = DISABLE;
-	pHcan->Init.AutoBusOff = ENABLE;
+	pHcan->Init.AutoBusOff = DISABLE;
 	pHcan->Init.AutoWakeUp = ENABLE;
 	pHcan->Init.AutoRetransmission = DISABLE;
 	pHcan->Init.ReceiveFifoLocked = DISABLE;
-	pHcan->Init.TransmitFifoPriority = DISABLE;*/
+	pHcan->Init.TransmitFifoPriority = DISABLE;
 
-	  hcan1.Instance = CAN1;
-	  hcan1.Init.Prescaler = 6;
-	  hcan1.Init.Mode = CAN_MODE_NORMAL;
-	  hcan1.Init.SyncJumpWidth = CAN_SJW_3TQ;
-	  hcan1.Init.TimeSeg1 = CAN_BS1_6TQ;
-	  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
-	  hcan1.Init.TimeTriggeredMode = DISABLE;
-	  hcan1.Init.AutoBusOff = ENABLE;
-	  hcan1.Init.AutoWakeUp = ENABLE;
-	  hcan1.Init.AutoRetransmission = DISABLE;
-	  hcan1.Init.ReceiveFifoLocked = DISABLE;
-	  hcan1.Init.TransmitFifoPriority = DISABLE;
 	if (HAL_CAN_Init(&hcan1) != HAL_OK)
 	{
 		return CANTransceiverDriver_Status_Error;
@@ -60,7 +48,8 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 	pSelf->pHcan = pHcan;
 
-	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, 24/4, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){//TODO pass proper prescaller
+	//TODO add reading of config
+	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, 24, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){//TODO pass proper prescaller
 		return ret;
 	}
 
