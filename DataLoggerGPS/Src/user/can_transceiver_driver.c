@@ -2,7 +2,7 @@
  * can_transceiver_driver.c
  *
  *  Created on: 28.06.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #include "user/can_transceiver_driver.h"
@@ -258,6 +258,8 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTranscei
 	//TODO
 	UNUSED(pSelf);
 	UNUSED(pData);
+
+	return CANTransceiverDriver_Status_Error;
 }
 
 /****************************** Implementations of stm32f7xx_hal_can.h __weak functions placeholders ******************************/

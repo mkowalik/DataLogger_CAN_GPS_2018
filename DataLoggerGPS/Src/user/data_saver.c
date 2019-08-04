@@ -2,10 +2,10 @@
  * data_saver.c
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
-#include <user/data_saver.h>
+#include "user/data_saver.h"
 #include "stdint.h"
 #include "stdio.h"
 #include "string.h"
@@ -21,7 +21,7 @@ DataSaver_Status_TypeDef DataSaver_init(DataSaver_TypeDef* pSelf, Config_TypeDef
 	pSelf->pConfig				= pConfig;
 	pSelf->pFileSystemHandler	= pFileSystemHandler;
 
-	if (FIFOQueue_init(&pSelf->framesFIFO, pSelf->framesQueueTab, sizeof(CANData_TypeDef), MEMORY_MSG_QUEUE_SIZE) != FIFOStatus_OK){
+	if (FIFOQueue_init(&pSelf->framesFIFO, pSelf->framesQueueTab, sizeof(CANData_TypeDef), MEMORY_MSG_QUEUE_SIZE) != FIFO_Status_OK){
 		return DataSaver_Status_Error;
 	}
 
@@ -98,7 +98,7 @@ DataSaver_Status_TypeDef DataSaver_stopLogging(DataSaver_TypeDef* pSelf){
 
 }
 
-DataSaver_Status_TypeDef DataSaver_writeData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData){
+DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData){
 
 	if (pSelf->state != DataSaver_State_OpenedFile){
 		return DataSaver_Status_FileNotOpenedError;

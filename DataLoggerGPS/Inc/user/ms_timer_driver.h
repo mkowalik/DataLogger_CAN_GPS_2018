@@ -2,7 +2,7 @@
  * ms_timer_middleware.h
  *
  *  Created on: 19.03.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef MS_TIMER_DRIVER_H_
@@ -29,10 +29,10 @@ typedef struct  {
 	uint32_t					uiStopTickValue;
 } MSTimerDriver_TypeDef;
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_init(MSTimerDriver_TypeDef* pSelf);
-MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(MSTimerDriver_TypeDef* pSelf);
-MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(MSTimerDriver_TypeDef* pSelf);
-MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(MSTimerDriver_TypeDef* pSelf);
-MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime);
+MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf);
+MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_TypeDef* pSelf);
+MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(volatile MSTimerDriver_TypeDef* pSelf);
+MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_TypeDef* pSelf);
+MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime);
 
 #endif /* MS_TIMER_DRIVER_H_ */

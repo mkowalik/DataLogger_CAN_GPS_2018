@@ -2,7 +2,7 @@
  * can_receiver.h
  *
  *  Created on: 03.06.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #include <user/ms_timer_driver.h>

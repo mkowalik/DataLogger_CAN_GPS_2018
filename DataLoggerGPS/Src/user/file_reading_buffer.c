@@ -2,7 +2,7 @@
  * file_reading_buffer.c
  *
  *  Created on: 17.07.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #include "user/file_reading_buffer.h"

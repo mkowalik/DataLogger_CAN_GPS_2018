@@ -2,7 +2,7 @@
  * action_scheduler.c
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 
@@ -24,11 +24,11 @@ ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSe
 		return ActionScheduler_Status_Error;
 	}
 
-	pSelf->pConfigManager = pConfigManager;
-	pSelf->pDataSaver = pDataSaver;
-	pSelf->pCANReceiver = pCANReceiver;
-	pSelf->pRTCDriver = pRTCDriver;
-	pSelf->pStatusLedDriver = pStatusLedDriver;
+	pSelf->pConfigManager	= pConfigManager;
+	pSelf->pDataSaver		= pDataSaver;
+	pSelf->pCANReceiver		= pCANReceiver;
+	pSelf->pRTCDriver		= pRTCDriver;
+	pSelf->pStatusLedDriver	= pStatusLedDriver;
 
 	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){
 		return ActionScheduler_Status_Error;
@@ -207,7 +207,7 @@ static ActionScheduler_Status_TypeDef ActionScheduler_loggingState(ActionSchedul
 				break;
 			}
 
-			if (DataSaver_writeData(pSelf->pDataSaver, &msg) != DataSaver_Status_OK){
+			if (DataSaver_writeCANData(pSelf->pDataSaver, &msg) != DataSaver_Status_OK){
 				return ActionScheduler_Status_Error;
 			}
 

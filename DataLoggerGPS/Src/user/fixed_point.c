@@ -2,10 +2,25 @@
  * fixed_point.c
  *
  *  Created on: 05.05.2017
- *      Author: kowalik
+ *      Author: Michal Kowalik
  */
 
 #include "user/fixed_point.h"
+
+FixedPoint FixedPoint_constrDeimalFrac(int32_t decimalPart, uint32_t fractionalNumerator, uint32_t fractionalDenominator, uint8_t fractionalBits){
+
+	FixedPoint ret;
+
+	ret.fractionalBits = fractionalBits;
+
+	decimalPart += fractionalNumerator / fractionalDenominator; //< handle case when fractionalNumerator > fractionalDenomianator
+	fractionalNumerator %= fractionalDenominator;
+
+	ret.integer  = decimalPart << fractionalBits;
+	ret.integer |= (fractionalNumerator << fractionalBits) / fractionalDenominator;
+
+	return ret;
+}
 
 FixedPoint FixedPoint_constr(int32_t valueConverted, int32_t divider, int32_t multiplier, int32_t offset, uint8_t fractionalBits){
 
@@ -19,7 +34,6 @@ FixedPoint FixedPoint_constr(int32_t valueConverted, int32_t divider, int32_t mu
 	ret.integer |= (((valueConverted * divider) % multiplier) * (1<<fractionalBits)) / multiplier;	//fractional part of the number
 
 	return ret;
-
 }
 
 uint8_t FixedPoint_a_equal_b(FixedPoint a, FixedPoint b){
@@ -45,7 +59,6 @@ uint8_t FixedPoint_a_equal_b(FixedPoint a, FixedPoint b){
 	}
 
 	return ret;
-
 }
 
 uint8_t FixedPoint_a_lessorequal_b(FixedPoint a, FixedPoint b){
@@ -57,7 +70,6 @@ uint8_t FixedPoint_a_lessorequal_b(FixedPoint a, FixedPoint b){
 	//assumption a.fractionalBits >= b.fractionalBits
 
 	return (FixedPoint_a_less_b(a, b) || FixedPoint_a_equal_b(a, b));
-
 }
 
 uint8_t FixedPoint_a_greaterorequal_b(FixedPoint a, FixedPoint b){
@@ -69,7 +81,6 @@ uint8_t FixedPoint_a_greaterorequal_b(FixedPoint a, FixedPoint b){
 	//assumption a.fractionalBits >= b.fractionalBits
 
 	return (FixedPoint_a_greater_b(a, b) || FixedPoint_a_equal_b(a, b));
-
 }
 
 uint8_t FixedPoint_a_greater_b(FixedPoint a, FixedPoint b){
@@ -86,7 +97,6 @@ uint8_t FixedPoint_a_greater_b(FixedPoint a, FixedPoint b){
 		return ((a.integer >> diffBits) > b.integer);
 
 	return (a.integer > (b.integer << diffBits));
-
 }
 
 uint8_t FixedPoint_a_less_b(FixedPoint a, FixedPoint b){
@@ -105,3 +115,14 @@ uint8_t FixedPoint_a_less_b(FixedPoint a, FixedPoint b){
 	return (a.integer < (b.integer << diffBits));
 }
 
+FixedPoint FixedPoint_a_mult_b(FixedPoint a, FixedPoint b, uint8_t resultFractionalBits){
+
+	uint32_t tmpFractionalBits	= a.fractionalBits + b.fractionalBits;
+	int64_t tmpResult			= a.integer * b.integer;
+
+	FixedPoint ret;
+	ret.integer			= (int32_t)(tmpResult >> (tmpFractionalBits - resultFractionalBits));
+	ret.fractionalBits	= resultFractionalBits;
+
+	return ret;
+}

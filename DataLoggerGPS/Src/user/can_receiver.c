@@ -2,7 +2,7 @@
  * can_receiver.c
  *
  *  Created on: 03.06.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #include "user/can_receiver.h"
@@ -14,7 +14,7 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 	pSelf->pCanTransceiverHandler = pCanTransceiverHandler;
 	pSelf->pMsTimerDriverHandler = pMsTimerDriverHandler;
 
-	if (FIFOQueue_init(&(pSelf->framesFIFO), pSelf->aReceiverQueueBuffer, sizeof(CANData_TypeDef), CAN_MSG_QUEUE_SIZE) != FIFOStatus_OK){ //TODO czy alignment nie popusje sizeof
+	if (FIFOQueue_init(&(pSelf->framesFIFO), pSelf->aReceiverQueueBuffer, sizeof(CANData_TypeDef), CAN_MSG_QUEUE_SIZE) != FIFO_Status_OK){ //TODO czy alignment nie popusje sizeof
 		return CANReceiver_Status_InitError;
 	}
 
@@ -60,16 +60,16 @@ CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg){
 
-	FIFOStatus_TypeDef fifoStatus = FIFOStatus_OK;
+	FIFO_Status_TypeDef fifoStatus = FIFO_Status_OK;
 
 	fifoStatus = FIFOQueue_dequeue(&(pSelf->framesFIFO), pRetMsg);
 
 	switch(fifoStatus){
-		case FIFOStatus_OK:
+		case FIFO_Status_OK:
 			return CANReceiver_Status_OK;
-		case FIFOStatus_Empty:
+		case FIFO_Status_Empty:
 			return CANReceiver_Status_Empty;
-		case FIFOStatus_Error:
+		case FIFO_Status_Error:
 		default:
 			return CANReceiver_Status_Error;
 	}
@@ -84,8 +84,8 @@ CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CA
 		return CANReceiver_Status_RunTimeError;
 	}
 
-	FIFOStatus_TypeDef fifoStatus;
-	if ((fifoStatus = FIFOQueue_enqueue(&(pSelf->framesFIFO), pData)) != FIFOStatus_OK){
+	FIFO_Status_TypeDef fifoStatus;
+	if ((fifoStatus = FIFOQueue_enqueue(&(pSelf->framesFIFO), pData)) != FIFO_Status_OK){
 		return CANReceiver_Status_RunTimeError;	//TODO moze jak sie nie zmiesci do kolejki, to nie Error tylko jakas sytuacja wyjatkowa???
 	}
 

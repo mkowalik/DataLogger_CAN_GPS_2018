@@ -2,7 +2,7 @@
  * message_medium_driver.h
  *
  *  Created on: 28.06.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef CAN_TRANSCEIVER_DRIVER_H_
@@ -39,11 +39,11 @@ typedef enum {
 } CANTransceiverDriver_ErrorCode_TypeDef;
 
 typedef struct {
-	CAN_HandleTypeDef* pHcan;
-	void (*pRxCallbackFunctions[CAN_MAX_CALLBACK_NUMBER]) (CANData_TypeDef* pData, void* arg); //pointer to void funtion geting as argument pData and void* argument
-	void* pRxCallbackArguemnts[CAN_MAX_CALLBACK_NUMBER];
-	void (*pErrorCallbackFunctions[CAN_MAX_CALLBACK_NUMBER]) (uint16_t errorcode, void* arg);
-	void* pErrorCallbackArguemnts[CAN_MAX_CALLBACK_NUMBER];
+	CAN_HandleTypeDef*	pHcan;
+	void 			  (*pRxCallbackFunctions[CAN_MAX_CALLBACK_NUMBER]) (CANData_TypeDef* pData, void* arg); //pointer to void funtion geting as argument pData and void* argument
+	void* 				pRxCallbackArguemnts[CAN_MAX_CALLBACK_NUMBER];
+	void			  (*pErrorCallbackFunctions[CAN_MAX_CALLBACK_NUMBER]) (uint16_t errorcode, void* arg);
+	void*				pErrorCallbackArguemnts[CAN_MAX_CALLBACK_NUMBER];
 } CANTransceiverDriver_TypeDef;
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, Config_TypeDef* pConfig, CAN_HandleTypeDef* pHcan, CAN_TypeDef* pCANInstance);

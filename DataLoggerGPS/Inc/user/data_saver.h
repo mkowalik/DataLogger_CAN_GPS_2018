@@ -2,7 +2,7 @@
  * data_saver.h
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef DATA_SAVER_H_
@@ -59,6 +59,6 @@ typedef enum {
 DataSaver_Status_TypeDef DataSaver_init(DataSaver_TypeDef* pSelf, Config_TypeDef* pConfig, FileSystemWrapper_TypeDef* pFileSystemHandler);
 DataSaver_Status_TypeDef DataSaver_startLogging(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
 DataSaver_Status_TypeDef DataSaver_stopLogging(DataSaver_TypeDef* pSelf);
-DataSaver_Status_TypeDef DataSaver_writeData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
 
 #endif /* DATA_SAVER_H_ */

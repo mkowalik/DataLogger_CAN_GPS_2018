@@ -2,7 +2,7 @@
  * file_writing_buffer.h
  *
  *  Created on: 17.07.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef USER_FILE_WRITING_BUFFER_H_

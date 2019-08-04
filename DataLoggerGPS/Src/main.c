@@ -31,15 +31,16 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "string.h"
+
 #include "user/config.h"
 #include "user/can_receiver.h"
 #include "user/action_scheduler.h"
-
-#include "string.h"
-
 #include "user/file_reading_buffer.h"
 #include "user/file_writing_buffer.h"
 #include "user/led_driver.h"
+#include "user/uart_driver.h"
+#include "user/gps_driver.h"
 
 /* USER CODE END Includes */
 
@@ -77,6 +78,9 @@ MSTimerDriver_TypeDef			msTimerDriver;
 
 LedDriver_TypeDef				ledDebug1Driver;
 LedDriver_TypeDef				ledDebug2Driver;
+
+UartDriver_TypeDef				uart1Driver;
+GPSDriver_TypeDef				gpsDriver;
 
 /* USER CODE END PV */
 
@@ -294,6 +298,10 @@ static void MX_NVIC_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void Warning_Handler(char* description){
+
+}
 
 static uint16_t errorInCounter = 0;
 

@@ -2,7 +2,7 @@
  * action_scheduler.h
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef ACTION_SCHEDULER_H_

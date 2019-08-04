@@ -2,13 +2,13 @@
  * ms_timer_middleware.c
  *
  *  Created on: 19.03.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
-#include <user/ms_timer_driver.h>
+#include "user/ms_timer_driver.h"
 #include "stm32f7xx_hal.h"
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_init(MSTimerDriver_TypeDef* pSelf){
+MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf){
 
 	if (pSelf->state != MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_Status_Error;
@@ -19,7 +19,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_init(MSTimerDriver_TypeDef* pSelf){
 	return MSTimerDriver_Status_OK;
 }
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(MSTimerDriver_TypeDef* pSelf){
+MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_TypeDef* pSelf){
 
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
@@ -45,7 +45,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(MSTimerDriver_TypeDef* 
 
 }
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(MSTimerDriver_TypeDef* pSelf){
+MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(volatile MSTimerDriver_TypeDef* pSelf){
 
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
@@ -61,7 +61,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(MSTimerDriver_TypeDef* p
 	return MSTimerDriver_Status_OK;
 }
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(MSTimerDriver_TypeDef* pSelf){
+MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_TypeDef* pSelf){
 
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
@@ -77,7 +77,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(MSTimerDriver_TypeDef* p
 
 }
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime){
+MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime){
 
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;

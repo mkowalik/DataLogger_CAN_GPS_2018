@@ -2,7 +2,7 @@
  * file_system_wrapper.h
  *
  *  Created on: 27.01.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef FILE_SYSTEM_WRAPPER_H_

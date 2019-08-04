@@ -2,13 +2,12 @@
  * config_data.c
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
-#include <user/file_system_wrapper.h>
+#include "user/file_system_wrapper.h"
 #include "user/config.h"
-
-#define MIN(A,B)  (((A) < (B)) ? (A) : (B))
+#include "user/utils.h"
 
 uint8_t assertCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint16_t id, uint16_t dlc){
 

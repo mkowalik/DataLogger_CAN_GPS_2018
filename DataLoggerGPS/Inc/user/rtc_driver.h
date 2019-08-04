@@ -2,7 +2,7 @@
  * precise_time_middleware.h
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef RTC_MIDDLEWARE_H_
@@ -10,6 +10,7 @@
 
 #include "stdint.h"
 #include "rtc.h"
+#include "date_time_data.h"
 
 #define RTC_DRIVER_YEAR_MIN_VALUE	1980
 #define RTC_DRIVER_YEAR_MAX_VALUE	2079 //< Difference betweend Year max and min no bigger than 100
@@ -23,15 +24,6 @@
 #define RTC_DRIVER_MINUTE_MAX_VALUE	59
 #define RTC_DRIVER_SECOND_MIN_VALUE	0
 #define RTC_DRIVER_SECOND_MAX_VALUE	59
-
-typedef struct {
-	uint16_t	year;
-	uint8_t		month;
-	uint8_t		day;
-	uint8_t		hour;
-	uint8_t		minute;
-	uint8_t		second;
-} DateTime_TypeDef;
 
 typedef enum {
 	RTCDriver_Status_OK = 0,

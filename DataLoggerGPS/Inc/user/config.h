@@ -2,7 +2,7 @@
  * config.h
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef CONFIG_H_

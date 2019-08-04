@@ -2,7 +2,7 @@
  * led_driver.h
  *
  *  Created on: 26.07.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #ifndef USER_LED_DRIVER_H_

@@ -2,7 +2,7 @@
  * file_writing_buffer.c
  *
  *  Created on: 17.07.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 

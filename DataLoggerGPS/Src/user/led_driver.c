@@ -2,7 +2,7 @@
  * led_driver.c
  *
  *  Created on: 26.07.2018
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
 #include "user/led_driver.h"

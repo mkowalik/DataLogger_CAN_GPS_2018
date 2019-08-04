@@ -2,10 +2,10 @@
  * precise_time_middleware.c
  *
  *  Created on: 12.11.2017
- *      Author: Kowalik
+ *      Author: Michal Kowalik
  */
 
-#include <user/rtc_driver.h>
+#include "user/rtc_driver.h"
 #include "rtc.h"
 
 
