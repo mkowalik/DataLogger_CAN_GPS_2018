@@ -10,6 +10,7 @@
 #include "user/gps_driver.h"
 #include "user/string_operations.h"
 #include "user/utils.h"
+#include "user/fixed_point.h"
 
 #include <stdio.h>
 
@@ -38,7 +39,7 @@
 
 #define GPS_NMEA_SUFIX_LENGTH				(sizeof(GPS_NMEA_CHECKSUM_SEPARATOR_SIGN)+GPS_NMEA_CHECKSUM_LENGTH+sizeof(GPS_NMEA_PRE_TERMINATION_SIGN)+sizeof(GPS_NMEA_TERMINATION_SIGN))
 
-#define GPS_KNOT_TO_KPH_FACTOR	FixedPoint_constrDeimalFrac(1, 852, 1000, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS)
+#define GPS_KNOT_TO_KPH_FACTOR				FixedPoint_constrDecimalFrac(1, 852, 1000, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS)
 
 #define GPS_UART_DEFAULT_AT_START_BAUDRATE			9600
 
@@ -170,14 +171,6 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 		}
 	}
 
-	if ((ret = _GPSDriver_changeUartBaudrateCommand(pSelf, GPS_UART_BAUDRATE)) != GPSDriver_Status_OK){
-		return ret;
-	}
-
-	if ((ret = _GPSDriver_changeUpdateFrequemcyCommand(pSelf, frequency)) != GPSDriver_Status_OK){
-		return ret;
-	}
-
 	if (UartDriver_setReceivedBytesStartAndTerminationSignCallback(
 			pSelf->pUartHandler,
 			_GPSDriver_dataReceivedCallback,
@@ -186,6 +179,22 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 			GPS_NMEA_START_SIGN,
 			GPS_NMEA_TERMINATION_SIGN) != UartDriver_Status_OK){
 
+		return GPSDriver_Status_UartError;
+	}
+
+	if (UartDriver_startReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
+		return GPSDriver_Status_UartError;
+	}
+
+	if ((ret = _GPSDriver_changeUartBaudrateCommand(pSelf, GPS_UART_BAUDRATE)) != GPSDriver_Status_OK){
+		return ret;
+	}
+
+	if ((ret = _GPSDriver_changeUpdateFrequemcyCommand(pSelf, frequency)) != GPSDriver_Status_OK){
+		return ret;
+	}
+
+	if (UartDriver_stopReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
 		return GPSDriver_Status_UartError;
 	}
 
@@ -240,6 +249,50 @@ GPSDriver_Status_TypeDef GPSDriver_removeReceivedDataCallback(volatile GPSDriver
 	pSelf->pCallbackArguments[callbackIterator]				= NULL;
 
 	return GPSDriver_Status_OK;
+}
+
+GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf) {
+
+	if (pSelf == NULL){
+		return GPSDriver_Status_Error;
+	}
+
+	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
+		return GPSDriver_Status_UnInitializedError;
+	}
+
+	if (pSelf->state == GPSDriver_State_Running){
+		return GPSDriver_Status_RunningError;
+	}
+
+	if (UartDriver_startReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
+		return GPSDriver_Status_UartError;
+	}
+
+	return GPSDriver_Status_OK;
+
+}
+
+GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf) {
+
+	if (pSelf == NULL){
+		return GPSDriver_Status_Error;
+	}
+
+	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
+		return GPSDriver_Status_UnInitializedError;
+	}
+
+	if (pSelf->state == GPSDriver_State_Initialized){
+		return GPSDriver_Status_NotRunningError;
+	}
+
+	if (UartDriver_stopReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
+		return GPSDriver_Status_UartError;
+	}
+
+	return GPSDriver_Status_OK;
+
 }
 
 GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf) {
@@ -298,8 +351,9 @@ GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf) {
 
 	if (pSelf->gpggaPartialSegmentReceived && pSelf->gpgsaPartialSegmentReceived && pSelf->gprmcPartialSegmentReceived){
 		if (ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gpgsaPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
-				ABS(pSelf->gpgsaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
-				ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY){
+			ABS(pSelf->gpgsaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
+			ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY){
+
 			for (uint8_t i=0; i<GPS_DRIVER_MAX_CALLBACK_NUMBER; i++){
 				if (pSelf->pReceivedDataCallbackFunctions[i] != NULL){
 					pSelf->pReceivedDataCallbackFunctions[i](pSelf->partialGPSData, (void*)pSelf->pCallbackArguments[i]);
@@ -417,10 +471,6 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile GPSDriver_Ty
 static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GPSDriver_TypeDef* pSelf, uint32_t baudRate){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
-	if (pSelf == NULL){
-		return GPSDriver_Status_Error;
-	}
-
 	if (pSelf->state == GPSDriver_State_UnInitialized){
 		return GPSDriver_Status_UnInitializedError;
 	}
@@ -454,10 +504,6 @@ static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GP
 }
 
 static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile GPSDriver_TypeDef* pSelf, GPSDriver_Frequency_TypeDef frequency){
-
-	if (pSelf == NULL){
-		return GPSDriver_Status_Error;
-	}
 
 	if (pSelf->state == GPSDriver_State_UnInitialized){
 		return GPSDriver_Status_Error;
@@ -755,7 +801,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_parseFixedPoint(uint8_t* bytes, uint1
 		fractionalDenominator *= 10;
 	}
 
-	*retFixedPoint = FixedPoint_constrDeimalFrac(decimalPart, fractionalNumerator, fractionalDenominator, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS);
+	*retFixedPoint = FixedPoint_constrDecimalFrac(decimalPart, fractionalNumerator, fractionalDenominator, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS);
 
 	return GPSDriver_Status_OK;
 }

@@ -8,6 +8,16 @@
 #include "user/can_receiver.h"
 #include "main.h"
 
+//< ----- Private functions prototypes ----- >//
+
+CANReceiver_Status_TypeDef	CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
+void						CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf);
+
+CANReceiver_Status_TypeDef	CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANTransceiverDriver_ErrorCode_TypeDef errorcode);
+void						CANReceiver_ErrorCallbackWrapper(CANTransceiverDriver_ErrorCode_TypeDef errorcode, void* pVoidSelf);
+
+//< ----- Public functions ----- >//
+
 CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler){
 
 	pSelf->pConfig = pConfig;
@@ -57,6 +67,11 @@ CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 	return CANReceiver_Status_OK;
 }
 
+CANReceiver_Status_TypeDef CANReceiver_stop(CANReceiver_TypeDef* pSelf){
+
+	//TODO to nigdzie nie jest wywolywane, a powinno byc
+}
+
 
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg){
 
@@ -77,6 +92,8 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 	return CANReceiver_Status_OK;
 
 }
+
+//< ----- Callback functions ----- >//
 
 CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData){
 

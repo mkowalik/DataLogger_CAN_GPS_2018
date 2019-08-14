@@ -7,7 +7,7 @@
 
 #include "user/fixed_point.h"
 
-FixedPoint FixedPoint_constrDeimalFrac(int32_t decimalPart, uint32_t fractionalNumerator, uint32_t fractionalDenominator, uint8_t fractionalBits){
+FixedPoint FixedPoint_constrDecimalFrac(int32_t decimalPart, uint32_t fractionalNumerator, uint32_t fractionalDenominator, uint8_t fractionalBits){
 
 	FixedPoint ret;
 

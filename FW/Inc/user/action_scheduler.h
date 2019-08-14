@@ -14,9 +14,11 @@
 #include "user/config.h"
 #include "user/can_receiver.h"
 #include "user/led_driver.h"
+#include "user/gps_receiver.h"
 
 typedef enum {
 	ActionScheduler_Status_OK = 0,
+	ActionScheduler_Status_NullPointerError,
 	ActionScheduler_Status_UnInitializedError,
 	ActionScheduler_Status_Error
 } ActionScheduler_Status_TypeDef;
@@ -48,6 +50,7 @@ typedef struct {
 	ConfigDataManager_TypeDef*		pConfigManager;
 	DataSaver_TypeDef*				pDataSaver;
 	CANReceiver_TypeDef*			pCANReceiver;
+	GPSReceiver_TypeDef*			pGPSReceiver;
 	LedDriver_TypeDef*				pStatusLedDriver;
 	RTCDriver_TypeDef*				pRTCDriver;
 	uint32_t						logStartMsTime;
@@ -55,8 +58,9 @@ typedef struct {
 
 
 ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager,
-		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver);
+		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, GPSReceiver_TypeDef* pGPSReceiver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver);
 ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_TypeDef* pSelf);
+ActionScheduler_Status_TypeDef ActionScheduler_thread(ActionScheduler_TypeDef* pSelf);
 //ActionScheduler_Status_TypeDef ActionScheduler_1msElapsedCallbackHandler(ActionScheduler_TypeDef* pSelf);
 
 #endif /* ACTION_SCHEDULER_H_ */

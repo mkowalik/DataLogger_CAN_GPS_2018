@@ -28,6 +28,7 @@ typedef enum {
 	UartDriver_Status_NotTransmitingErrror,
 	UartDriver_Status_TooManyCallbacksError,
 	UartDriver_Status_NullPointerError,
+	UartDriver_Status_HALError,
 	UartDriver_Status_Error
 } UartDriver_Status_TypeDef;
 
@@ -35,7 +36,6 @@ typedef enum {
 	UartDriver_State_UnInitialized = 0,
 	UartDriver_State_DuringInit,
 	UartDriver_State_Ready,
-	UartDriver_State_ChangingSettings,
 	UartDriver_State_Receiving
 } UartDriver_State_TypeDef;
 
@@ -86,7 +86,7 @@ typedef enum {
 } UartDriver_StopBits_TypeDef;*/
 
 typedef uint16_t UartDriver_CallbackIterator_TypeDef;
-UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate);
+UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate);
 
 UartDriver_Status_TypeDef UartDriver_getBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t* pRetBaudRate);
 UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate);
@@ -111,6 +111,9 @@ UartDriver_Status_TypeDef UartDriver_removeReceivedByteCallback(volatile UartDri
 UartDriver_Status_TypeDef UartDriver_setReceivedBytesStartAndTerminationSignCallback(volatile UartDriver_TypeDef* pSelf, void (*foo)(uint8_t* bytes, uint16_t length, uint32_t timestamp, void* pArgs),
 		void* pArgs, volatile UartDriver_CallbackIterator_TypeDef* pRetCallbackIterator, uint8_t startSign, uint8_t terminationSign);
 UartDriver_Status_TypeDef UartDriver_removeReceivedBytesStartAndTerminationSignCallback(volatile UartDriver_TypeDef* pSelf, UartDriver_CallbackIterator_TypeDef callbackIterator);
+
+UartDriver_Status_TypeDef UartDriver_startReceiver(volatile UartDriver_TypeDef* pSelf);
+UartDriver_Status_TypeDef UartDriver_stopReceiver(volatile UartDriver_TypeDef* pSelf);
 
 UartDriver_Status_TypeDef UartDriver_receivedBytesCallback(volatile UartDriver_TypeDef* pSelf);
 UartDriver_Status_TypeDef UartDriver_transmitCompleteCallback(volatile UartDriver_TypeDef* pSelf);

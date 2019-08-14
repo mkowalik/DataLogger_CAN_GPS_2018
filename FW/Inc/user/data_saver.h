@@ -12,6 +12,7 @@
 #include "user/file_writing_buffer.h"
 #include "user/file_system_wrapper.h"
 #include "user/can_data.h"
+#include "user/gps_data.h"
 #include "user/fifo_queue.h"
 #include "user/config.h"
 
@@ -33,9 +34,6 @@ typedef enum {
 } DataSaver_State_TypeDef;
 
 typedef struct {
-	CANData_TypeDef					framesQueueTab[MEMORY_MSG_QUEUE_SIZE];
-	FIFOQueue_TypeDef				framesFIFO;
-
 	FileSystemWrapper_TypeDef*		pFileSystemHandler;
 	FileSystemWrapper_File_TypeDef	sDataFile;
 	FileWritingBuffer_TypeDef		sWritingBuffer;
@@ -56,9 +54,10 @@ typedef enum {
 	DataSaver_Status_Error
 } DataSaver_Status_TypeDef;
 
-DataSaver_Status_TypeDef DataSaver_init(DataSaver_TypeDef* pSelf, Config_TypeDef* pConfig, FileSystemWrapper_TypeDef* pFileSystemHandler);
-DataSaver_Status_TypeDef DataSaver_startLogging(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
-DataSaver_Status_TypeDef DataSaver_stopLogging(DataSaver_TypeDef* pSelf);
-DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_init			(DataSaver_TypeDef* pSelf, Config_TypeDef* pConfig, FileSystemWrapper_TypeDef* pFileSystemHandler);
+DataSaver_Status_TypeDef DataSaver_startLogging	(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
+DataSaver_Status_TypeDef DataSaver_stopLogging	(DataSaver_TypeDef* pSelf);
+DataSaver_Status_TypeDef DataSaver_writeCANData	(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_writeGPSData	(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData);
 
 #endif /* DATA_SAVER_H_ */

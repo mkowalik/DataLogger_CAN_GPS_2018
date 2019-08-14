@@ -66,8 +66,9 @@
 ConfigDataManager_TypeDef		configDataManager;
 DataSaver_TypeDef				dataSaver;
 
-CANReceiver_TypeDef				CANReceiver;
+CANReceiver_TypeDef				canReceiver;
 RTCDriver_TypeDef				rtcDriver;
+GPSReceiver_TypeDef				gpsReceiver;
 
 ActionScheduler_TypeDef			actionScheduler;
 
@@ -137,7 +138,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SDMMC1_SD_Init();
-  MX_USART1_UART_Init();
   MX_FATFS_Init();
 
   /* Initialize interrupts */
@@ -160,35 +160,46 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (FileSystemWrapper_init(&fileSystem) != FileSystemWrapper_Status_OK){
-	  Error_Handler();
-  }
+//  if (FileSystemWrapper_init(&fileSystem) != FileSystemWrapper_Status_OK){
+//	  Error_Handler();
+//  }
+//
+//  if (ConfigDataManager_init(&configDataManager, &fileSystem) != ConfigDataManager_Status_OK){
+//	  Error_Handler();
+//  }
+//
+//  Config_TypeDef* pConfig;
+//  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
+//	  Error_Handler();
+//  }
+//
+//  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
+//	  Error_Handler();
+//  }
 
-  if (ConfigDataManager_init(&configDataManager, &fileSystem) != ConfigDataManager_Status_OK){
+  if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
 	  Error_Handler();
   }
+  if (GPSDriver_init(&gpsDriver, &uart1Driver, &msTimerDriver, GPSDriver_Frequency_5Hz) != GPSDriver_Status_OK){
+	  Error_Handler();
+  }
+//  if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
+//	  Error_Handler();
+//  }
+//  if (CANReceiver_init(&canReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
+//	  Error_Handler();
+//  }
+//
+//  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsReceiver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+//	  Error_Handler();
+//  }
+//  if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
+//	  Error_Handler();
+//  }
 
-  Config_TypeDef* pConfig;
-  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
-	  Error_Handler();
-  }
-
-  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
-	  Error_Handler();
-  }
-  if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (CANReceiver_init(&CANReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
-	  Error_Handler();
-  }
-
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &CANReceiver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
-	  Error_Handler();
-  }
-  if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
-	  Error_Handler();
-  }
+	if (GPSReceiver_start(&gpsReceiver) != GPSReceiver_Status_OK){
+		Error_Handler();
+	}
 
   /* USER CODE END 2 */
 
@@ -199,7 +210,22 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Error_Handler();
+
+//	if (ActionScheduler_thread(&actionScheduler) != ActionScheduler_Status_OK){
+//		Warning_Handler("ActionScheduler_thread returned error.");
+//	}
+
+	if (GPSDriver_thread(&gpsDriver) != GPSDriver_Status_OK){
+		Warning_Handler("GPSDriver_thread returned error.");
+	}
+
+	GPSData_TypeDef retGPSData;
+	if (GPSReceiver_pullLastFrame(&gpsReceiver, &retGPSData) != GPSReceiver_Status_OK){
+		Error_Handler();
+	}
+
+
+	return ActionScheduler_Status_Error;
   }
   /* USER CODE END 3 */
 }

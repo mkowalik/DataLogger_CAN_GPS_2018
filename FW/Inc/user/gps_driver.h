@@ -25,13 +25,15 @@
 
 #define GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC	83
 
-#define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			10
+#define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			128
 
 #define GPS_SET_BAUDRATE_DELAY						50
 
 typedef enum {
 	GPSDriver_Status_OK = 0,
 	GPSDriver_Status_UnInitializedError,
+	GPSDriver_Status_RunningError,
+	GPSDriver_Status_NotRunningError,
 	GPSDriver_Status_NMEASentenceError,
 	GPSDriver_Status_WrongNMEAChecksumError,
 	GPSDriver_Status_TooManyCallbacksError,
@@ -45,7 +47,8 @@ typedef enum {
 typedef enum {
 	GPSDriver_State_UnInitialized = 0,
 	GPSDriver_State_DuringInit,
-	GPSDriver_State_Initialized
+	GPSDriver_State_Initialized,
+	GPSDriver_State_Running
 } GPSDriver_State_TypeDef;
 
 typedef enum {
@@ -87,7 +90,7 @@ typedef struct {
 	volatile FIFOQueue_TypeDef						nmeaSentenceStringFIFO;
 	volatile _GPSDriver_NMEASentenceString			nmeaSentenseStringFIFOBuffer[GPS_NMEA_STRING_BUFFER_FIFO_SIZE];
 
-	volatile uint8_t								awaitingResponse[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC]; //TODO wyzerowac te trzy pola w inicie
+	volatile uint8_t								awaitingResponse[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
 	volatile uint16_t								awaitingResponseLength;
 	volatile _GPSDriver_ResponseState				awaitingResponseState;
 
@@ -102,6 +105,9 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 GPSDriver_Status_TypeDef GPSDriver_setReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, void (*foo)(GPSData_TypeDef gpsData, void* pArgs),
 		void* pArgs, UartDriver_CallbackIterator_TypeDef* pRetCallbackIterator);
 GPSDriver_Status_TypeDef GPSDriver_removeReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, GPSDriver_CallbackIterator_TypeDef callbackIterator);
+
+GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf);
+GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf);
 
 GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf);
 

@@ -6,11 +6,12 @@
  */
 
 #include <stddef.h>
+#include <stdio.h>
 #include "user/string_operations.h"
 
 StringOperations_Status_TypeDef findChar(uint8_t* buffer, uint8_t charToFind, uint16_t bufferSize, uint16_t* pRetIndex){
 
-	if (buffer == NULL){
+	if (buffer == NULL || pRetIndex == NULL){
 		return StringOperations_Status_OK;
 	}
 
@@ -23,10 +24,14 @@ StringOperations_Status_TypeDef findChar(uint8_t* buffer, uint8_t charToFind, ui
 	}
 
 	*pRetIndex = bufferSize;
-	return StringOperations_Status_CharNotFound;
+	return StringOperations_Status_CharNotFoundError;
 }
 
 StringOperations_Status_TypeDef stringEqual(uint8_t* stringA, uint8_t* stringB, uint16_t length){
+
+	if (stringA == NULL || stringB == NULL){
+		return StringOperations_Status_OK;
+	}
 
 	for (uint16_t i=0; i<length; i++){
 		if (stringA[i] != stringB[i]){
@@ -40,6 +45,10 @@ StringOperations_Status_TypeDef stringEqual(uint8_t* stringA, uint8_t* stringB, 
 
 StringOperations_Status_TypeDef stringToFixedPoint(uint8_t* sentence, uint16_t length, uint8_t decimalSeparator, uint8_t fractionalBits, FixedPoint* pRetFixedPoint){
 
+	if (sentence == NULL || pRetFixedPoint == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+
 	StringOperations_Status_TypeDef ret;
 	uint16_t dotPosition;
 
@@ -51,12 +60,31 @@ StringOperations_Status_TypeDef stringToFixedPoint(uint8_t* sentence, uint16_t l
 		return StringOperations_Status_Error;
 	}
 
-//TODO
+	uint32_t	decimalPart;
+	uint32_t	fractionalNumerator;
+	uint32_t	fractionalDenominator = 1;
 
-	return StringOperations_Status_Error;
+	if ((ret = string2UInt32(sentence, dotPosition, &decimalPart)) != StringOperations_Status_OK){
+		return ret;
+	}
+	if ((ret = string2UInt32(sentence + dotPosition + sizeof(decimalSeparator), length - dotPosition - sizeof(decimalSeparator), &fractionalNumerator)) != StringOperations_Status_OK){
+		return ret;
+	}
+
+	for (uint32_t i=0; i<length - dotPosition - sizeof(decimalSeparator); i++){
+		fractionalDenominator *= 10;
+	}
+
+	*pRetFixedPoint = FixedPoint_constrDecimalFrac(decimalPart, fractionalNumerator, fractionalDenominator, fractionalBits);
+
+	return StringOperations_Status_OK;
 }
 
 StringOperations_Status_TypeDef decChar2Uint8(uint8_t c, uint8_t* pRetInt){
+
+	if (pRetInt == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
 	if (c >= '0' && c <= '9'){
 		*pRetInt = c - '0';
 		return StringOperations_Status_OK;
@@ -66,6 +94,10 @@ StringOperations_Status_TypeDef decChar2Uint8(uint8_t c, uint8_t* pRetInt){
 
 
 StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint8_t length, uint32_t* pRetInt){
+
+	if (sentence == NULL || pRetInt == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
 
 	StringOperations_Status_TypeDef ret;
 	*pRetInt = 0;
@@ -85,6 +117,11 @@ StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint8_t length,
 
 
 StringOperations_Status_TypeDef hexChar2Uint8(uint8_t c, uint8_t* pRetInt){
+
+	if (pRetInt == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+
     if (c >= '0' && c <= '9'){
     	*pRetInt = c - '0';
     	return StringOperations_Status_OK;
@@ -99,7 +136,13 @@ StringOperations_Status_TypeDef hexChar2Uint8(uint8_t c, uint8_t* pRetInt){
 }
 
 StringOperations_Status_TypeDef	uInt8ToString(uint8_t val, uint8_t* pRetString){
- //TODO
+
+	if (pRetString == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+
+	sprintf((char*)pRetString, "%u", val);
+	return StringOperations_Status_OK;
 }
 
 bool isDecimalChar(uint8_t c){

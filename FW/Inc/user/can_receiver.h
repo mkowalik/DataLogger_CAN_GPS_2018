@@ -14,9 +14,7 @@
 #ifndef CAN_RECEIVER_DRIVER_H_
 #define CAN_RECEIVER_DRIVER_H_
 
-#define 	CAN_MSG_QUEUE_SIZE	512
-
-#define	CAN_MAX_CHANNELS_PER_FRAME	8
+#define CAN_MSG_QUEUE_SIZE	512
 
 typedef enum {
 	CANReceiver_Status_OK = 0,
@@ -37,11 +35,7 @@ typedef struct {
 
 CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler);
 CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf);
+CANReceiver_Status_TypeDef CANReceiver_stop(CANReceiver_TypeDef* pSelf);
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg);
-
-CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
-void CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf);
-CANReceiver_Status_TypeDef CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANTransceiverDriver_ErrorCode_TypeDef errorcode);
-void CANReceiver_ErrorCallbackWrapper(CANTransceiverDriver_ErrorCode_TypeDef errorcode, void* pVoidSelf);
 
 #endif /* CAN_RECEIVER_DRIVER_H_ */

@@ -21,11 +21,7 @@ DataSaver_Status_TypeDef DataSaver_init(DataSaver_TypeDef* pSelf, Config_TypeDef
 	pSelf->pConfig				= pConfig;
 	pSelf->pFileSystemHandler	= pFileSystemHandler;
 
-	if (FIFOQueue_init(&pSelf->framesFIFO, pSelf->framesQueueTab, sizeof(CANData_TypeDef), MEMORY_MSG_QUEUE_SIZE) != FIFO_Status_OK){
-		return DataSaver_Status_Error;
-	}
-
-	pSelf->state = DataSaver_State_Initialized;
+	pSelf->state				= DataSaver_State_Initialized;
 
 	return DataSaver_Status_OK;
 
@@ -122,6 +118,10 @@ DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANDat
 	}
 
 	return DataSaver_Status_OK;
+}
+
+DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData){
+
 }
 
 #define	DATA_SAVER_HEADER_BUFFER_SIZE	16

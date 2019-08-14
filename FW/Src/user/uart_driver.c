@@ -9,15 +9,13 @@
 #include "usart.h"
 #include <string.h>
 
-//< ----- Private functions ----- >//
+//< ----- Private functions prototypes ----- >//
 
 static UartDriver_Status_TypeDef UartDriver_transmitBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bytes);
-static UartDriver_Status_TypeDef UartDriver_startReceiver(volatile UartDriver_TypeDef* pSelf);
-static UartDriver_Status_TypeDef UartDriver_stopReceiver(volatile UartDriver_TypeDef* pSelf);
 
-UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate){
+//< ----- Public functions implementation ----->//
 
-	UartDriver_Status_TypeDef ret;
+UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate){
 
 	if (pSelf == NULL || pUartHandler == NULL || pMsTimerHandler == NULL){
 		return UartDriver_Status_NullPointerError;
@@ -51,17 +49,36 @@ UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UA
 		pSelf->receivedTerminationSignsNumber[i]		= 0;
 	}
 
+	{	//< HAL init
+		pSelf->pUartHandler->Instance						= pUartInstance;
+		pSelf->pUartHandler->Init.BaudRate					= baudRate;
+		pSelf->pUartHandler->Init.WordLength				= UART_WORDLENGTH_8B;
+		pSelf->pUartHandler->Init.StopBits					= UART_STOPBITS_1;
+		pSelf->pUartHandler->Init.Parity					= UART_PARITY_NONE;
+		pSelf->pUartHandler->Init.Mode						= UART_MODE_TX_RX;
+		pSelf->pUartHandler->Init.HwFlowCtl					= UART_HWCONTROL_NONE;
+		pSelf->pUartHandler->Init.OverSampling				= UART_OVERSAMPLING_16;
+		pSelf->pUartHandler->Init.OneBitSampling			= UART_ONE_BIT_SAMPLE_DISABLE;
+		pSelf->pUartHandler->AdvancedInit.AdvFeatureInit	= UART_ADVFEATURE_NO_INIT;
+
+		__disable_irq();
+		if (HAL_UART_Init(pSelf->pUartHandler) != HAL_OK)
+		{
+			return UartDriver_Status_HALError;
+		}
+		if (HAL_UART_AbortReceive(pSelf->pUartHandler) != HAL_OK){
+			return UartDriver_Status_HALError;
+		}
+		__enable_irq();
+	}
+
 	if (pSelf->pUartHandler->gState != HAL_UART_STATE_READY){
 		return UartDriver_Status_Error;
 	}
 
-	if (pSelf->pUartHandler->Init.BaudRate != baudRate){
-		if ((ret = UartDriver_setBaudRate(pSelf, baudRate)) != UartDriver_Status_OK){
-			return ret;
-		}
-	}
+	pSelf->state = UartDriver_State_Ready;
 
-	return UartDriver_startReceiver(pSelf);
+	return UartDriver_Status_OK;
 }
 
 UartDriver_Status_TypeDef UartDriver_getBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t* pRetBaudRate){
@@ -91,7 +108,6 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 	}
 
 	UartDriver_Status_TypeDef ret;
-	UartDriver_State_TypeDef prevState = pSelf->state;
 
 	if (pSelf->state == UartDriver_State_Receiving){
 		if ((ret = UartDriver_stopReceiver(pSelf)) != UartDriver_Status_OK){
@@ -99,11 +115,9 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 		}
 	}
 
-	if (pSelf->state != UartDriver_State_Ready){
+	if (pSelf->state != UartDriver_State_DuringInit && pSelf->state != UartDriver_State_Ready){
 		return UartDriver_Status_Error;
 	}
-
-	pSelf->state = UartDriver_State_ChangingSettings;
 
 	if (HAL_UART_DeInit((UART_HandleTypeDef*)pSelf->pUartHandler) != HAL_OK){
 		return UartDriver_Status_Error;
@@ -111,13 +125,19 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 
 	pSelf->pUartHandler->Init.BaudRate = baudRate;
 
-	if (HAL_UART_Init((UART_HandleTypeDef*)pSelf->pUartHandler) != HAL_OK){
-		return UartDriver_Status_Error;
+	{
+		__disable_irq();
+		if (HAL_UART_Init(pSelf->pUartHandler) != HAL_OK)
+		{
+			return UartDriver_Status_HALError;
+		}
+		if (HAL_UART_AbortReceive(pSelf->pUartHandler) != HAL_OK){
+			return UartDriver_Status_HALError;
+		}
+		__enable_irq();
 	}
 
-	pSelf->state = prevState;
-
-	if (prevState == UartDriver_State_Receiving){
+	if (pSelf->state == UartDriver_State_Receiving){
 		return UartDriver_startReceiver(pSelf);
 	}
 
@@ -366,7 +386,6 @@ UartDriver_Status_TypeDef UartDriver_setReceivedBytesStartAndTerminationSignCall
 	*pRetCallbackIterator = (UartDriver_CallbackIterator_TypeDef)i;
 
 	return UartDriver_Status_OK;
-
 }
 
 UartDriver_Status_TypeDef UartDriver_removeReceivedBytesStartAndTerminationSignCallback(volatile UartDriver_TypeDef* pSelf, UartDriver_CallbackIterator_TypeDef callbackIterator){
@@ -398,20 +417,7 @@ UartDriver_Status_TypeDef UartDriver_removeReceivedBytesStartAndTerminationSignC
 	return UartDriver_Status_OK;
 }
 
-static UartDriver_Status_TypeDef UartDriver_transmitBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bytes){
-
-	while (pSelf->transmitInProgress != false){ }
-
-	if (HAL_UART_Transmit_IT(pSelf->pUartHandler, pBuffer, bytes) != HAL_OK){
-		return UartDriver_Status_Error;
-	}
-
-	pSelf->transmitInProgress = true;
-
-	return UartDriver_Status_OK;
-}
-
-static UartDriver_Status_TypeDef UartDriver_startReceiver(volatile UartDriver_TypeDef* pSelf){
+UartDriver_Status_TypeDef UartDriver_startReceiver(volatile UartDriver_TypeDef* pSelf){
 
 	if (pSelf->state != UartDriver_State_Ready){
 		return UartDriver_Status_Error;
@@ -426,7 +432,7 @@ static UartDriver_Status_TypeDef UartDriver_startReceiver(volatile UartDriver_Ty
 	return UartDriver_Status_OK;
 }
 
-static UartDriver_Status_TypeDef UartDriver_stopReceiver(volatile UartDriver_TypeDef* pSelf){
+UartDriver_Status_TypeDef UartDriver_stopReceiver(volatile UartDriver_TypeDef* pSelf){
 
 	if (pSelf->state != UartDriver_State_Receiving){
 		return UartDriver_Status_NotReceivingErrror;
@@ -439,19 +445,20 @@ static UartDriver_Status_TypeDef UartDriver_stopReceiver(volatile UartDriver_Typ
 	return UartDriver_Status_OK;
 }
 
-/*UartDriver_Status_TypeDef UartDriver_thread(volatile UartDriver_TypeDef* pSelf){
+//< ----- Private functions implementation ----->//
 
-	if (pSelf == NULL){
-		return UartDriver_Status_NullPointerError;
+static UartDriver_Status_TypeDef UartDriver_transmitBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bytes){
+
+	while (pSelf->transmitInProgress != false){ }
+
+	if (HAL_UART_Transmit_IT(pSelf->pUartHandler, pBuffer, bytes) != HAL_OK){
+		return UartDriver_Status_Error;
 	}
 
-	if (pSelf->state == UartDriver_State_UnInitialized || pSelf->state == UartDriver_State_DuringInit){
-		return UartDriver_Status_UnInitializedErrror;
-	}
-
+	pSelf->transmitInProgress = true;
 
 	return UartDriver_Status_OK;
-}*/
+}
 
 //< ----- Interrupt handling ----- >//
 
@@ -487,7 +494,7 @@ UartDriver_Status_TypeDef UartDriver_receivedBytesCallback(volatile UartDriver_T
 		return UartDriver_Status_Error;
 	}
 
-	// --- Handling one byte callback --- //
+	//< ----- Handling one byte callback ----- >//
 	for (uint16_t fooIt=0; fooIt<UART_DRIVER_MAX_CALLBACK_NUMBER; fooIt++){
 
 		if (pSelf->callbacksByte[fooIt] != NULL){
@@ -524,6 +531,11 @@ UartDriver_Status_TypeDef UartDriver_receivedBytesCallback(volatile UartDriver_T
 	static uint16_t						bufferIt;
 
 	for (uint16_t fooIt=0; fooIt<UART_DRIVER_MAX_CALLBACK_NUMBER; fooIt++){
+
+		if (pSelf->callbacksStartAndTerminationSign[fooIt] == NULL){
+			continue;
+		}
+
 		while (true){
 
 			fifoStatus = FIFOMultiread_lastElement(&pSelf->callbacksStartAndTerminationSignReaders[fooIt], &charBuffer);
@@ -556,48 +568,48 @@ UartDriver_Status_TypeDef UartDriver_receivedBytesCallback(volatile UartDriver_T
 
 	for (uint16_t fooIt=0; fooIt<UART_DRIVER_MAX_CALLBACK_NUMBER; fooIt++){
 
-		if (pSelf->callbacksStartAndTerminationSign[fooIt] != NULL){
-
-			if (pSelf->receivedStartSignsNumber[fooIt] > 0 && pSelf->receivedTerminationSignsNumber[fooIt] > 0){
-
-				bufferIt = 0;
-
-				// searching for start sign
-				while (true){
-
-					fifoStatus = FIFOMultiread_dequeue(&pSelf->callbacksStartAndTerminationSignReaders[fooIt], &charBuffer);
-
-					if (fifoStatus != FIFOMultiread_Status_OK){ //< queue should not be empty. Minimum one start sign and minimum one termination sign are threre
-						return UartDriver_Status_Error;
-					}
-
-					if (charBuffer.dataByte == pSelf->startSignVal[fooIt]){ //< found start sign
-						arrayBuffer[bufferIt++]	= charBuffer.dataByte;
-						timestampBuffer			= charBuffer.msTime;
-						break;
-					}
-				}
-
-				// searching for termination sign
-				while (true){
-
-					fifoStatus = FIFOMultiread_dequeue(&pSelf->callbacksStartAndTerminationSignReaders[fooIt], &charBuffer);
-
-					if (fifoStatus != FIFOMultiread_Status_OK){ //< queue should not be empty. Minimum one start sign and minimum one termination sign are threre
-						return UartDriver_Status_Error;
-					}
-
-					arrayBuffer[bufferIt++] = charBuffer.dataByte;
-
-					if (charBuffer.dataByte == pSelf->terminationSignVal[fooIt]){ //< found termination sign
-						break;
-					}
-				}
-
-				pSelf->callbacksStartAndTerminationSign[fooIt](arrayBuffer, bufferIt, timestampBuffer, pSelf->callbackStartAndTerminationSignArgs[fooIt]);
-			}
+		if (pSelf->callbacksStartAndTerminationSign[fooIt] == NULL){
+			continue;
 		}
 
+		if (pSelf->receivedStartSignsNumber[fooIt] > 0 && pSelf->receivedTerminationSignsNumber[fooIt] > 0){
+
+			bufferIt = 0;
+
+			// searching for start sign
+			while (true){
+
+				fifoStatus = FIFOMultiread_dequeue(&pSelf->callbacksStartAndTerminationSignReaders[fooIt], &charBuffer);
+
+				if (fifoStatus != FIFOMultiread_Status_OK){ //< queue should not be empty. Minimum one start sign and minimum one termination sign are threre
+					return UartDriver_Status_Error;
+				}
+
+				if (charBuffer.dataByte == pSelf->startSignVal[fooIt]){ //< found start sign
+					arrayBuffer[bufferIt++]	= charBuffer.dataByte;
+					timestampBuffer			= charBuffer.msTime;
+					break;
+				}
+			}
+
+			// searching for termination sign
+			while (true){
+
+				fifoStatus = FIFOMultiread_dequeue(&pSelf->callbacksStartAndTerminationSignReaders[fooIt], &charBuffer);
+
+				if (fifoStatus != FIFOMultiread_Status_OK){ //< queue should not be empty. Minimum one start sign and minimum one termination sign are threre
+					return UartDriver_Status_Error;
+				}
+
+				arrayBuffer[bufferIt++] = charBuffer.dataByte;
+
+				if (charBuffer.dataByte == pSelf->terminationSignVal[fooIt]){ //< found termination sign
+					break;
+				}
+			}
+
+			pSelf->callbacksStartAndTerminationSign[fooIt](arrayBuffer, bufferIt, timestampBuffer, pSelf->callbackStartAndTerminationSignArgs[fooIt]);
+		}
 	}
 
 	if (HAL_UART_Receive_IT(pSelf->pUartHandler, (uint8_t*)&pSelf->actuallyReceivingByte, 1) != HAL_OK){

@@ -31,7 +31,7 @@ static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_H
 	pHcan->Init.ReceiveFifoLocked = DISABLE;
 	pHcan->Init.TransmitFifoPriority = DISABLE;
 
-	if (HAL_CAN_Init(&hcan1) != HAL_OK)
+	if (HAL_CAN_Init(pHcan) != HAL_OK)
 	{
 		return CANTransceiverDriver_Status_Error;
 	}

@@ -16,7 +16,8 @@ typedef enum {
 	StringOperations_Status_OK = 0,
 	StringOperations_Status_NotEqual,
 	StringOperations_Status_NotDecimalCharError,
-	StringOperations_Status_CharNotFound,
+	StringOperations_Status_CharNotFoundError,
+	StringOperations_Status_NullPointerError,
 	StringOperations_Status_Error
 } StringOperations_Status_TypeDef;
 
