@@ -185,7 +185,8 @@ void ConfigureLoggerSDDialog::on_addChannelButton_clicked()
                      newChannelDialog.getIs16Bit(),
                      newChannelDialog.getIsOnOff(),
                      newChannelDialog.getIsFlag(),
-                     newChannelDialog.getIsCustom());
+                     newChannelDialog.getIsCustom(),
+                     newChannelDialog.getIsBigEndian());
         ch.set_valueType(vt);
         ch.set_multiplier(newChannelDialog.getMultiplier());
         ch.set_divider(newChannelDialog.getDivider());
@@ -279,7 +280,8 @@ void ConfigureLoggerSDDialog::editGivenItem(QTreeWidgetItem *clickedItem, QTreeW
                          channelDialog.getIs16Bit(),
                          channelDialog.getIsOnOff(),
                          channelDialog.getIsFlag(),
-                         channelDialog.getIsCustom());
+                         channelDialog.getIsCustom(),
+                         channelDialog.getIsBigEndian());
             ch.set_valueType(vt);
             ch.set_multiplier(channelDialog.getMultiplier());
             ch.set_divider(channelDialog.getDivider());

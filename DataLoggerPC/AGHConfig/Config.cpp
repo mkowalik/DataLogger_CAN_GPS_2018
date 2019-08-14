@@ -79,9 +79,9 @@ Config::const_iterator Config::cend(){
 
 void Config::write_to_bin(WritingClass& writer){
 
-    writer.write_uint16(static_cast<unsigned int>(get_version()));
-    writer.write_uint16(static_cast<unsigned int>(get_subVersion()));
-    writer.write_uint16(static_cast<unsigned int>(get_numOfFrames()));
+    writer.write_uint16(static_cast<unsigned int>(get_version()), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(static_cast<unsigned int>(get_subVersion()), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(static_cast<unsigned int>(get_numOfFrames()), RawDataParser::UseDefaultEndian);
 
     for (map<int, ConfigFrame>::iterator it=frames_map.begin(); it!=frames_map.end(); it++){
         it->second.write_to_bin(writer);
@@ -90,9 +90,9 @@ void Config::write_to_bin(WritingClass& writer){
 }
 
 void Config::read_from_bin(ReadingClass& reader){
-    set_version(static_cast<int>(reader.reading_uint16()));
-    set_subVersion(static_cast<int>(reader.reading_uint16()));
-    int framesNumber = static_cast<int>(reader.reading_uint16());
+    set_version(static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
+    set_subVersion(static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
+    int framesNumber = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
 
     for(int i=0; i<framesNumber; i++){
         ConfigFrame frame;

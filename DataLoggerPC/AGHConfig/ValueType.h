@@ -10,13 +10,14 @@ private:
 public:
     ValueType();
 	ValueType(unsigned char feature);
-    ValueType(bool setSigned, bool set16bit, bool setOnOffType, bool setFlagType, bool setCustomType);
+    ValueType(bool setSigned, bool set16bit, bool setOnOffType, bool setFlagType, bool setCustomType, bool setBigEndianType);
     int             channelDLC() const;
     bool            isSignedType() const;
     bool            is16BitLength() const ;
     bool            isOnOffType() const;
     bool            isFlagType() const;
     bool            isCustomType() const;
+    bool            isBigEndianType() const;
 
     unsigned char   getHexValue() const;
 

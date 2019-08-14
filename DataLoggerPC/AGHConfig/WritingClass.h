@@ -18,9 +18,9 @@ private:
 public:
     WritingClass(string nameOfFile, RawDataParser& dataParser);
     void            write_uint8(unsigned int aValue);
-    void            write_uint16(unsigned int aValue);
-    void            write_uint32(unsigned int aValue);
-    void            write_int16(int aValue);
+    void            write_uint16(unsigned int aValue, RawDataParser::EndianessMode endianessMode);
+    void            write_uint32(unsigned int aValue, RawDataParser::EndianessMode endianessMode);
+    void            write_int16(int aValue, RawDataParser::EndianessMode endianessMode);
     void            write_string(string aStr, bool writeTerminatingZero, int aLength = -1);
 
     void            write_double_to_string(double value, int decimal_figures, char decimalSeparator, bool writeTerminatingZero);

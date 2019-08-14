@@ -21,7 +21,12 @@ SingleFrameData::SingleFrameData(unsigned int msTime, const ConfigFrame& frame, 
 
     int i=0;
     for (ConfigFrame::const_iterator it=frame.cbegin(); it!=frame.cend(); ++it){
-        int value = dataParser.interpret_signed_int(rawValues+i, it->get_DLC());
+        int value = 0;
+        if (it->get_valueType().isSignedType()){
+            value = dataParser.interpret_signed_int(rawValues+i, it->get_DLC(), it->get_valueType().isBigEndianType() ? RawDataParser::BigEndian : RawDataParser::LittleEndian);
+        } else {
+            value = dataParser.interpret_unsigned_int(rawValues+i, it->get_DLC(), it->get_valueType().isBigEndianType() ? RawDataParser::BigEndian : RawDataParser::LittleEndian);
+        }
         data.push_back(SingleChannelData(*it, value));
         i += it->get_DLC();
     }
@@ -199,7 +204,7 @@ void DataFileClass::write_to_csv(WritableToCSV::FileTimingMode mode, WritingClas
             write_to_csv_static_period_mode(channelValueMap, writer, 1, decimalSeparator);
             break;
         default:
-            throw "No such mode exception!"; //TODO
+            throw std::invalid_argument("No such mode exception!"); //TODO
         }
     }
 
@@ -209,7 +214,7 @@ void DataFileClass::read_from_bin(ReadingClass& reader) {
 
     config.read_from_bin(reader);
 
-    startTime.tm_year = static_cast<int>(reader.reading_uint16());
+    startTime.tm_year = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
     startTime.tm_mon  = static_cast<int>(reader.reading_uint8());
     startTime.tm_mday = static_cast<int>(reader.reading_uint8());
     startTime.tm_hour = static_cast<int>(reader.reading_uint8());
@@ -219,8 +224,8 @@ void DataFileClass::read_from_bin(ReadingClass& reader) {
     try {
         while(!reader.eof()){
             char            buffer[8];
-            unsigned int    msTime   = reader.reading_uint32();
-            int             frameID  = static_cast<int>(reader.reading_uint16());
+            unsigned int    msTime   = reader.reading_uint32(RawDataParser::UseDefaultEndian);
+            int             frameID  = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
             ConfigFrame& configFrame = config.get_frame_by_id(frameID);
             reader.reading_bytes(buffer, configFrame.get_DLC());
             SingleFrameData dataRow(msTime, configFrame, buffer, reader.get_dataParser());

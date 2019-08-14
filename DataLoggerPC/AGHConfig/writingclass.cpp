@@ -15,23 +15,23 @@ WritingClass::WritingClass(string nameOfFile, RawDataParser& dataParser) :
 
 void WritingClass::write_uint8(unsigned int aValue){
     clear_buffer(4);
-    dataParser.write_unsigned_int(aValue, buffer, 1);
+    dataParser.write_unsigned_int(aValue, buffer, 1, RawDataParser::UseDefaultEndian);
     fileStream.write(buffer, 1);
 }
-void WritingClass::write_uint16(unsigned int aValue){
+void WritingClass::write_uint16(unsigned int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);
-    dataParser.write_unsigned_int(aValue, buffer, 4);
+    dataParser.write_unsigned_int(aValue, buffer, 4, endianessMode);
     fileStream.write(buffer, 2);
 }
-void WritingClass::write_uint32(unsigned int aValue){
+void WritingClass::write_uint32(unsigned int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);
-    dataParser.write_unsigned_int(aValue, buffer, 4);
+    dataParser.write_unsigned_int(aValue, buffer, 4, endianessMode);
     fileStream.write(buffer, 4);
 }
 
-void WritingClass::write_int16(int aValue){
+void WritingClass::write_int16(int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);
-    dataParser.write_signed_int(aValue, buffer, 2);
+    dataParser.write_signed_int(aValue, buffer, 2, endianessMode);
     fileStream.write(buffer, 2);
 }
 

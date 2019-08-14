@@ -49,6 +49,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="bigEndian_checkBox">
+         <property name="text">
+          <string>Big Endian</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QRadioButton" name="integer_radioButton">
          <property name="text">
           <string>Integer Value</string>

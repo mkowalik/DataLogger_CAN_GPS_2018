@@ -38,6 +38,9 @@ NewChannelDialog::NewChannelDialog(ValueType valueType, int multipilier, int div
     if (valueType.isSignedType()){
         ui->signed_checkBox->setChecked(true);
     }
+    if (valueType.isBigEndianType()){
+        ui->bigEndian_checkBox->setChecked(true);
+    }
 
     ui->multiplier_spinBox->setValue(multipilier);
     ui->divider_spinBox->setValue(divider);
@@ -54,6 +57,10 @@ bool NewChannelDialog::getIsSigned(){
 
 bool NewChannelDialog::getIs16Bit(){
     return ui->bit16_checkBox->isChecked();
+}
+
+bool NewChannelDialog::getIsBigEndian(){
+    return ui->bigEndian_checkBox->isChecked();
 }
 
 bool NewChannelDialog::getIsInteger(){

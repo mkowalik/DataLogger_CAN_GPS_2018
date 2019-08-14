@@ -100,9 +100,9 @@ void ConfigChannel::write_to_bin(WritingClass& writer){
 
     get_valueType().write_to_bin(writer);
 
-    writer.write_int16(get_multiplier());
-    writer.write_uint16(get_divider());
-    writer.write_int16(get_offset());
+    writer.write_int16(get_multiplier(), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(get_divider(), RawDataParser::UseDefaultEndian);
+    writer.write_int16(get_offset(), RawDataParser::UseDefaultEndian);
 
     writer.write_string(get_channelName(), true, CHANNEL_NAME_LENGHT);
     writer.write_string(get_unitName(), true, UNIT_LENGTH);
@@ -114,9 +114,9 @@ void ConfigChannel::read_from_bin(ReadingClass& reader){
 
     valueType.read_from_bin(reader);
 
-    set_multiplier(reader.reading_int16());
-    set_divider(reader.reading_uint16());
-    set_offset(reader.reading_int16());
+    set_multiplier(reader.reading_int16(RawDataParser::UseDefaultEndian));
+    set_divider(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    set_offset(reader.reading_int16(RawDataParser::UseDefaultEndian));
 
     set_channelName(reader.reading_string(CHANNEL_NAME_LENGHT, true));
     set_unitName(reader.reading_string(UNIT_LENGTH, true));

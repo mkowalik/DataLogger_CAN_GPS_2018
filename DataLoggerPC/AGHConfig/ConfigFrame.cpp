@@ -70,7 +70,7 @@ ConfigFrame::const_iterator ConfigFrame::cend() const {
 
 void ConfigFrame::write_to_bin(WritingClass& writer){
 
-    writer.write_uint16(static_cast<unsigned int>(ID));
+    writer.write_uint16(static_cast<unsigned int>(ID), RawDataParser::UseDefaultEndian);
     writer.write_uint8(static_cast<unsigned int>(get_DLC()));
     writer.write_string(moduleName, true, MODULE_NAME_LENGTH);
     for (vector <ConfigChannel>::iterator it=channels.begin(); it!=channels.end(); it++){
@@ -80,7 +80,7 @@ void ConfigFrame::write_to_bin(WritingClass& writer){
 
 void ConfigFrame::read_from_bin(ReadingClass& reader){
 
-    set_ID(static_cast<int>(reader.reading_uint16()));
+    set_ID(static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
     int readDLC = min(MAX_DLC_VALUE, static_cast<int>(reader.reading_uint8()));
     set_moduleName(reader.reading_string(MODULE_NAME_LENGTH, true));
 

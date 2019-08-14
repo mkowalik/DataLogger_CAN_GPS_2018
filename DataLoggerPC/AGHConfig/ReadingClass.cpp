@@ -20,20 +20,20 @@ ReadingClass::ReadingClass(string nameOfFile, RawDataParser& dataParser) : dataP
     fileSize = (end-begin);
 }
 
-unsigned int ReadingClass::reading_uint32(){
+unsigned int ReadingClass::reading_uint32(RawDataParser::EndianessMode endianessMode){
     if (bytes_left() < 4){
         throw out_of_range("Less than 4 bytes left while reading uint32.");
     }
     data.read(buffer, 4);
-    return dataParser.interpret_unsigned_int(buffer, 4);
+    return dataParser.interpret_unsigned_int(buffer, 4, endianessMode);
 }
 
-unsigned int ReadingClass::reading_uint16(){
+unsigned int ReadingClass::reading_uint16(RawDataParser::EndianessMode endianessMode){
     if (bytes_left() < 2){
         throw out_of_range("Less than 2 bytes left while reading uint16.");
     }
     data.read(buffer, 2);
-    return dataParser.interpret_unsigned_int(buffer, 2);
+    return dataParser.interpret_unsigned_int(buffer, 2, endianessMode);
 }
 
 unsigned int ReadingClass::reading_uint8(){
@@ -41,15 +41,15 @@ unsigned int ReadingClass::reading_uint8(){
         throw out_of_range("Less than 1 byte left while reading uint8.");
     }
     data.read(buffer, 1);
-    return dataParser.interpret_unsigned_int(buffer, 1);
+    return dataParser.interpret_unsigned_int(buffer, 1, RawDataParser::UseDefaultEndian);
 }
 
-int ReadingClass::reading_int16(){
+int ReadingClass::reading_int16(RawDataParser::EndianessMode endianessMode){
     if (bytes_left() < 2){
         throw out_of_range("Less than 2 bytes left while reading int16.");
     }
     data.read(buffer, 2);
-    return dataParser.interpret_signed_int(buffer, 2);
+    return dataParser.interpret_signed_int(buffer, 2, endianessMode);
 }
 
 string ReadingClass::reading_string(int length, bool readTerminatingZero){

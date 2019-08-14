@@ -21,6 +21,7 @@ public:
 
     bool getIsSigned();
     bool getIs16Bit();
+    bool getIsBigEndian();
     bool getIsInteger();
     bool getIsOnOff();
     bool getIsFlag();
