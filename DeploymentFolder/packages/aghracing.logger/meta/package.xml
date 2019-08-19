@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>AGH Racing Logger Application</DisplayName>
+    <Description>AGH Racing Logger Application</Description>
+    <Version>0.2.1</Version>
+    <ReleaseDate>2019-08-19</ReleaseDate>
+    <Default>true</Default>
+    <Script>installscript.qs</Script>
+</Package>
