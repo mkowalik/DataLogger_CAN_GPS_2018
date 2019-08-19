@@ -48,8 +48,28 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 	pSelf->pHcan = pHcan;
 
-	//TODO add reading of config
-	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, 24, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){//TODO pass proper prescaller
+	uint32_t prescalerValue;
+
+	switch (pConfig->can_speed){
+	case 1000:
+		prescalerValue = 6;
+		break;
+	case 500:
+		prescalerValue = 12;
+		break;
+	case 250:
+		prescalerValue = 24;
+		break;
+	case 125:
+		prescalerValue = 48;
+		break;
+	case 50:
+		prescalerValue = 120;
+		break;
+	default:
+		return CANTransceiverDriver_Status_IncorrectCANBitrateValueError;
+	}
+	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, prescalerValue, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){//TODO pass proper prescaller
 		return ret;
 	}
 
