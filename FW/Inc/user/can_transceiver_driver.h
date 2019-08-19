@@ -18,6 +18,7 @@ typedef enum {
 	CANTransceiverDriver_Status_OK = 0,
 	CANTransceiverDriver_Status_StartError,
 	CANTransceiverDriver_Status_TooManyFramesIDsError,
+	CANTransceiverDriver_Status_IncorrectCANBitrateValueError,
 	CANTransceiverDriver_Status_Error
 } CANTransceiverDriver_Status_TypeDef;
 
