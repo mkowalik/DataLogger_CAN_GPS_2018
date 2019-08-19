@@ -9,6 +9,7 @@
 #include "user/action_scheduler.h"
 #include "stdio.h"
 
+
 //< ----- Private functions prototypes ----- >//
 static bool AcionScheduler_StartLogTrigger(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData);
 static bool AcionScheduler_StopLogTrigger(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData);
@@ -22,6 +23,7 @@ static ActionScheduler_Status_TypeDef ActionScheduler_logCloseState(ActionSchedu
 //< ----- Public functions ----- >//
 
 ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager,
+
 		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, GPSReceiver_TypeDef* pGPSReceiver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver) {
 
 	if (pSelf == NULL || pConfigManager == NULL || pDataSaver == NULL || pCANReceiver == NULL || pGPSReceiver == NULL || pRTCDriver == NULL || pStatusLedDriver == NULL){
@@ -47,6 +49,7 @@ ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSe
 	return ActionScheduler_Status_OK;
 
 }
+
 
 ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_TypeDef* pSelf){
 
@@ -103,19 +106,30 @@ ActionScheduler_Status_TypeDef ActionScheduler_1msElapsedCallbackHandler(ActionS
 */
 
 //< ----- Private functions ----- >//
-
 static bool AcionScheduler_StartLogTrigger(ActionScheduler_TypeDef* pSelf, CANData_TypeDef* pData){
 
 	if (pSelf->state == ActionScheduler_State_UnInitialized){
 		return ActionScheduler_Status_UnInitializedError;
 	}
-
+#ifndef CAR_DEF
+	#error "Missing CAR_DEF definition."
+#elif CAR_DEF == CAR_DEF_GRAZYNA
 	if ((pData->ID == 0x600) &&
 		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) > 50)){	//TODO make it not hardcoded
 		//(pData->Data[2] > 10)){
 			return true;
 	}
 	return false;
+#elif CAR_DEF == CAR_DEF_LEM
+	if ((pData->ID == 0x550) &&
+			pData->Data[0] != 0 &&
+			pData->Data[1] != 1){
+		return true;
+	}
+	return false;
+#else
+	#error "Unexpected value of CAR_DEF definition." 
+#endif
 
 }
 
@@ -161,13 +175,25 @@ static bool AcionScheduler_StopLogTrigger(ActionScheduler_TypeDef* pSelf, CANDat
 //	if (pSelf->state == ActionScheduler_State_UnInitialized){
 //		return ActionScheduler_Status_UnInitializedError;
 //	}
-
+#ifndef CAR_DEF
+	#error "Missing CAR_DEF definition."
+#elif CAR_DEF == CAR_DEF_GRAZYNA
 	if ((pData->ID == 0x600) &&
 		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) < 50)){
 		//	(pData->Data[2] <5)){
 			return true;
 	}
 	return false;
+#elif CAR_DEF == CAR_DEF_LEM
+	if ((pData->ID == 0x550) &&
+			pData->Data[0] == 0 &&
+			pData->Data[1] == 1){
+		return 1;
+	}
+	return 0;
+#else
+	#error "Unexpected value of CAR_DEF definition."
+#endif
 
 }
 

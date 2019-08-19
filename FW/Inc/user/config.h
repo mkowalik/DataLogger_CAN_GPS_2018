@@ -20,7 +20,7 @@
 
 #define	CONFIG_FILENAME		"logger.aghconf"
 
-#define	CONFIG_FILE_USED_VERSION		1
+#define	CONFIG_FILE_USED_VERSION		0
 #define	CONFIG_FILE_USED_SUBVERSION		2
 
 #define CONFIG_ID_NUMBER			2048
@@ -65,6 +65,7 @@ typedef struct {
 	uint16_t 				version;
 	uint16_t 				subversion;
 	uint16_t 				num_of_frames;
+	uint16_t				can_speed;
 	ConfigFrame_TypeDef 	frames[CONFIG_MAX_NO_OF_FRAMES];
 	ConfigFrame_TypeDef* 	framesByID[CONFIG_ID_NUMBER];
 } Config_TypeDef;
