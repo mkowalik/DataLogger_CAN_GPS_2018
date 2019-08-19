@@ -59,6 +59,10 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 		return ConfigDataManager_Status_ConfigFileWrongVersionError;
 	}
 
+	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.can_speed) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_ConfigFileDataError;
+	}
+
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.num_of_frames) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_ConfigFileDataError;
 	}

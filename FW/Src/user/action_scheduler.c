@@ -69,12 +69,25 @@ static uint8_t AcionScheduler_StartLogTrigger(ActionScheduler_TypeDef* pSelf, CA
 //		return ActionScheduler_Status_UnInitializedError;
 //	}
 
+#ifndef CAR_DEF
+	#error "Missing CAR_DEF definition."
+#elif CAR_DEF == CAR_DEF_GRAZYNA
 	if ((pData->ID == 0x600) &&
 		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) > 50)){	//TODO make it not hardcoded
 		//(pData->Data[2] > 10)){
 			return 1;
 	}
 	return 0;
+#elif CAR_DEF == CAR_DEF_LEM
+	if ((pData->ID == 0x550) &&
+			pData->Data[0] != 0 &&
+			pData->Data[1] != 1){
+		return 1;
+	}
+	return 0;
+#else
+	#error "Unexpected value of CAR_DEF definition."
+#endif
 
 }
 
@@ -112,13 +125,25 @@ static uint8_t AcionScheduler_StopLogTrigger(ActionScheduler_TypeDef* pSelf, CAN
 //	if (pSelf->state == ActionScheduler_State_UnInitialized){
 //		return ActionScheduler_Status_UnInitializedError;
 //	}
-
+#ifndef CAR_DEF
+	#error "Missing CAR_DEF definition."
+#elif CAR_DEF == CAR_DEF_GRAZYNA
 	if ((pData->ID == 0x600) &&
 		((uint16_t)(pData->Data[0] | ((pData->Data[1])<<8)) < 50)){
 		//	(pData->Data[2] <5)){
 			return 1;
 	}
 	return 0;
+#elif CAR_DEF == CAR_DEF_LEM
+	if ((pData->ID == 0x550) &&
+			pData->Data[0] == 0 &&
+			pData->Data[1] == 1){
+		return 1;
+	}
+	return 0;
+#else
+	#error "Unexpected value of CAR_DEF definition."
+#endif
 
 }
 

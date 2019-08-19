@@ -135,6 +135,9 @@ static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, D
 	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, LOG_FILE_SUBVERSION) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;;
 	}
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->can_speed) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;;
+	}
 	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->num_of_frames) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;;
 	}

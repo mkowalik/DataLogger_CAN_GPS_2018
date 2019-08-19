@@ -8,6 +8,11 @@
 #ifndef ACTION_SCHEDULER_H_
 #define ACTION_SCHEDULER_H_
 
+#define	CAR_DEF_GRAZYNA	1
+#define	CAR_DEF_LEM		2
+
+#define CAR_DEF			CAR_DEF_LEM
+
 #include <user/data_saver.h>
 #include <user/ms_timer_driver.h>
 #include <user/rtc_driver.h>
