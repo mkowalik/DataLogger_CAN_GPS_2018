@@ -20,7 +20,7 @@ private:
 public slots:
     void updateProgressBar(int);
     void addFileToList(QString sourceFileName, QString destinationFileName);
-    void errorInLastFile();
+    void errorInLastFile(QString reasonDescription);
     void downloadingComplete();
     void convertingThreadStarted();
 };

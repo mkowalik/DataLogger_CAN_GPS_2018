@@ -12,7 +12,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QLabel *stat = new QLabel(authors);
+    QString version("ver: ");
+    version += QString::number(Config::get_actualVersion());
+    version += ".";
+    version += QString::number(Config::get_actualSubVersion());
+
+    QLabel *stat = new QLabel(authors + " [" + version + "]");
     stat->setAlignment(Qt::AlignRight);
 
     ui->statusBar->addWidget(stat, 1);

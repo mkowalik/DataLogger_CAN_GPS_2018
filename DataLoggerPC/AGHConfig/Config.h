@@ -10,12 +10,22 @@
 using namespace std;
 
 class Config : public WritableToBin, public ReadableFromBin {
+public:
+    enum class EnCANBitrate {
+        bitrate_50kbps = 50,
+        bitrate_125kbps = 125,
+        bitrate_250kbps = 250,
+        bitrate_500kbps = 500,
+        bitrate_1Mbps = 1000,
+    };
 private:
     int             version;
     int             subVersion;
+    EnCANBitrate    canBitrate;
     map <int, ConfigFrame> frames_map;
-    static const int DEFAULT_VERSION = 1;
-    static const int DEFAULT_SUB_VERSION = 2;
+    static const int ACTUAL_VERSION = 0;
+    static const int ACTUAL_SUB_VERSION = 2;
+    static const EnCANBitrate DEFAULT_CAN_BITRATE = EnCANBitrate::bitrate_500kbps;
 public:
 
     class iterator : public std::iterator<std::forward_iterator_tag, ConfigFrame> {
@@ -48,13 +58,18 @@ public:
        const_iterator operator++(int);
     };
 
+    static int get_actualVersion();
+    static int get_actualSubVersion();
+
     Config();
 
     void            set_version(int sVersion);
     void            set_subVersion(int sSubVersion);
+    void            set_CANBitrate(EnCANBitrate bitrate);
 
     int             get_version() const;
     int             get_subVersion() const;
+    EnCANBitrate    get_CANBitrate() const;
     int             get_numOfFrames() const;
     ConfigFrame&    get_frame_by_id(int id);
 

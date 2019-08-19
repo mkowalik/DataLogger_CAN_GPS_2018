@@ -58,8 +58,15 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="5">
-      <spacer name="horizontalSpacer_2">
+     <item row="2" column="3">
+      <widget class="QPushButton" name="selectPrototypeFileButton">
+       <property name="text">
+        <string>Select File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <spacer name="horizontalSpacer_6">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -84,13 +91,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
-      <widget class="QPushButton" name="selectOutputFileButton">
-       <property name="text">
-        <string>Select File</string>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="prototypeFileLabel">
        <property name="text">
@@ -98,23 +98,23 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="5">
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
+     <item row="2" column="1" colspan="2">
+      <widget class="QComboBox" name="prototypeFileComboBox">
+       <property name="minimumSize">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>250</width>
+         <height>0</height>
         </size>
        </property>
-      </spacer>
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
-     <item row="2" column="3">
-      <widget class="QPushButton" name="selectPrototypeFileButton">
+     <item row="1" column="1" colspan="4">
+      <widget class="QLabel" name="warningLabel">
        <property name="text">
-        <string>Select File</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Because of alpha-release file must have name logger.aghconf&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -132,39 +132,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="4">
-      <spacer name="horizontalSpacer_5">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="1" colspan="4">
-      <widget class="QLabel" name="warningLabel">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Because of alpha-release file must have name logger.aghconf&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <spacer name="horizontalSpacer_6">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="1" column="0">
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
@@ -178,16 +145,88 @@
        </property>
       </spacer>
      </item>
-     <item row="2" column="1" colspan="2">
-      <widget class="QComboBox" name="prototypeFileComboBox">
-       <property name="minimumSize">
+     <item row="0" column="3">
+      <widget class="QPushButton" name="selectOutputFileButton">
+       <property name="text">
+        <string>Select File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
         <size>
-         <width>250</width>
-         <height>0</height>
+         <width>40</width>
+         <height>20</height>
         </size>
        </property>
-       <property name="editable">
-        <bool>true</bool>
+      </spacer>
+     </item>
+     <item row="1" column="5">
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="2" column="5">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="3" column="1" colspan="2">
+      <widget class="QComboBox" name="canSpeedComboBox">
+       <property name="currentText">
+        <string>500kbps</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>50kbps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>125kbps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>250kbps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>500kbps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1Mbps</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>CAN Bitrate:</string>
        </property>
       </widget>
      </item>

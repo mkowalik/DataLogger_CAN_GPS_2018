@@ -20,8 +20,14 @@ void FilesDownloadDialog::addFileToList(QString sourceFileName, QString destinat
     ui->filesListWidget->addItem(sourceFileName + " -> " + destinationFileName);
 }
 
-void FilesDownloadDialog::errorInLastFile(){
+void FilesDownloadDialog::errorInLastFile(QString reasonDescription){
     ui->filesListWidget->item(ui->filesListWidget->count()-1)->setForeground(Qt::red);
+    if (reasonDescription.length() > 0){
+        QString text = ui->filesListWidget->item(ui->filesListWidget->count()-1)->text();
+        text += "\r\n";
+        text += reasonDescription;
+        ui->filesListWidget->item(ui->filesListWidget->count()-1)->setText(text);
+    }
 }
 
 void FilesDownloadDialog::downloadingComplete(){

@@ -26,6 +26,8 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
     ui->framesTreeWidget->header()->resizeSection(5, 50);
     ui->framesTreeWidget->header()->resizeSection(6, 80);
     ui->framesTreeWidget->header()->resizeSection(7, 120);
+
+    ui->canSpeedComboBox->setCurrentText(QString::fromStdString(this->canBitrateToString(this->config.get_CANBitrate())));
 }
 
 ConfigureLoggerSDDialog::~ConfigureLoggerSDDialog()
@@ -60,8 +62,8 @@ void ConfigureLoggerSDDialog::on_selectPrototypeFileButton_clicked()
     config.reset();
     try {
         config.read_from_bin(reader);
-    } catch(std::exception e){
-        QMessageBox::warning(this, "Prototype file problem.", QString("Problem with reading prototype file. "));
+    } catch(std::logic_error e){
+        QMessageBox::warning(this, "Prototype file problem.", QString("Problem with reading prototype file. ") + QString(e.what()));
         return;
     }
 
@@ -226,6 +228,64 @@ void ConfigureLoggerSDDialog::on_saveConfigButton_clicked()
     config.write_to_bin(writer);
 
     QMessageBox::information(this, "Config export completed", "Your config has ben exported to \"" + filePath + "\" file.");
+
+    reloadFramesTreeWidget();
+    reloadCANBusSpeedWidget();
+}
+
+Config::EnCANBitrate ConfigureLoggerSDDialog::stringToCANBitrate(string bitrateStr){
+    if(bitrateStr == "50kbps"){
+        return Config::EnCANBitrate::bitrate_50kbps;
+    } else if (bitrateStr == "125kbps"){
+        return Config::EnCANBitrate::bitrate_125kbps;
+    } else if (bitrateStr == "250kbps"){
+        return Config::EnCANBitrate::bitrate_250kbps;
+    } else if (bitrateStr == "500kbps"){
+        return Config::EnCANBitrate::bitrate_500kbps;
+    } else if (bitrateStr == "1Mbps"){
+        return Config::EnCANBitrate::bitrate_1Mbps;
+    } else {
+        throw std::invalid_argument("Invalid value of CAN bitrate string.");
+    }
+}
+
+string ConfigureLoggerSDDialog::canBitrateToString(Config::EnCANBitrate canBitrate){
+    switch(canBitrate){
+    case Config::EnCANBitrate::bitrate_50kbps:
+        return "50kbps";
+    case Config::EnCANBitrate::bitrate_125kbps:
+        return "125kbps";
+    case Config::EnCANBitrate::bitrate_250kbps:
+        return "250kbps";
+    case Config::EnCANBitrate::bitrate_500kbps:
+        return "500kbps";
+    case Config::EnCANBitrate::bitrate_1Mbps:
+        return "1Mbps";
+    default:
+         throw std::invalid_argument("Invalid value of CAN bitrate.");
+    }
+}
+
+void ConfigureLoggerSDDialog::reloadCANBusSpeedWidget(){
+    switch(config.get_CANBitrate()){
+    case Config::EnCANBitrate::bitrate_50kbps:
+        ui->canSpeedComboBox->setCurrentText("50kbps");
+        break;
+    case Config::EnCANBitrate::bitrate_125kbps:
+        ui->canSpeedComboBox->setCurrentText("125kbps");
+        break;
+    case Config::EnCANBitrate::bitrate_250kbps:
+        ui->canSpeedComboBox->setCurrentText("250kbps");
+        break;
+    case Config::EnCANBitrate::bitrate_500kbps:
+        ui->canSpeedComboBox->setCurrentText("500kbps");
+        break;
+    case Config::EnCANBitrate::bitrate_1Mbps:
+        ui->canSpeedComboBox->setCurrentText("1Mbps");
+        break;
+    default:
+        throw std::invalid_argument("Invalid value of CAN bitrate string.");
+    }
 }
 
 void ConfigureLoggerSDDialog::reloadFramesTreeWidget(){
@@ -323,4 +383,9 @@ void ConfigureLoggerSDDialog::prepareChannelWidget(const ConfigChannel& channel,
     pWidget->setText(6, QString::fromStdString(channel.get_unitName()));
     pWidget->setText(7, QString::fromStdString(channel.get_comment()));
 
+}
+
+void ConfigureLoggerSDDialog::on_canSpeedComboBox_currentTextChanged(const QString &val)
+{
+    this->config.set_CANBitrate(this->stringToCANBitrate(val.toStdString()));
 }

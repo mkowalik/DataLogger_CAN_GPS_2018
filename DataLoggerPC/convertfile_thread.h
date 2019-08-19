@@ -28,7 +28,7 @@ public:
 signals:
     void actualProgress(int percentageProgress);
     void actualFileConverting(QString sourceName, QString destinationName);
-    void errorWhileConvertingPreviousFile();
+    void errorWhileConvertingPreviousFile(QString reasonDescription);
     void fatalErrorSignal();
 public slots:
     void cancelExecution();

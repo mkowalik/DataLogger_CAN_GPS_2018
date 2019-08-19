@@ -19,13 +19,17 @@ public:
     explicit ConfigureLoggerSDDialog(RawDataParser& rawDataParser, QWidget *parent = nullptr);
     ~ConfigureLoggerSDDialog();
 private:
-    void reloadFramesTreeWidget();
-    void editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent);
-    void prepareFrameWidget(const ConfigFrame& frame, QTreeWidgetItem* pWidget);
-    void prepareChannelWidget(const ConfigChannel& channel, QTreeWidgetItem* pWidget);
+    void                 reloadFramesTreeWidget();
+    void                 reloadCANBusSpeedWidget();
+    void                 editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent);
+    void                 prepareFrameWidget(const ConfigFrame& frame, QTreeWidgetItem* pWidget);
+    void                 prepareChannelWidget(const ConfigChannel& channel, QTreeWidgetItem* pWidget);
+    string               canBitrateToString(Config::EnCANBitrate canBitrate);
+    Config::EnCANBitrate stringToCANBitrate(string bitrateStr);
 private slots:
     void on_selectOutputFileButton_clicked();
     void on_selectPrototypeFileButton_clicked();
+
     void on_resetButton_clicked();
     void on_framesTreeWidget_customContextMenuRequested(const QPoint &pos);
     void on_actionEdit_triggered();
@@ -34,6 +38,8 @@ private slots:
     void on_newFrameButton_clicked();
     void on_addChannelButton_clicked();
     void on_saveConfigButton_clicked();
+    void on_canSpeedComboBox_currentTextChanged(const QString &val);
+
 private:
     Ui::ConfigureLoggerSDDialog *ui;
 

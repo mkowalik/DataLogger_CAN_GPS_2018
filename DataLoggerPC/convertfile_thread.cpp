@@ -52,8 +52,8 @@ void ConvertFileThread::run(){
             dataFile.write_to_csv(this->timingMode, writer, decimalSeparator);
 
             qDebug() << "DONE!";
-        } catch (exception e){
-            emit errorWhileConvertingPreviousFile();
+        } catch (std::logic_error e){
+            emit errorWhileConvertingPreviousFile(QString(e.what()));
             qDebug() << "EXCEPTION!";
         }
         filesList.pop_front();

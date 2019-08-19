@@ -39,7 +39,7 @@ DownloadDataSDDialog::DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget
 
     connect(convertFileThread, SIGNAL(actualProgress(int)), filesDownloadDialog, SLOT(updateProgressBar(int)));
     connect(convertFileThread, SIGNAL(actualFileConverting(QString, QString)), filesDownloadDialog, SLOT(addFileToList(QString, QString)));
-    connect(convertFileThread, SIGNAL(errorWhileConvertingPreviousFile()), filesDownloadDialog, SLOT(errorInLastFile()));
+    connect(convertFileThread, SIGNAL(errorWhileConvertingPreviousFile(QString)), filesDownloadDialog, SLOT(errorInLastFile(QString)));
     connect(convertFileThread, SIGNAL(finished()), filesDownloadDialog, SLOT(downloadingComplete()));
     connect(convertFileThread, SIGNAL(fatalErrorSignal()), this, SLOT(fatalErrorInConvertingThreadSlot()));
     connect(convertFileThread, SIGNAL(started()), filesDownloadDialog, SLOT(convertingThreadStarted()));
