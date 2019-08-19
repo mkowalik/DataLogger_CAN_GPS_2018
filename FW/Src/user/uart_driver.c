@@ -451,9 +451,14 @@ static UartDriver_Status_TypeDef UartDriver_transmitBytes(volatile UartDriver_Ty
 
 	while (pSelf->transmitInProgress != false){ }
 
-	if (HAL_UART_Transmit_IT(pSelf->pUartHandler, pBuffer, bytes) != HAL_OK){
+	if (HAL_UART_Transmit_DMA(pSelf->pUartHandler, pBuffer, bytes) != HAL_OK){
 		return UartDriver_Status_Error;
 	}
+
+
+//	if (HAL_UART_Transmit(pSelf->pUartHandler, pBuffer, bytes, 500) != HAL_OK){
+//		return UartDriver_Status_Error;
+//	}
 
 	pSelf->transmitInProgress = true;
 

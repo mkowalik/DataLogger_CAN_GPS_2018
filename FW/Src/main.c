@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "dma.h"
 #include "fatfs.h"
 #include "gfxsimulator.h"
 #include "rtc.h"
@@ -137,13 +138,14 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_SDMMC1_SD_Init();
   MX_FATFS_Init();
+  MX_GFXSIMULATOR_Init();
 
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-
   LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
   LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
 
@@ -153,6 +155,24 @@ int main(void)
   if (LedDriver_init(&ledDebug2Driver, (LedDriver_Port_TypeDef*)my_LED_DEBUG2_GPIO_Port, &ledDebug2Pin) != LedDriver_Status_OK){
 	  Error_Handler();
   }
+
+  if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
+	  Error_Handler();
+  }
+  while (1){
+//	  if (UartDriver_sendBytes(&uart1Driver, "test\n", sizeof("test\n")) != UartDriver_Status_OK){
+//		  Error_Handler();
+//	  }
+	  HAL_Delay(500);
+	  LedDriver_OnLed(&ledDebug2Driver);
+	  HAL_Delay(500);
+	  LedDriver_OffLed(&ledDebug2Driver);
+  }
+
+
+
+
+
   if (RTCDriver_init(&rtcDriver, &hrtc) != RTCDriver_Status_OK){
 	  Error_Handler();
   }
@@ -160,22 +180,22 @@ int main(void)
 	  Error_Handler();
   }
 
-//  if (FileSystemWrapper_init(&fileSystem) != FileSystemWrapper_Status_OK){
-//	  Error_Handler();
-//  }
-//
-//  if (ConfigDataManager_init(&configDataManager, &fileSystem) != ConfigDataManager_Status_OK){
-//	  Error_Handler();
-//  }
-//
-//  Config_TypeDef* pConfig;
-//  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
-//	  Error_Handler();
-//  }
-//
-//  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
-//	  Error_Handler();
-//  }
+  if (FileSystemWrapper_init(&fileSystem) != FileSystemWrapper_Status_OK){
+	  Error_Handler();
+  }
+
+  if (ConfigDataManager_init(&configDataManager, &fileSystem) != ConfigDataManager_Status_OK){
+	  Error_Handler();
+  }
+
+  Config_TypeDef* pConfig;
+  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
+	  Error_Handler();
+  }
+
+  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
+	  Error_Handler();
+  }
 
   if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
 	  Error_Handler();
@@ -183,19 +203,19 @@ int main(void)
   if (GPSDriver_init(&gpsDriver, &uart1Driver, &msTimerDriver, GPSDriver_Frequency_5Hz) != GPSDriver_Status_OK){
 	  Error_Handler();
   }
-//  if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
-//	  Error_Handler();
-//  }
-//  if (CANReceiver_init(&canReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
-//	  Error_Handler();
-//  }
-//
-//  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsReceiver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
-//	  Error_Handler();
-//  }
-//  if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
-//	  Error_Handler();
-//  }
+  if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
+	  Error_Handler();
+  }
+  if (CANReceiver_init(&canReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
+	  Error_Handler();
+  }
+
+  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsReceiver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+	  Error_Handler();
+  }
+  if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
+	  Error_Handler();
+  }
 
 	if (GPSReceiver_start(&gpsReceiver) != GPSReceiver_Status_OK){
 		Error_Handler();
@@ -321,6 +341,9 @@ static void MX_NVIC_Init(void)
   /* SDMMC1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SDMMC1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(SDMMC1_IRQn);
+  /* DMA2_Stream7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 }
 
 /* USER CODE BEGIN 4 */

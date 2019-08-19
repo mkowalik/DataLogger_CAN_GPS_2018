@@ -141,6 +141,7 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	pSelf->state					= GPSDriver_State_DuringInit;
 	pSelf->pUartHandler				= pUartHandler;
 	pSelf->pMSTimer					= pMSTimer;
+	pSelf->pUartCallbackIterator	= 0;
 
 	pSelf->gpggaPartialSegmentReceived	= false;
 	pSelf->gpgsaPartialSegmentReceived	= false;

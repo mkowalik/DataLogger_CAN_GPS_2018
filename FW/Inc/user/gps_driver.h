@@ -27,7 +27,7 @@
 
 #define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			128
 
-#define GPS_SET_BAUDRATE_DELAY						50
+#define GPS_SET_BAUDRATE_DELAY						500
 
 typedef enum {
 	GPSDriver_Status_OK = 0,
@@ -90,9 +90,9 @@ typedef struct {
 	volatile FIFOQueue_TypeDef						nmeaSentenceStringFIFO;
 	volatile _GPSDriver_NMEASentenceString			nmeaSentenseStringFIFOBuffer[GPS_NMEA_STRING_BUFFER_FIFO_SIZE];
 
-	volatile uint8_t								awaitingResponse[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
 	volatile uint16_t								awaitingResponseLength;
 	volatile _GPSDriver_ResponseState				awaitingResponseState;
+	volatile uint8_t								awaitingResponse[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
 
 	void										  (*pReceivedDataCallbackFunctions[GPS_DRIVER_MAX_CALLBACK_NUMBER])(GPSData_TypeDef gpsData, void* pArgs);
 	volatile void* volatile 						pCallbackArguments[GPS_DRIVER_MAX_CALLBACK_NUMBER];
