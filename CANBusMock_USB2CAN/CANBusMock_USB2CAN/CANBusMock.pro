@@ -26,22 +26,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         widget.cpp \
-    EUSB2CAN_Class.cpp
+        EUSB2CAN_Class.cpp \
+        canspeedwidget.cpp
 
 HEADERS += \
         widget.h \
-    EUSB2CAN_DLL.h \
-    widget.h \
-    ui_widget.h \
-    EUSB2CAN_DLL.h \
-    EUSB2CAN_Class.h
+        widget.h \
+        ui_widget.h \
+        EUSB2CAN_Class.h \
+        EUSB2CAN_DLL.h \
+        canspeedwidget.h
 
 FORMS += \
-        widget.ui
+        widget.ui \
+    canspeedwidget.ui
 
 INCLUDEPATH += .
 
-# LIBS += EUSB2CAN.dll
+#LIBS += ./EUSB2CAN.dll
 
 DISTFILES += \
     EUSB2CAN.dll

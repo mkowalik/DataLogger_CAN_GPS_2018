@@ -1,10 +1,12 @@
 #include "widget.h"
+#include "canspeedwidget.h"
 #include <QApplication>
 #include <QWidget>
 #include <QSpinBox>
 #include <QThread>
-#include "EUSB2CAN_Class.h"
 #include <iostream>
+
+#include "EUSB2CAN_Class.h"
 
 using namespace std;
 
@@ -55,13 +57,13 @@ void SenderThread::run(){
             msg.data[1] = (((unsigned int)rpm->value()) >> 8) & 0xFF;
             msg.data[0] = ((unsigned int)rpm->value()) & 0xFF;
 
-            s = canHandle->canWrite(&msg);
+            s = canHandle->write(&msg);
             s = canHandle->flush();
 
             msg.id = 0x601;
             msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
 
-            s = canHandle->canWrite(&msg);
+            s = canHandle->write(&msg);
             s = canHandle->flush();
 
             msg.id = 0x602;
@@ -70,13 +72,13 @@ void SenderThread::run(){
             msg.data[7] = (((unsigned int)clt->value()) >> 8) & 0xFF;
             msg.data[6] = ((unsigned int)clt->value()) & 0xFF;
 
-            s = canHandle->canWrite(&msg);
+            s = canHandle->write(&msg);
             s = canHandle->flush();
 
             msg.id = 0x603;
             msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
 
-            s = canHandle->canWrite(&msg);
+            s = canHandle->write(&msg);
             s = canHandle->flush();
 
             msg.id = 0x604;
@@ -86,21 +88,21 @@ void SenderThread::run(){
 
     //        std::cout << (int)msg.data[2] << ";" << (int)msg.data[3] << std::endl;
 
-            s = canHandle->canWrite(&msg);
+            s = canHandle->write(&msg);
             s = canHandle->flush();
         }
         msg.id = 0x300;
         msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
         msg.data[0] = (123) & 0xFF;
 
-        s = canHandle->canWrite(&msg);
+        s = canHandle->write(&msg);
         s = canHandle->flush();
 
         msg.id = 0x380;
         msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
         msg.data[0] = (231) & 0xFF;
 
-        s = canHandle->canWrite(&msg);
+        s = canHandle->write(&msg);
         s = canHandle->flush();
 
         msg.id = 0x080;
@@ -108,7 +110,7 @@ void SenderThread::run(){
         msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
         msg.data[0] = ((unsigned int)gear->value()) & 0xFF;
 
-        s = canHandle->canWrite(&msg);
+        s = canHandle->write(&msg);
         s = canHandle->flush();
 
         msg.id = 0x400;
@@ -116,7 +118,7 @@ void SenderThread::run(){
         msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
         msg.data[0] = ((unsigned int)fuel->value()) & 0xFF;
 
-        s = canHandle->canWrite(&msg);
+        s = canHandle->write(&msg);
         s = canHandle->flush();
 
         msg.id = 0x000;
@@ -124,7 +126,7 @@ void SenderThread::run(){
         msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
         msg.data[0] = 0xFF;
 
-        s = canHandle->canWrite(&msg);
+        s = canHandle->write(&msg);
         s = canHandle->flush();
 
         msg.id = 0x001;
@@ -132,7 +134,7 @@ void SenderThread::run(){
         msg.data[0] = msg.data[1] = msg.data[2] = msg.data[3] = msg.data[4] = msg.data[5] = msg.data[6] = msg.data[7] = 0;
         msg.data[0] = 0xFF;
 
-        s = canHandle->canWrite(&msg);
+        s = canHandle->write(&msg);
         s = canHandle->flush();
 
         QThread::msleep(10);
@@ -145,11 +147,15 @@ SenderThread::SenderThread(QObject *parent){
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    CANSpeedWidget wCan;
+    wCan.exec();
+    EUSB2CAN_CanSpeed canBitrate = wCan.getCANBitrate();
+
     Widget w;
     w.show();
 
     EUSB2CAN_Class canHandle;
-    EUSB2CAN_Status canStatus = canHandle.initialize(EUSB2CAN_BR_1M);
+    EUSB2CAN_Status canStatus = canHandle.initialize(canBitrate);
 
     std::cout << "Init status: " << canStatus << std::endl;
 
