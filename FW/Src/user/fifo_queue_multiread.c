@@ -86,6 +86,7 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_unregisterReaderIdentifier(volatile F
 	return FIFOMultiread_Status_OK;
 }
 
+
 FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, volatile void* volatile pElement){
 
 	if (pSelf == NULL || pElement == NULL){
@@ -99,9 +100,8 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDe
 	if (FIFOMultiread_isFull(pSelf)){
 		return FIFOMultiread_Status_Full;
 	}
-
-	pSelf->tailIndex = (pSelf->tailIndex + 1) % (pSelf->queueLength); // Notice incrementing tail value
 	memcpy((void*)pSelf->pTabPtr + (pSelf->tailIndex * pSelf->elementSize), (void*)pElement, pSelf->elementSize);
+	pSelf->tailIndex = (pSelf->tailIndex + 1) % (pSelf->queueLength); // Notice incrementing tail value
 
 	for (uint8_t i = 0; i < FIFO_MULTIREAD_MAX_READERS; i++){
 		if (pSelf->readerActive[i]){

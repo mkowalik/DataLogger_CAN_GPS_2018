@@ -14,7 +14,7 @@
 #include "fifo_queue_multiread.h"
 #include "ms_timer_driver.h"
 
-#define	UART_DRIVER_TIMEOUT				500
+#define	UART_DRIVER_TX_TIMEOUT			250
 #define UART_DRIVER_MAX_CALLBACK_NUMBER	2
 #define UART_DRIVER_BUFFER_SIZE			1024 //< GPS max sentence x 5 (max whole pack) x 2
 
@@ -29,6 +29,8 @@ typedef enum {
 	UartDriver_Status_TooManyCallbacksError,
 	UartDriver_Status_NullPointerError,
 	UartDriver_Status_HALError,
+	UartDriver_Status_MSTimerError,
+	UartDriver_Status_FIFOError,
 	UartDriver_Status_Error
 } UartDriver_Status_TypeDef;
 
@@ -54,6 +56,7 @@ typedef struct {
 	UART_HandleTypeDef* volatile						pUartHandler;
 	volatile UartDriver_State_TypeDef					state;
 	MSTimerDriver_TypeDef* volatile						pMsTimerHandler;
+	volatile uint32_t									transmitStartTimestamp;
 	volatile bool										transmitInProgress;
 
 	volatile FIFOMultiread_TypeDef						rxFifo;
@@ -91,7 +94,7 @@ UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UA
 UartDriver_Status_TypeDef UartDriver_getBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t* pRetBaudRate);
 UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate);
 
-UartDriver_Status_TypeDef UartDriver_sendBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bytes);
+UartDriver_Status_TypeDef UartDriver_sendBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t length);
 
 UartDriver_Status_TypeDef UartDriver_receiveBytesTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pReceiveBuffer,
 		uint16_t bufferSize, uint8_t terminationSign);	//TODO dorobic wersje z timeoutem

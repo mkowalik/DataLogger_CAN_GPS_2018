@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "user/string_operations.h"
+#include <string.h>
 
 StringOperations_Status_TypeDef findChar(uint8_t* buffer, uint8_t charToFind, uint16_t bufferSize, uint16_t* pRetIndex){
 
@@ -40,7 +41,6 @@ StringOperations_Status_TypeDef stringEqual(uint8_t* stringA, uint8_t* stringB, 
 	}
 
 	return StringOperations_Status_OK;
-
 }
 
 StringOperations_Status_TypeDef stringToFixedPoint(uint8_t* sentence, uint16_t length, uint8_t decimalSeparator, uint8_t fractionalBits, FixedPoint* pRetFixedPoint){
@@ -135,13 +135,63 @@ StringOperations_Status_TypeDef hexChar2Uint8(uint8_t c, uint8_t* pRetInt){
 	return StringOperations_Status_NotDecimalCharError;
 }
 
-StringOperations_Status_TypeDef	uInt8ToString(uint8_t val, uint8_t* pRetString){
+StringOperations_Status_TypeDef	uInt8ToString(uint8_t* pRetBuffer, uint8_t val){
 
-	if (pRetString == NULL){
+	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
 
-	sprintf((char*)pRetString, "%u", val);
+	sprintf((char*)pRetBuffer, "%u", val);
+	return StringOperations_Status_OK;
+}
+
+StringOperations_Status_TypeDef appendUInt8ToString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize){
+	if (pRetBuffer == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+	if (sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), "%u", val) > bufferSize - strlen((char*)pRetBuffer)){
+		return StringOperations_Status_BufferOverflowError;
+	}
+	return StringOperations_Status_OK;
+}
+
+StringOperations_Status_TypeDef uInt8ToHexString(uint8_t* pRetBuffer, uint8_t val, bool upperCase){
+	if (pRetBuffer == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+	sprintf((char*)pRetBuffer, (upperCase == true) ? ("%X") : ("%x"), val);
+	return StringOperations_Status_OK;
+}
+
+StringOperations_Status_TypeDef appendUint8ToHexString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize, bool upperCase){
+	if (pRetBuffer == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+
+	if (sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), (upperCase == true) ? ("%X") : ("%x"), val) > bufferSize - strlen((char*)pRetBuffer)){
+		return StringOperations_Status_BufferOverflowError;
+	}
+	return StringOperations_Status_OK;
+
+}
+
+StringOperations_Status_TypeDef	uInt32ToString(uint32_t val, uint8_t* pRetBuffer){
+	if (pRetBuffer == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+
+	sprintf((char*)pRetBuffer, "%lu", val);
+	return StringOperations_Status_OK;
+}
+
+StringOperations_Status_TypeDef appendUInt32ToString(uint8_t* pRetBuffer, uint32_t val, uint16_t bufferSize){
+	if (pRetBuffer == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+
+	if (sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), "%lu", val) > bufferSize - strlen((char*)pRetBuffer)){
+		return StringOperations_Status_BufferOverflowError;
+	}
 	return StringOperations_Status_OK;
 }
 
@@ -150,4 +200,9 @@ bool isDecimalChar(uint8_t c){
 		return true;
 	}
 	return false;
+}
+
+uint8_t* strCharCat(uint8_t* str, uint8_t c){
+	uint8_t str2[2] = {c, 0};
+	return (uint8_t*)strcat((char*)str, (char*)str2);
 }

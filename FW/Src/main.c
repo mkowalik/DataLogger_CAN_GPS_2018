@@ -108,6 +108,10 @@ void HAL_SYSTICK_Callback(void){
 	}*/
 }
 
+void testCallback(uint8_t* bytes, uint16_t length, uint32_t timestamp, void* pArgs){
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -141,7 +145,6 @@ int main(void)
   MX_DMA_Init();
   MX_SDMMC1_SD_Init();
   MX_FATFS_Init();
-  MX_GFXSIMULATOR_Init();
 
   /* Initialize interrupts */
   MX_NVIC_Init();
@@ -156,27 +159,14 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
-	  Error_Handler();
-  }
-  while (1){
-//	  if (UartDriver_sendBytes(&uart1Driver, "test\n", sizeof("test\n")) != UartDriver_Status_OK){
-//		  Error_Handler();
-//	  }
-	  HAL_Delay(500);
-	  LedDriver_OnLed(&ledDebug2Driver);
-	  HAL_Delay(500);
-	  LedDriver_OffLed(&ledDebug2Driver);
-  }
-
-
-
-
-
   if (RTCDriver_init(&rtcDriver, &hrtc) != RTCDriver_Status_OK){
 	  Error_Handler();
   }
+
   if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
+	  Error_Handler();
+  }
+  if (MSTimerDriver_startCounting(&msTimerDriver) != MSTimerDriver_Status_OK){
 	  Error_Handler();
   }
 
@@ -200,7 +190,9 @@ int main(void)
   if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
 	  Error_Handler();
   }
-  if (GPSDriver_init(&gpsDriver, &uart1Driver, &msTimerDriver, GPSDriver_Frequency_5Hz) != GPSDriver_Status_OK){
+
+  GPSDriver_Status_TypeDef retGps;
+  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &msTimerDriver, GPSDriver_Frequency_5Hz)) != GPSDriver_Status_OK){
 	  Error_Handler();
   }
   if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
@@ -216,10 +208,6 @@ int main(void)
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }
-
-	if (GPSReceiver_start(&gpsReceiver) != GPSReceiver_Status_OK){
-		Error_Handler();
-	}
 
   /* USER CODE END 2 */
 
@@ -238,12 +226,12 @@ int main(void)
 	if (GPSDriver_thread(&gpsDriver) != GPSDriver_Status_OK){
 		Warning_Handler("GPSDriver_thread returned error.");
 	}
-
+//DEBUG begin
 	GPSData_TypeDef retGPSData;
 	if (GPSReceiver_pullLastFrame(&gpsReceiver, &retGPSData) != GPSReceiver_Status_OK){
 		Error_Handler();
 	}
-
+//DEBUG end
 
 	return ActionScheduler_Status_Error;
   }
@@ -276,7 +264,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 96;
+  RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

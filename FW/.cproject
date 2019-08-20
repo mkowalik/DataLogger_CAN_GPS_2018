@@ -277,7 +277,14 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="$(PROJECT_NAME).com.atollic.truestudio.exe.1549124020" name="Executable" projectType="com.atollic.truestudio.exe" />
 	</storageModule>
-	<storageModule moduleId="refreshScope" />
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="DataLoggerGPS" />
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/DataLoggerGPS" />
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="" />
 		<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">

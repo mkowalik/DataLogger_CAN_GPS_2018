@@ -56,10 +56,6 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 
 CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 
-	if (MSTimerDriver_startCounting(pSelf->pMsTimerDriverHandler) != MSTimerDriver_Status_OK){
-		return CANReceiver_Status_Error;
-	}
-
 	if (CANTransceiverDriver_start(pSelf->pCanTransceiverHandler) != CANTransceiverDriver_Status_OK){
 		return CANReceiver_Status_Error;
 	}
