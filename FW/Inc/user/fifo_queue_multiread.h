@@ -37,6 +37,8 @@ typedef struct {
 	volatile uint16_t						headIndex[FIFO_MULTIREAD_MAX_READERS];
 	volatile uint16_t						tailIndex;
 	volatile bool							readerActive[FIFO_MULTIREAD_MAX_READERS];
+	volatile bool							enqueueInProgress;
+	volatile int16_t						dequeueInProgressCounter;
 } FIFOMultiread_TypeDef;
 
 typedef struct {
@@ -45,8 +47,8 @@ typedef struct {
 } FIFOMultireadReaderIdentifier_TypeDef;
 
 FIFOMultiread_Status_TypeDef	FIFOMultiread_init(volatile FIFOMultiread_TypeDef* pSelf, volatile void* pTabPtrArg, uint8_t elementSize, uint16_t queueSize);
-FIFOMultiread_Status_TypeDef	FIFOMultiread_registerReaderIdentifier(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReaderIdentifier_TypeDef* pReaderHandler);
-FIFOMultiread_Status_TypeDef	FIFOMultiread_unregisterReaderIdentifier(volatile FIFOMultireadReaderIdentifier_TypeDef* pReaderHandler);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReaderIdentifier_TypeDef* pReaderHandler);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_unregisterReader(volatile FIFOMultireadReaderIdentifier_TypeDef* pReaderHandler);
 
 FIFOMultiread_Status_TypeDef	FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, volatile void* volatile pElement);
 bool							FIFOMultiread_isFull(volatile FIFOMultiread_TypeDef* volatile pSelf);

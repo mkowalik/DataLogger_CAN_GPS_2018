@@ -40,12 +40,9 @@
 
 #define GPS_KNOT_TO_KPH_FACTOR				FixedPoint_constrDecimalFrac(1, 852, 1000, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS)
 
-#define GPS_UART_DEFAULT_AT_START_BAUDRATE			9600
+#define GPS_UART_DEFAULT_AT_START_BAUDRATE	9600
 
 //< ----- Private functions prototypes ----- >//
-
-static void _GPSDriver_dataReceivedCallback(uint8_t* pSentence, uint16_t length, uint32_t timestamp, void* pArgs);
-static void _GPSDriver_sendCommandAndWaitForResponseTemporaryCallback(uint8_t* pCommand, uint16_t length, uint32_t timestamp, void* pArgs);
 
 static GPSDriver_Status_TypeDef _GPSDriver_getNMEAChecksumValue(const uint8_t* pSentence, uint8_t* retChecksumValue);
 static GPSDriver_Status_TypeDef _GPSDriver_checkNMEAChecksum(const uint8_t* pSentence);
@@ -59,79 +56,23 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile GPSDriver_Ty
 static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GPSDriver_TypeDef* pSelf, uint32_t baudRate);
 static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile GPSDriver_TypeDef* pSelf, GPSDriver_Frequency_TypeDef frequency);
 
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
-
 static GPSDriver_Status_TypeDef _GPSDriver_parseTime(uint8_t* pSentence, uint16_t length, volatile DateTime_TypeDef* pRetDateTime);
 static GPSDriver_Status_TypeDef _GPSDriver_parseDate(uint8_t* pSentence, uint16_t length, volatile DateTime_TypeDef* pRetDateTime);
 static GPSDriver_Status_TypeDef _GPSDriver_parseLatitude(uint8_t* pSentence, uint16_t length, volatile GPSData_TypeDef* pRetGPSData);
 static GPSDriver_Status_TypeDef _GPSDriver_parseLongitude(uint8_t* pSentence, uint16_t length, volatile GPSData_TypeDef* pRetGPSData);
 static GPSDriver_Status_TypeDef _GPSDriver_parseFixedPoint(uint8_t* pSentence, uint16_t length, volatile FixedPoint* pRetFixedPoint);
 
-//< ----- Uart Callback function ----- >//
-
-static void _GPSDriver_dataReceivedCallback(uint8_t* pSentence, uint16_t length, uint32_t timestamp, void* pArgs){
-
-	if (pArgs == NULL || pSentence == NULL){
-		Warning_Handler("_GPSDriver_dataReceivedCallback - null pointer."); return;
-	}
-
-	volatile GPSDriver_TypeDef* volatile pSelf = (GPSDriver_TypeDef*) pArgs;
-
-	if (pSelf->state == GPSDriver_State_DuringInit){
-		Warning_Handler("_GPSDriver_dataReceivedCallback - GPS Driver during init."); return;
-	}
-
-	if (pSelf->state == GPSDriver_State_UnInitialized){
-		Warning_Handler("_GPSDriver_dataReceivedCallback - GPS Driver uninitialized."); return;
-	}
-
-	if (length > GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC){
-		Warning_Handler("_GPSDriver_dataReceivedCallback - NMEA pSentence longer than max length."); return;
-	}
-
-	_GPSDriver_NMEASentenceString tmpNMEAString;
-	tmpNMEAString.timestamp		 	= timestamp;
-	tmpNMEAString.sentenceLength	= length;
-	memcpy(tmpNMEAString.sentenceString, pSentence, MIN(length, GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC));
-
-	if (FIFOQueue_enqueue(&pSelf->nmeaSentenceStringFIFO, &tmpNMEAString) != FIFO_Status_OK){
-		Warning_Handler("_GPSDriver_dataReceivedCallback - FIFOQueue_enqueue error."); return;
-	}
-
-}
-
-static void _GPSDriver_sendCommandAndWaitForResponseTemporaryCallback(uint8_t* pCommand, uint16_t length, uint32_t timestamp, void* pArgs){
-
-	volatile GPSDriver_TypeDef* volatile pSelf = (GPSDriver_TypeDef*) pArgs;
-
-	if (pSelf->awaitingResponseState != _GPSDriver_ResponseState_WaitingForResponse){
-		Warning_Handler("_GPSDriver_sendCommandAndWaitForResponseTemporaryCallback - awaitingResponseState not equal to _GPSDriver_ResponseState_WaitingForResponse."); return;
-	}
-
-	if (length != pSelf->awaitingResponseLength){
-		return;
-	}
-
-	StringOperations_Status_TypeDef retStatus = stringEqual((uint8_t*)pSelf->awaitingResponse, (uint8_t*)pCommand, pSelf->awaitingResponseLength);
-	if (retStatus == StringOperations_Status_OK){
-		pSelf->awaitingResponseState = _GPSDriver_ResponseState_ResponseReceived;
-		return;
-	} else if (retStatus == StringOperations_Status_NotEqual){
-		return;
-	} else {
-		Warning_Handler("_GPSDriver_sendCommandAndWaitForResponseTemporaryCallback - stringEqual operation error.");
-	}
-}
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
 
 //< ----- Public functions ----- >//
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartHandler, MSTimerDriver_TypeDef* pMSTimer, GPSDriver_Frequency_TypeDef frequency){
+GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, GPSDriver_Frequency_TypeDef frequency){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
-	if (pSelf == NULL || pUartHandler == NULL){
-		return GPSDriver_Status_Error;
+	if (pSelf == NULL || pUartDriverHandler == NULL || pUartReceiverHandler == NULL){
+		return GPSDriver_Status_NullPointerError;
 	}
 
 	if (pSelf->state != GPSDriver_State_UnInitialized){
@@ -139,9 +80,10 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	}
 
 	pSelf->state					= GPSDriver_State_DuringInit;
-	pSelf->pUartHandler				= pUartHandler;
+	pSelf->pUartDriverHandler		= pUartDriverHandler;
+	pSelf->pUartReceiverHandler		= pUartReceiverHandler;
 	pSelf->pMSTimer					= pMSTimer;
-	pSelf->pUartCallbackIterator	= 0;
+	pSelf->pUartReaderIterator		= 0;
 
 	pSelf->gpggaPartialSegmentReceived	= false;
 	pSelf->gpgsaPartialSegmentReceived	= false;
@@ -151,117 +93,61 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	pSelf->gprmcPartialSegmentTimestamp	= 0;
 	memset((void*)&pSelf->partialGPSData, 0, sizeof(GPSData_TypeDef));
 
-	memset((void*)&pSelf->nmeaSentenseStringFIFOBuffer, 0, sizeof(_GPSDriver_NMEASentenceString) * GPS_NMEA_STRING_BUFFER_FIFO_SIZE);
-	if (FIFOQueue_init(&pSelf->nmeaSentenceStringFIFO, pSelf->nmeaSentenseStringFIFOBuffer, sizeof(_GPSDriver_NMEASentenceString), GPS_NMEA_STRING_BUFFER_FIFO_SIZE) != FIFO_Status_OK){
-		return GPSDriver_Status_Error;
-	}
-
-	pSelf->awaitingResponseLength	= 0;
-	pSelf->awaitingResponseState	= _GPSDriver_ResponseState_Idle;
-	memset((void*)&pSelf->awaitingResponse, 0, GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC);
-
 	uint32_t actualUartBaudrate;
 
-	if (UartDriver_getBaudRate(pSelf->pUartHandler, &actualUartBaudrate) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartDriver_getBaudRate(pSelf->pUartDriverHandler, &actualUartBaudrate) != UartDriver_Status_OK){
+		return GPSDriver_Status_UartDriverError;
 	}
 
 	if (actualUartBaudrate != GPS_UART_DEFAULT_AT_START_BAUDRATE){
-		if (UartDriver_setBaudRate(pSelf->pUartHandler, GPS_UART_DEFAULT_AT_START_BAUDRATE) != UartDriver_Status_OK){
-			return GPSDriver_Status_UartError;
+		if (UartDriver_setBaudRate(pSelf->pUartDriverHandler, GPS_UART_DEFAULT_AT_START_BAUDRATE) != UartDriver_Status_OK){
+			return GPSDriver_Status_UartDriverError;
 		}
 	}
 
-	if (UartDriver_setReceivedBytesStartAndTerminationSignCallback(
-			pSelf->pUartHandler,
-			_GPSDriver_dataReceivedCallback,
-			(void*)pSelf,
-			&pSelf->pUartCallbackIterator,
+	if (UartReceiver_registerStartAndTerminationSignReader(
+			pSelf->pUartReceiverHandler,
+			&pSelf->pUartReaderIterator,
 			GPS_NMEA_START_SIGN,
-			GPS_NMEA_TERMINATION_SIGN) != UartDriver_Status_OK){
+			GPS_NMEA_TERMINATION_SIGN
+		) != UartReceiver_Status_OK){
 
-		return GPSDriver_Status_UartError;
+		return GPSDriver_Status_UartReceiverError;
 	}
 
 	HAL_Delay(GPS_DEVICE_START_TIME_MS);
 
-	if (UartDriver_startReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartReceiver_start(pSelf->pUartReceiverHandler) != UartReceiver_Status_OK){
+		ret = GPSDriver_Status_UartReceiverError;
 	}
 
-	if ((ret = _GPSDriver_sendTestCommand(pSelf)) != GPSDriver_Status_OK){
-		return ret;
+	if (ret == GPSDriver_Status_OK){
+		ret = _GPSDriver_sendTestCommand(pSelf);
 	}
 
-	if ((ret = _GPSDriver_changeUartBaudrateCommand(pSelf, GPS_UART_BAUDRATE)) != GPSDriver_Status_OK){
-		return ret;
+	if (ret == GPSDriver_Status_OK){
+		ret = _GPSDriver_changeUartBaudrateCommand(pSelf, GPS_UART_BAUDRATE);
 	}
 
-	if ((ret = _GPSDriver_changeUpdateFrequemcyCommand(pSelf, frequency)) != GPSDriver_Status_OK){
-		return ret;
+	if (ret == GPSDriver_Status_OK){
+		ret = _GPSDriver_changeUpdateFrequemcyCommand(pSelf, frequency);
 	}
 
-	if (UartDriver_stopReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartReceiver_stop(pSelf->pUartReceiverHandler) != UartReceiver_Status_OK){
+		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverError : ret;
 	}
 
-	pSelf->state = GPSDriver_State_Initialized;
-
-	return GPSDriver_Status_OK;
-}
-
-GPSDriver_Status_TypeDef GPSDriver_setReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, void (*foo)(GPSData_TypeDef gpsData, void* pArgs),
-		void* pArgs, GPSDriver_CallbackIterator_TypeDef* pRetCallbackIterator){
-
-	if (pSelf == NULL || foo == NULL || pRetCallbackIterator == NULL){
-		return GPSDriver_Status_Error;
+	if (ret == GPSDriver_Status_OK){
+		pSelf->state = GPSDriver_State_Initialized;
 	}
 
-	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
-		return GPSDriver_Status_UnInitializedError;
-	}
-
-	uint8_t i = 0;
-	for (uint8_t i=0; i<GPS_DRIVER_MAX_CALLBACK_NUMBER; i++){
-		if (pSelf->pReceivedDataCallbackFunctions[i] != NULL){
-			pSelf->pReceivedDataCallbackFunctions[i] = foo;
-			pSelf->pCallbackArguments[i] = pArgs;
-		}
-	}
-
-	*pRetCallbackIterator = (GPSDriver_CallbackIterator_TypeDef)i;
-
-	if (i == GPS_DRIVER_MAX_CALLBACK_NUMBER){
-		return GPSDriver_Status_TooManyCallbacksError;
-	}
-
-	return GPSDriver_Status_OK;
-}
-
-GPSDriver_Status_TypeDef GPSDriver_removeReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, GPSDriver_CallbackIterator_TypeDef callbackIterator){
-
-	if (pSelf == NULL){
-		return GPSDriver_Status_Error;
-	}
-
-	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
-		return GPSDriver_Status_UnInitializedError;
-	}
-
-	if (pSelf->pReceivedDataCallbackFunctions[callbackIterator] == NULL){
-		return GPSDriver_Status_UartError;
-	}
-
-	pSelf->pReceivedDataCallbackFunctions[callbackIterator]	= NULL;
-	pSelf->pCallbackArguments[callbackIterator]				= NULL;
-
-	return GPSDriver_Status_OK;
+	return ret;
 }
 
 GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf) {
 
 	if (pSelf == NULL){
-		return GPSDriver_Status_Error;
+		return GPSDriver_Status_NullPointerError;
 	}
 
 	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
@@ -272,8 +158,8 @@ GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSe
 		return GPSDriver_Status_RunningError;
 	}
 
-	if (UartDriver_startReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartReceiver_start(pSelf->pUartReceiverHandler) != UartReceiver_Status_OK){
+		return GPSDriver_Status_UartReceiverError;
 	}
 
 	return GPSDriver_Status_OK;
@@ -283,7 +169,7 @@ GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSe
 GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf) {
 
 	if (pSelf == NULL){
-		return GPSDriver_Status_Error;
+		return GPSDriver_Status_NullPointerError;
 	}
 
 	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
@@ -294,82 +180,90 @@ GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSel
 		return GPSDriver_Status_NotRunningError;
 	}
 
-	if (UartDriver_stopReceiver(pSelf->pUartHandler) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartReceiver_stop(pSelf->pUartReceiverHandler) != UartReceiver_Status_OK){
+		return GPSDriver_Status_UartReceiverError;
 	}
 
 	return GPSDriver_Status_OK;
 
 }
 
-GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf) {
+GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData) {
 
-	if (pSelf == NULL){
-		return GPSDriver_Status_Error;
+	if (pSelf == NULL || pRetGPSData == NULL){
+		return GPSDriver_Status_NullPointerError;
 	}
 
 	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
 		return GPSDriver_Status_UnInitializedError;
 	}
+	GPSDriver_Status_TypeDef		ret						= GPSDriver_Status_OK;;
+	_GPSDriver_NMEASentenceString	nmeaRxSentenceString	= { 0 };
+	UartReceiver_Status_TypeDef		retUR					= UartReceiver_Status_OK;
 
-	GPSDriver_Status_TypeDef		ret = GPSDriver_Status_OK;
-	FIFO_Status_TypeDef				fifoRet;
-	_GPSDriver_NMEASentenceString	retNMEAString;
+	while (1) {
 
-	fifoRet = FIFOQueue_dequeue(&pSelf->nmeaSentenceStringFIFO, &retNMEAString);
-
-	if (fifoRet == FIFO_Status_Empty){
-		return ret;
-	} else if (fifoRet == FIFO_Status_OK){
-
-		if (retNMEAString.sentenceLength > sizeof(GPS_NMEA_GPGGA_PREFIX) &&
-				stringEqual(GPS_NMEA_GPGGA_PREFIX, retNMEAString.sentenceString, sizeof(GPS_NMEA_GPGGA_PREFIX))) {
-
-			if ((ret = _GPSDriver_handleGPGGASentence(pSelf, &retNMEAString)) != GPSDriver_Status_OK){
-				return ret;
-			}
-			pSelf->gpggaPartialSegmentTimestamp	= retNMEAString.timestamp;
-			pSelf->gpggaPartialSegmentReceived	= true;
-
-		} else if (retNMEAString.sentenceLength  > sizeof(GPS_NMEA_GPGSA_PREFIX) &&
-				stringEqual(GPS_NMEA_GPGSA_PREFIX, retNMEAString.sentenceString, sizeof(GPS_NMEA_GPGSA_PREFIX)) ){
-
-			if ((ret = _GPSDriver_handleGPGSASentence(pSelf, &retNMEAString)) != GPSDriver_Status_OK){
-				return ret;
-			}
-			pSelf->gpgsaPartialSegmentTimestamp	= retNMEAString.timestamp;
-			pSelf->gpgsaPartialSegmentReceived	= true;
-
-		} else if (retNMEAString.sentenceLength  > sizeof(GPS_NMEA_GPRMC_PREFIX) &&
-				stringEqual(GPS_NMEA_GPRMC_PREFIX, retNMEAString.sentenceString, sizeof(GPS_NMEA_GPRMC_PREFIX)) ){
-
-			if ((ret = _GPSDriver_handleGPRMCSentence(pSelf, &retNMEAString)) != GPSDriver_Status_OK){
-				return ret;
-			}
-			pSelf->gprmcPartialSegmentTimestamp	= retNMEAString.timestamp;
-			pSelf->gprmcPartialSegmentReceived	= true;
-
-		} else {
-			return GPSDriver_Status_OK; //< not recognised NMEA Sentence prefix
+		retUR = UartReceiver_pullLastSentence(pSelf->pUartReceiverHandler, pSelf->pUartReaderIterator, nmeaRxSentenceString.sentenceString, &nmeaRxSentenceString.sentenceLength, &nmeaRxSentenceString.timestamp); //TODO dodac buffer size
+		if (retUR == UartReceiver_Status_Empty){
+			return GPSDriver_Status_Empty;
+		} else if (retUR != UartReceiver_Status_OK){
+			return GPSDriver_Status_UartReceiverError;
 		}
-	} else {
-		return GPSDriver_Status_Error;
-	}
 
-	if (pSelf->gpggaPartialSegmentReceived && pSelf->gpgsaPartialSegmentReceived && pSelf->gprmcPartialSegmentReceived){
-		if (ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gpgsaPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
-			ABS(pSelf->gpgsaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
-			ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY){
+		if (nmeaRxSentenceString.sentenceLength > sizeof(GPS_NMEA_GPGGA_PREFIX) &&
+				stringEqual(GPS_NMEA_GPGGA_PREFIX, nmeaRxSentenceString.sentenceString, sizeof(GPS_NMEA_GPGGA_PREFIX))) {
 
-			for (uint8_t i=0; i<GPS_DRIVER_MAX_CALLBACK_NUMBER; i++){
-				if (pSelf->pReceivedDataCallbackFunctions[i] != NULL){
-					pSelf->pReceivedDataCallbackFunctions[i](pSelf->partialGPSData, (void*)pSelf->pCallbackArguments[i]);
-				}
+			ret = _GPSDriver_handleGPGGASentence(pSelf, &nmeaRxSentenceString);
+			if (ret == GPSDriver_Status_OK){
+				pSelf->gpggaPartialSegmentTimestamp	= nmeaRxSentenceString.timestamp;
+				pSelf->gpggaPartialSegmentReceived	= true;
+			} else if (ret == GPSDriver_Status_NMEASentenceError || ret == GPSDriver_Status_WrongNMEAChecksumError){
+				Warning_Handler("GPSDriver_Status_NMEASentenceError or GPSDriver_Status_WrongNMEAChecksumError error while parsing GPGGA Sentence.");
+			} else {
+				return ret;
+			}
+
+		} else if (nmeaRxSentenceString.sentenceLength  > sizeof(GPS_NMEA_GPGSA_PREFIX) &&
+				stringEqual(GPS_NMEA_GPGSA_PREFIX, nmeaRxSentenceString.sentenceString, sizeof(GPS_NMEA_GPGSA_PREFIX)) ){
+
+			ret = _GPSDriver_handleGPGSASentence(pSelf, &nmeaRxSentenceString);
+
+			if (ret == GPSDriver_Status_OK){
+				pSelf->gpgsaPartialSegmentTimestamp	= nmeaRxSentenceString.timestamp;
+				pSelf->gpgsaPartialSegmentReceived	= true;
+			} else if (ret == GPSDriver_Status_NMEASentenceError || ret == GPSDriver_Status_WrongNMEAChecksumError){
+				Warning_Handler("GPSDriver_Status_NMEASentenceError or GPSDriver_Status_WrongNMEAChecksumError error while parsing GPGSA Sentence.");
+			} else {
+				return ret;
+			}
+
+		} else if (nmeaRxSentenceString.sentenceLength  > sizeof(GPS_NMEA_GPRMC_PREFIX) &&
+				stringEqual(GPS_NMEA_GPRMC_PREFIX, nmeaRxSentenceString.sentenceString, sizeof(GPS_NMEA_GPRMC_PREFIX)) ){
+
+			ret = _GPSDriver_handleGPRMCSentence(pSelf, &nmeaRxSentenceString);
+
+			if (ret == GPSDriver_Status_OK){
+				pSelf->gprmcPartialSegmentTimestamp	= nmeaRxSentenceString.timestamp;
+				pSelf->gprmcPartialSegmentReceived	= true;
+			} else if (ret == GPSDriver_Status_NMEASentenceError || ret == GPSDriver_Status_WrongNMEAChecksumError){
+				Warning_Handler("GPSDriver_Status_NMEASentenceError or GPSDriver_Status_WrongNMEAChecksumError error while parsing GPRMC Sentence.");
+			} else {
+				return ret;
 			}
 		}
-	}
 
-	return GPSDriver_Status_OK;
+		if (pSelf->gpggaPartialSegmentReceived && pSelf->gpgsaPartialSegmentReceived && pSelf->gprmcPartialSegmentReceived){
+			if (ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gpgsaPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
+				ABS(pSelf->gpgsaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
+				ABS(pSelf->gpggaPartialSegmentTimestamp - pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY){
+
+				*pRetGPSData = pSelf->partialGPSData;
+
+				return GPSDriver_Status_OK;
+			}
+		}
+	}
+	return GPSDriver_Status_Error;
 }
 
 //< ----- Private functions ----- >//
@@ -470,52 +364,62 @@ static GPSDriver_Status_TypeDef _GPSDriver_appendCommandSufix(volatile GPSDriver
 static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatile GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer, uint8_t* pExpectedOKResponseBuffer){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
-	if (pSelf->awaitingResponseState != _GPSDriver_ResponseState_Idle){
-		return GPSDriver_Status_BusyError;
-	}
 
-	strcpy((char*)pSelf->awaitingResponse, (char*)pExpectedOKResponseBuffer);
-	pSelf->awaitingResponseLength	= strlen((char*)pExpectedOKResponseBuffer);
-	pSelf->awaitingResponseState	= _GPSDriver_ResponseState_WaitingForResponse;
+	uint16_t expectedResponseLength = strlen((char*)pExpectedOKResponseBuffer);
 
-	volatile UartDriver_CallbackIterator_TypeDef	tempCallbackIterator;
+	volatile UartReceiver_ReaderIterator_TypeDef	tempReaderIterator;
+	uint8_t											tempSentenceBuffer[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
+	uint16_t										tempSentenceLength;
+	uint32_t										tempSentenceTimestamp;
+	UartReceiver_Status_TypeDef						retUR	= UartReceiver_Status_OK;
 
-	if (	UartDriver_setReceivedBytesStartAndTerminationSignCallback
+	if (	UartReceiver_registerStartAndTerminationSignReader
 			(
-				pSelf->pUartHandler,
-				_GPSDriver_sendCommandAndWaitForResponseTemporaryCallback,
-				(void*)pSelf,
-				&tempCallbackIterator,
+				pSelf->pUartReceiverHandler,
+				&tempReaderIterator,
 				pExpectedOKResponseBuffer[0],
 				pExpectedOKResponseBuffer[strlen((char*)pExpectedOKResponseBuffer)-1]
-			) != UartDriver_Status_OK ) {
+			) != UartReceiver_Status_OK ) {
 
-		return GPSDriver_Status_UartError;
+		return GPSDriver_Status_UartReceiverError;
 	}
 
-	if (UartDriver_sendBytes(pSelf->pUartHandler, pCommandBuffer, strlen((char*)pCommandBuffer)) != UartDriver_Status_OK){
-		ret = GPSDriver_Status_UartError;
-	}
+	ret = _GPSDriver_sendCommand(pSelf, pCommandBuffer);
 
 	uint32_t sentCommandTimestamp;
 	if (ret == GPSDriver_Status_OK && MSTimerDriver_getMSTime(pSelf->pMSTimer, &sentCommandTimestamp) != MSTimerDriver_Status_OK){
-		ret = GPSDriver_Status_Error;
+		ret = GPSDriver_Status_MSTimerError;
 	}
 
-	while (ret == GPSDriver_Status_OK && pSelf->awaitingResponseState != _GPSDriver_ResponseState_ResponseReceived){
+	while (ret == GPSDriver_Status_OK){
+
+		retUR = UartReceiver_pullLastSentence(pSelf->pUartReceiverHandler, tempReaderIterator, tempSentenceBuffer, &tempSentenceLength, &tempSentenceTimestamp);
+		if (retUR != UartReceiver_Status_OK && retUR != UartReceiver_Status_Empty){
+			ret = GPSDriver_Status_UartReceiverError;
+		}
+
+		if (retUR != UartReceiver_Status_Empty && tempSentenceLength == expectedResponseLength){
+			StringOperations_Status_TypeDef retStatus = stringEqual(tempSentenceBuffer, pExpectedOKResponseBuffer, tempSentenceLength);
+			if (retStatus == StringOperations_Status_OK){
+				break;
+			} else if (retStatus == StringOperations_Status_NotEqual){
+				continue;
+			} else {
+				ret = GPSDriver_Status_StringOperationsError;
+			}
+		}
+/*
 		uint32_t actualTimestamp;
 		if (MSTimerDriver_getMSTime(pSelf->pMSTimer, &actualTimestamp) != MSTimerDriver_Status_OK){
-			ret = GPSDriver_Status_Error;
+			ret = GPSDriver_Status_MSTimerError;
 		}
 		if (ret == GPSDriver_Status_OK && actualTimestamp - sentCommandTimestamp > GPS_COMMAND_RESPONSE_TIMEOUT_MS){
 			ret = GPSDriver_Status_ACKTimeoutError;
-		}
+		}*/
 	}
 
-	pSelf->awaitingResponseState = _GPSDriver_ResponseState_Idle;
-
-	if (UartDriver_removeReceivedBytesStartAndTerminationSignCallback(pSelf->pUartHandler, tempCallbackIterator) != UartDriver_Status_OK ) {
-		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartError : ret;
+	if (UartReceiver_removeStartAndTerminationSignReader(pSelf->pUartReceiverHandler, tempReaderIterator) != UartReceiver_Status_OK ) {
+		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverError : ret;
 	}
 
 	return ret;
@@ -523,8 +427,16 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatil
 
 static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer){
 
-	if (UartDriver_sendBytes(pSelf->pUartHandler, pCommandBuffer, strlen((char*)pCommandBuffer)) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartDriver_sendBytesDMA(pSelf->pUartDriverHandler, pCommandBuffer, strlen((char*)pCommandBuffer), GPS_TX_TIMEOUT_MS) != UartDriver_Status_OK){
+		return GPSDriver_Status_UartDriverError;
+	}
+
+	UartDriver_Status_TypeDef ret = UartDriver_waitForTxTimeout(pSelf->pUartDriverHandler);
+
+	if (ret == UartDriver_Status_TxTimeoutError){
+		return GPSDriver_Status_TXTimeoutError;
+	} else if (ret != UartDriver_Status_OK){
+		return GPSDriver_Status_UartDriverError;
 	}
 
 	return GPSDriver_Status_OK;
@@ -574,8 +486,8 @@ static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GP
 		return ret;
 	}
 
-	if (UartDriver_setBaudRate(pSelf->pUartHandler, GPS_UART_BAUDRATE) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartError;
+	if (UartDriver_setBaudRate(pSelf->pUartDriverHandler, GPS_UART_BAUDRATE) != UartDriver_Status_OK){
+		return GPSDriver_Status_UartDriverError;
 	}
 
 	HAL_Delay(GPS_SET_BAUDRATE_DELAY);

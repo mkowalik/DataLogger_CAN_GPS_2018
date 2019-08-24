@@ -82,7 +82,11 @@ LedDriver_TypeDef				ledDebug1Driver;
 LedDriver_TypeDef				ledDebug2Driver;
 
 UartDriver_TypeDef				uart1Driver;
+UartReceiver_TypeDef			uart1Receiver;
 GPSDriver_TypeDef				gpsDriver;
+
+LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
+LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
 
 /* USER CODE END PV */
 
@@ -90,6 +94,48 @@ GPSDriver_TypeDef				gpsDriver;
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
+
+void FIFOTest(){
+
+
+	volatile FIFOMultiread_TypeDef						rxFifo = {0};
+	volatile UartReceiver_FIFOElem_TypeDef				receiveBuffer[128];
+
+	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiver_FIFOElem_TypeDef), 128);
+	FIFOMultireadReaderIdentifier_TypeDef id;
+	FIFOMultiread_registerReader(&rxFifo, &id);
+
+	UartReceiver_FIFOElem_TypeDef byteWithTimestamp;
+
+  for (uint16_t i=0; i<128; i++){
+	  byteWithTimestamp.dataByte = i;
+	  byteWithTimestamp.msTime = i+128;
+	if (FIFOMultiread_enqueue(&rxFifo, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+	}
+  }
+
+  for (uint8_t i=0; i<128; i++){
+  	if (FIFOMultiread_dequeue(&id, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+  		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+  	}
+  }
+
+  for (uint16_t i=0; i<128; i++){
+	  byteWithTimestamp.dataByte = i;
+	  byteWithTimestamp.msTime = i+128;
+	if (FIFOMultiread_enqueue(&rxFifo, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+	}
+  }
+
+  for (uint16_t i=0; i<128; i++){
+  	if (FIFOMultiread_dequeue(&id, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+  		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+  	}
+  }
+
+}
 
 /* USER CODE END PFP */
 
@@ -108,9 +154,6 @@ void HAL_SYSTICK_Callback(void){
 	}*/
 }
 
-void testCallback(uint8_t* bytes, uint16_t length, uint32_t timestamp, void* pArgs){
-
-}
 
 /* USER CODE END 0 */
 
@@ -149,8 +192,6 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
-  LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
 
   if (LedDriver_init(&ledDebug1Driver, (LedDriver_Port_TypeDef*)my_LED_DEBUG1_GPIO_Port, &ledDebug1Pin) != LedDriver_Status_OK){
 	  Error_Handler();
@@ -190,11 +231,57 @@ int main(void)
   if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
 	  Error_Handler();
   }
-
-  GPSDriver_Status_TypeDef retGps;
-  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &msTimerDriver, GPSDriver_Frequency_5Hz)) != GPSDriver_Status_OK){
+  if (UartReceiver_init(&uart1Receiver, &uart1Driver) != UartReceiver_Status_OK){
 	  Error_Handler();
   }
+
+  //DEBUG BEGIN
+  UartReceiver_ReaderIterator_TypeDef reader = {0};
+
+	if (UartReceiver_registerStartAndTerminationSignReader(
+			&uart1Receiver,
+			&reader,
+			'$',
+			'\n'
+		) != UartReceiver_Status_OK){
+
+		return GPSDriver_Status_UartReceiverError;
+	}
+
+	uart1Receiver.receiveBuffer[0].dataByte = 0xFF;
+	uart1Receiver.receiveBuffer[0].msTime = 0xFFFFFFFF;
+	uart1Receiver.receiveBuffer[2].dataByte = 0xFF;
+	uart1Receiver.receiveBuffer[2].msTime = 0xFFFFFFFF;
+	for (int i=0; i<128; i++){
+		uart1Receiver.receiveBuffer[i].dataByte = 0xFF;
+	uart1Receiver.receiveBuffer[i].msTime = 0xFFFFFFFF;
+
+	}
+	uint32_t tmp = sizeof(UartReceiver_FIFOElem_TypeDef);
+	if (UartReceiver_start(&uart1Receiver) != UartReceiver_Status_OK){
+		return GPSDriver_Status_UartReceiverError;
+	}
+	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
+		HAL_Delay(10);
+
+	while (1){
+		uint8_t buffer[80];
+		uint16_t length;
+		UartReceiver_Status_TypeDef ret = UartReceiver_pullLastSentence(&uart1Receiver, reader, buffer, &length, NULL);
+		if (ret != UartReceiver_Status_Empty){
+			  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
+			  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
+		}
+		HAL_Delay(10);
+	}
+	//DEBUG END
+
+  GPSDriver_Status_TypeDef retGps;
+  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, GPSDriver_Frequency_5Hz)) != GPSDriver_Status_OK){
+	  Error_Handler();
+  }
+
   if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
 	  Error_Handler();
   }
@@ -223,9 +310,6 @@ int main(void)
 //		Warning_Handler("ActionScheduler_thread returned error.");
 //	}
 
-	if (GPSDriver_thread(&gpsDriver) != GPSDriver_Status_OK){
-		Warning_Handler("GPSDriver_thread returned error.");
-	}
 //DEBUG begin
 	GPSData_TypeDef retGPSData;
 	if (GPSReceiver_pullLastFrame(&gpsReceiver, &retGPSData) != GPSReceiver_Status_OK){
@@ -233,7 +317,6 @@ int main(void)
 	}
 //DEBUG end
 
-	return ActionScheduler_Status_Error;
   }
   /* USER CODE END 3 */
 }
@@ -264,7 +347,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLN = 96;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

@@ -61,6 +61,8 @@
 								<option id="com.atollic.truestudio.common_options.target.fpu.829683864" name="Floating point" superClass="com.atollic.truestudio.common_options.target.fpu" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.fpu.hard" valueType="enumerated" />
 								<option id="com.atollic.truestudio.common_options.target.fpucore.1297069055" name="FPU" superClass="com.atollic.truestudio.common_options.target.fpucore" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.fpucore.fpv5-d16" valueType="enumerated" />
 								<option id="com.atollic.truestudio.common_options.target.interwork.1173495076" name="Mix ARM/Thumb" superClass="com.atollic.truestudio.common_options.target.interwork" useByScannerDiscovery="false" />
+								<option id="com.atollic.truestudio.gcc.warnings.extra.1593670800" superClass="com.atollic.truestudio.gcc.warnings.extra" useByScannerDiscovery="false" value="true" valueType="boolean" />
+								<option id="com.atollic.truestudio.gcc.warnings.w_switch_default.1045765754" superClass="com.atollic.truestudio.gcc.warnings.w_switch_default" useByScannerDiscovery="false" value="true" valueType="boolean" />
 								<inputType id="com.atollic.truestudio.gcc.input.850396938" superClass="com.atollic.truestudio.gcc.input" />
 							</tool>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.ld.1444973427" name="C Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ld">

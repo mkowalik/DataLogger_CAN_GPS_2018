@@ -12,6 +12,7 @@
 
 #include "user/gps_data.h"
 #include "user/uart_driver.h"
+#include "user/uart_receiver.h"
 #include "user/fifo_queue.h"
 
 #define	GPS_DRIVER_MAX_CALLBACK_NUMBER				3
@@ -20,7 +21,9 @@
 
 #define GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS		12
 
+#define GPS_TX_TIMEOUT_MS							100
 #define GPS_COMMAND_RESPONSE_TIMEOUT_MS				1000
+
 #define GPS_DEVICE_START_TIME_MS					600
 
 #define GPS_SET_BAUDRATE_DELAY						400
@@ -33,6 +36,7 @@
 
 typedef enum {
 	GPSDriver_Status_OK = 0,
+	GPSDriver_Status_Empty,
 	GPSDriver_Status_UnInitializedError,
 	GPSDriver_Status_RunningError,
 	GPSDriver_Status_NotRunningError,
@@ -41,8 +45,13 @@ typedef enum {
 	GPSDriver_Status_TooManyCallbacksError,
 	GPSDriver_Status_BufferOverflowError,
 	GPSDriver_Status_BusyError,
-	GPSDriver_Status_UartError,
+	GPSDriver_Status_UartDriverError,
+	GPSDriver_Status_UartReceiverError,
+	GPSDriver_Status_MSTimerError,
+	GPSDriver_Status_StringOperationsError,
+	GPSDriver_Status_TXTimeoutError,
 	GPSDriver_Status_ACKTimeoutError,
+	GPSDriver_Status_NullPointerError,
 	GPSDriver_Status_Error
 } GPSDriver_Status_TypeDef;
 
@@ -73,13 +82,14 @@ typedef struct {
 	uint8_t		sentenceString[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
 } _GPSDriver_NMEASentenceString;
 
-typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
+typedef uint16_t GPSDriver_Reader_TypeDef;
 
 typedef struct {
 	volatile GPSDriver_State_TypeDef				state;
-	volatile UartDriver_TypeDef* volatile			pUartHandler;
+	volatile UartDriver_TypeDef* volatile			pUartDriverHandler;
+	volatile UartReceiver_TypeDef* volatile			pUartReceiverHandler;
 	volatile MSTimerDriver_TypeDef* volatile 		pMSTimer;
-	volatile UartDriver_CallbackIterator_TypeDef	pUartCallbackIterator;
+	volatile UartReceiver_ReaderIterator_TypeDef	pUartReaderIterator;
 
 	volatile bool									gpggaPartialSegmentReceived;
 	volatile bool									gpgsaPartialSegmentReceived;
@@ -88,29 +98,21 @@ typedef struct {
 	volatile uint32_t								gpgsaPartialSegmentTimestamp;
 	volatile uint32_t								gprmcPartialSegmentTimestamp;
 	volatile GPSData_TypeDef						partialGPSData;
-
-	volatile FIFOQueue_TypeDef						nmeaSentenceStringFIFO;
-	volatile _GPSDriver_NMEASentenceString			nmeaSentenseStringFIFOBuffer[GPS_NMEA_STRING_BUFFER_FIFO_SIZE];
-
-	volatile uint16_t								awaitingResponseLength;
-	volatile _GPSDriver_ResponseState				awaitingResponseState;
-	volatile uint8_t								awaitingResponse[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
-
-	void										  (*pReceivedDataCallbackFunctions[GPS_DRIVER_MAX_CALLBACK_NUMBER])(GPSData_TypeDef gpsData, void* pArgs);
-	volatile void* volatile 						pCallbackArguments[GPS_DRIVER_MAX_CALLBACK_NUMBER];
 } GPSDriver_TypeDef;
 
 typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartHandler, MSTimerDriver_TypeDef* pMSTimer, GPSDriver_Frequency_TypeDef frequency);
+GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, GPSDriver_Frequency_TypeDef frequency);
 
-GPSDriver_Status_TypeDef GPSDriver_setReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, void (*foo)(GPSData_TypeDef gpsData, void* pArgs),
-		void* pArgs, UartDriver_CallbackIterator_TypeDef* pRetCallbackIterator);
-GPSDriver_Status_TypeDef GPSDriver_removeReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, GPSDriver_CallbackIterator_TypeDef callbackIterator);
+/*GPSDriver_Status_TypeDef GPSDriver_setReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, void (*foo)(GPSData_TypeDef gpsData, void* pArgs),
+		void* pArgs, UartDriver_ByteReceivedCallbackIterator_TypeDef* pRetCallbackIterator);
+GPSDriver_Status_TypeDef GPSDriver_removeReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, GPSDriver_CallbackIterator_TypeDef callbackIterator);*/
 
 GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf);
 GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf);
 
-GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf);
+//GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf);
+
+GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData);
 
 #endif /* USER_GPS_DRIVER_H_ */
