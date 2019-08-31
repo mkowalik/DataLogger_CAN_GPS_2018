@@ -50,7 +50,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 	uint32_t prescalerValue;
 
-	switch (pConfig->can_speed){
+	switch (pConfig->canSpeed){
 	case 1000:
 		prescalerValue = 6;
 		break;

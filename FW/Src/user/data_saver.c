@@ -122,6 +122,68 @@ DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANDat
 
 DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData){
 
+	if (pSelf->state != DataSaver_State_OpenedFile){
+		return DataSaver_Status_FileNotOpenedError;
+	}
+
+	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTime) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->gpsFrameId) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pData->dateTime.year) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.month) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.day) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.hour) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.minute) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.second) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->longitude) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->latitude) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->nSatellites) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->altitude) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->speed) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->fixType) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->horizontalPrecision) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->horizontalPrecision) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->verticalPrecision) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	if (FileWritingBuffer_flush(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	return DataSaver_Status_OK;
 }
 
 #define	DATA_SAVER_HEADER_BUFFER_SIZE	16
@@ -133,56 +195,62 @@ static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, D
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, LOG_FILE_SUBVERSION) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;;
+		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->can_speed) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;;
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->canSpeed) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->num_of_frames) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;;
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pSelf->pConfig->gpsFrequency) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->gpsFrameId) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->numOfFrames) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
 	}
 
-	for (uint16_t frameNr=0; frameNr < pSelf->pConfig->num_of_frames; frameNr++){
+	for (uint16_t frameNr=0; frameNr < pSelf->pConfig->numOfFrames; frameNr++){
 
-		if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].ID) != FileWritingBuffer_Status_OK){
+		if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].ID) != FileWritingBuffer_Status_OK){
 			return DataSaver_Status_Error;
 		}
 
-		if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].DLC) != FileWritingBuffer_Status_OK){
+		if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].DLC) != FileWritingBuffer_Status_OK){
 			return DataSaver_Status_Error;
 		}
 
-		if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].moduleName, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
+		if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].moduleName, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
 			return DataSaver_Status_Error;
 		}
 
-		for (uint8_t bytesCounter=0, channelNo=0; bytesCounter<pSelf->pConfig->frames[frameNr].DLC; channelNo++){
+		for (uint8_t bytesCounter=0, channelNo=0; bytesCounter<pSelf->pConfig->canFrames[frameNr].DLC; channelNo++){
 
-			if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].valueType) != FileWritingBuffer_Status_OK){
+			if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].valueType) != FileWritingBuffer_Status_OK){
 				return DataSaver_Status_Error;
 			}
-			if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].multiplier) != FileWritingBuffer_Status_OK){
+			if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].multiplier) != FileWritingBuffer_Status_OK){
 				return DataSaver_Status_Error;
 			}
-			if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].divider) != FileWritingBuffer_Status_OK){
+			if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].divider) != FileWritingBuffer_Status_OK){
 				return DataSaver_Status_Error;
 			}
-			if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].offset) != FileWritingBuffer_Status_OK){
-				return DataSaver_Status_Error;
-			}
-
-			if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].description, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
-				return DataSaver_Status_Error;
-			}
-			if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].unit, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
-				return DataSaver_Status_Error;
-			}
-			if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->frames[frameNr].channels[channelNo].comment, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
+			if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].offset) != FileWritingBuffer_Status_OK){
 				return DataSaver_Status_Error;
 			}
 
+			if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].description, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
+				return DataSaver_Status_Error;
+			}
+			if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].unit, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
+				return DataSaver_Status_Error;
+			}
+			if (FileWritingBuffer_writeString(&pSelf->sWritingBuffer, pSelf->pConfig->canFrames[frameNr].channels[channelNo].comment, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
+				return DataSaver_Status_Error;
+			}
 
-			if ((pSelf->pConfig->frames[frameNr].channels[channelNo].valueType & CONFIG_16_BIT_TYPE_flag) == 0){
+
+			if ((pSelf->pConfig->canFrames[frameNr].channels[channelNo].valueType & CONFIG_16_BIT_TYPE_flag) == 0){
 				bytesCounter += 1;
 			} else {
 				bytesCounter += 2;

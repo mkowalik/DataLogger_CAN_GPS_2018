@@ -156,6 +156,11 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer
 	return FileWritingBuffer_Status_OK;
 }
 
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWritingBuffer_TypeDef* pSelf, FixedPoint value){
+
+	return FileWritingBuffer_writeUInt32(pSelf, value.integer);
+}
+
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeDef* pSelf){
 
 	if (pSelf->state != FileWritingBuffer_State_Initialized){

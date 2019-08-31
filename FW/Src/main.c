@@ -69,7 +69,7 @@ DataSaver_TypeDef				dataSaver;
 
 CANReceiver_TypeDef				canReceiver;
 RTCDriver_TypeDef				rtcDriver;
-GPSReceiver_TypeDef				gpsReceiver;
+GPSDriver_TypeDef				gpsDriver;
 
 ActionScheduler_TypeDef			actionScheduler;
 
@@ -83,7 +83,6 @@ LedDriver_TypeDef				ledDebug2Driver;
 
 UartDriver_TypeDef				uart1Driver;
 UartReceiver_TypeDef			uart1Receiver;
-GPSDriver_TypeDef				gpsDriver;
 
 LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
 LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
@@ -247,17 +246,6 @@ int main(void)
 
 		return GPSDriver_Status_UartReceiverError;
 	}
-
-	uart1Receiver.receiveBuffer[0].dataByte = 0xFF;
-	uart1Receiver.receiveBuffer[0].msTime = 0xFFFFFFFF;
-	uart1Receiver.receiveBuffer[2].dataByte = 0xFF;
-	uart1Receiver.receiveBuffer[2].msTime = 0xFFFFFFFF;
-	for (int i=0; i<128; i++){
-		uart1Receiver.receiveBuffer[i].dataByte = 0xFF;
-	uart1Receiver.receiveBuffer[i].msTime = 0xFFFFFFFF;
-
-	}
-	uint32_t tmp = sizeof(UartReceiver_FIFOElem_TypeDef);
 	if (UartReceiver_start(&uart1Receiver) != UartReceiver_Status_OK){
 		return GPSDriver_Status_UartReceiverError;
 	}
@@ -289,7 +277,7 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsReceiver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
@@ -312,7 +300,7 @@ int main(void)
 
 //DEBUG begin
 	GPSData_TypeDef retGPSData;
-	if (GPSReceiver_pullLastFrame(&gpsReceiver, &retGPSData) != GPSReceiver_Status_OK){
+	if (GPSDriver_pullLastFrame(&gpsDriver, &retGPSData) != GPSDriver_Status_OK){
 		Error_Handler();
 	}
 //DEBUG end
@@ -347,7 +335,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 96;
+  RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

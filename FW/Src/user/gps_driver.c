@@ -14,8 +14,6 @@
 
 #include <stdio.h>
 
-
-
 #define	GPS_CONFIG_TEST_CMD_PREFIX						"$PMTK000"
 #define	GPS_CONFIG_TEST_RESPONSE_PREFIX					"$PMTK001,0,3"
 #define	GPS_CONFIG_CHANGE_UART_SPEED_CMD_PREFIX			"$PMTK251"
@@ -73,10 +71,6 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	if (pSelf == NULL || pUartDriverHandler == NULL || pUartReceiverHandler == NULL){
 		return GPSDriver_Status_NullPointerError;
-	}
-
-	if (pSelf->state != GPSDriver_State_UnInitialized){
-		return UartDriver_Status_Error;
 	}
 
 	pSelf->state					= GPSDriver_State_DuringInit;
@@ -367,11 +361,11 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatil
 
 	uint16_t expectedResponseLength = strlen((char*)pExpectedOKResponseBuffer);
 
-	volatile UartReceiver_ReaderIterator_TypeDef	tempReaderIterator;
-	uint8_t											tempSentenceBuffer[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
-	uint16_t										tempSentenceLength;
-	uint32_t										tempSentenceTimestamp;
-	UartReceiver_Status_TypeDef						retUR	= UartReceiver_Status_OK;
+	UartReceiver_ReaderIterator_TypeDef	tempReaderIterator;
+	uint8_t								tempSentenceBuffer[GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC];
+	uint16_t							tempSentenceLength;
+	uint32_t							tempSentenceTimestamp;
+	UartReceiver_Status_TypeDef			retUR	= UartReceiver_Status_OK;
 
 	if (	UartReceiver_registerStartAndTerminationSignReader
 			(
@@ -408,14 +402,14 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatil
 				ret = GPSDriver_Status_StringOperationsError;
 			}
 		}
-/*
+
 		uint32_t actualTimestamp;
 		if (MSTimerDriver_getMSTime(pSelf->pMSTimer, &actualTimestamp) != MSTimerDriver_Status_OK){
 			ret = GPSDriver_Status_MSTimerError;
 		}
 		if (ret == GPSDriver_Status_OK && actualTimestamp - sentCommandTimestamp > GPS_COMMAND_RESPONSE_TIMEOUT_MS){
 			ret = GPSDriver_Status_ACKTimeoutError;
-		}*/
+		}
 	}
 
 	if (UartReceiver_removeStartAndTerminationSignReader(pSelf->pUartReceiverHandler, tempReaderIterator) != UartReceiver_Status_OK ) {
@@ -449,12 +443,11 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile GPSDriver_Ty
 	uint8_t responseBuffer[GPS_MAX_COMMAND_LENGTH] = {0};
 
 	strcpy((char*)commandBuffer, GPS_CONFIG_TEST_CMD_PREFIX);
-	strcpy((char*)responseBuffer, GPS_CONFIG_TEST_RESPONSE_PREFIX);
-
 	if ((ret = _GPSDriver_appendCommandSufix(pSelf, commandBuffer, GPS_MAX_COMMAND_LENGTH)) != GPSDriver_Status_OK){
 		return ret;
 	}
 
+	strcpy((char*)responseBuffer, GPS_CONFIG_TEST_RESPONSE_PREFIX);
 	if ((ret = _GPSDriver_appendCommandSufix(pSelf, responseBuffer, GPS_MAX_COMMAND_LENGTH)) != GPSDriver_Status_OK){
 		return ret;
 	}

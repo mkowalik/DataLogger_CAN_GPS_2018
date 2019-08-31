@@ -32,13 +32,13 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 		pSelf->aReceiverQueueBuffer[i] = (CANData_TypeDef){0};
 	}
 
-	uint16_t aFilterIDsTab[pConfig->num_of_frames];
+	uint16_t aFilterIDsTab[pConfig->numOfFrames];
 
-	for (uint16_t i=0; i<pConfig->num_of_frames; i++){
-		aFilterIDsTab[i] = pConfig->frames[i].ID;
+	for (uint16_t i=0; i<pConfig->numOfFrames; i++){
+		aFilterIDsTab[i] = pConfig->canFrames[i].ID;
 	}
 
-	if (CANTransceiverDriver_configFiltering(pSelf->pCanTransceiverHandler, aFilterIDsTab, pConfig->num_of_frames) != CANTransceiverDriver_Status_OK){
+	if (CANTransceiverDriver_configFiltering(pSelf->pCanTransceiverHandler, aFilterIDsTab, pConfig->numOfFrames) != CANTransceiverDriver_Status_OK){
 		return CANReceiver_Status_InitError;
 	}
 

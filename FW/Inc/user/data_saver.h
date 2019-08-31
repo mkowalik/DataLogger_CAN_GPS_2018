@@ -26,6 +26,8 @@
 #define	LOG_FILE_EXTENSION			"aghlog"
 #define	LOG_FILENAME_MAX_LENGTH		50
 
+#define	GPS_DATA_ID			0x800
+
 
 typedef enum {
 	DataSaver_State_UnInitialized = 0,

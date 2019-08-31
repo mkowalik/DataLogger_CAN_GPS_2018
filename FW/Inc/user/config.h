@@ -64,10 +64,12 @@ typedef struct {
 typedef struct {
 	uint16_t 				version;
 	uint16_t 				subversion;
-	uint16_t 				num_of_frames;
-	uint16_t				can_speed;
-	ConfigFrame_TypeDef 	frames[CONFIG_MAX_NO_OF_FRAMES];
-	ConfigFrame_TypeDef* 	framesByID[CONFIG_ID_NUMBER];
+	uint16_t 				numOfFrames;
+	uint16_t				canSpeed;
+	uint8_t					gpsFrequency;
+	uint16_t				gpsFrameId;
+	ConfigFrame_TypeDef 	canFrames[CONFIG_MAX_NO_OF_FRAMES];
+	ConfigFrame_TypeDef* 	canFramesByID[CONFIG_ID_NUMBER];
 } Config_TypeDef;
 
 
@@ -87,6 +89,7 @@ typedef enum {
 
 typedef enum {
 	ConfigDataManager_State_UnInitialized = 0,
+	ConfigDataManager_State_DuringInit,
 	ConfigDataManager_State_Initialized
 } ConfigDataManager_State_TypeDef;
 

@@ -10,6 +10,7 @@
 
 #include "stdint.h"
 #include "user/file_system_wrapper.h"
+#include "user/fixed_point.h"
 
 #define FILE_WRITING_BUFFER_SIZE	32
 
@@ -41,5 +42,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, char* string, uint16_t length);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeDef* pSelf);
+
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWritingBuffer_TypeDef* pSelf, FixedPoint value);
 
 #endif /* USER_FILE_WRITING_BUFFER_H_ */

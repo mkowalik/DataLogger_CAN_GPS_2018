@@ -15,7 +15,7 @@ uint8_t assertCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint16_t id, uint16
 		return 0;
 	}
 
-	if (pSelf->sConfig.framesByID[id] != NULL){
+	if (pSelf->sConfig.canFramesByID[id] != NULL){
 		return 0;
 	}
 
@@ -30,9 +30,7 @@ uint8_t assertCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint16_t id, uint16
 //TODO dopisac w dokumentacji, ze file system musi byc init, lub zrobic ze init wywolw
 ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDef* pSelf, FileSystemWrapper_TypeDef* pFileSystem){
 
-	if (pSelf->state != ConfigDataManager_State_UnInitialized){
-		return ConfigDataManager_Status_InitError;
-	}
+	pSelf->state = ConfigDataManager_State_DuringInit;
 
 	FileSystemWrapper_Status_TypeDef	status;
 
@@ -59,59 +57,66 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 		return ConfigDataManager_Status_ConfigFileWrongVersionError;
 	}
 
-	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.can_speed) != FileReadingBuffer_Status_OK){
+	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canSpeed) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_ConfigFileDataError;
 	}
 
-	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.num_of_frames) != FileReadingBuffer_Status_OK){
+	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &pSelf->sConfig.gpsFrequency) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_ConfigFileDataError;
+	}
+	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.gpsFrameId) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_ConfigFileDataError;
 	}
 
-	for (uint16_t frameNr=0; frameNr<pSelf->sConfig.num_of_frames; frameNr++){
+	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.numOfFrames) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_ConfigFileDataError;
+	}
 
-		if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.frames[frameNr].ID) != FileReadingBuffer_Status_OK){
+	for (uint16_t frameNr=0; frameNr<pSelf->sConfig.numOfFrames; frameNr++){
+
+		if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canFrames[frameNr].ID) != FileReadingBuffer_Status_OK){
 			return ConfigDataManager_Status_ConfigFileDataError;
 		}
-		if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &pSelf->sConfig.frames[frameNr].DLC) != FileReadingBuffer_Status_OK){
+		if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &pSelf->sConfig.canFrames[frameNr].DLC) != FileReadingBuffer_Status_OK){
 			return ConfigDataManager_Status_ConfigFileDataError;
 		}
-		if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.frames[frameNr].moduleName, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){
-			return ConfigDataManager_Status_ConfigFileDataError;
-		}
-
-		if (assertCorrectFrame(pSelf, pSelf->sConfig.frames[frameNr].ID, pSelf->sConfig.frames[frameNr].DLC) == 0){
+		if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.canFrames[frameNr].moduleName, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){
 			return ConfigDataManager_Status_ConfigFileDataError;
 		}
 
-		pSelf->sConfig.framesByID[pSelf->sConfig.frames[frameNr].ID] = &(pSelf->sConfig.frames[frameNr]);
+		if (assertCorrectFrame(pSelf, pSelf->sConfig.canFrames[frameNr].ID, pSelf->sConfig.canFrames[frameNr].DLC) == 0){
+			return ConfigDataManager_Status_ConfigFileDataError;
+		}
 
-		for (uint8_t bytesCounter=0, channelNo=0; bytesCounter<pSelf->sConfig.frames[frameNr].DLC; channelNo++){
+		pSelf->sConfig.canFramesByID[pSelf->sConfig.canFrames[frameNr].ID] = &(pSelf->sConfig.canFrames[frameNr]);
 
-			if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &pSelf->sConfig.frames[frameNr].channels[channelNo].valueType) != FileReadingBuffer_Status_OK){
-				return ConfigDataManager_Status_ConfigFileDataError;
-			}
+		for (uint8_t bytesCounter=0, channelNo=0; bytesCounter<pSelf->sConfig.canFrames[frameNr].DLC; channelNo++){
 
-			if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.frames[frameNr].channels[channelNo].multiplier) != FileReadingBuffer_Status_OK){
-				return ConfigDataManager_Status_ConfigFileDataError;
-			}
-			if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.frames[frameNr].channels[channelNo].divider) != FileReadingBuffer_Status_OK){
-				return ConfigDataManager_Status_ConfigFileDataError;
-			}
-			if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.frames[frameNr].channels[channelNo].offset) != FileReadingBuffer_Status_OK){
+			if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &pSelf->sConfig.canFrames[frameNr].channels[channelNo].valueType) != FileReadingBuffer_Status_OK){
 				return ConfigDataManager_Status_ConfigFileDataError;
 			}
 
-			if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.frames[frameNr].channels[channelNo].description, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){ //skip channel descritpion
+			if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canFrames[frameNr].channels[channelNo].multiplier) != FileReadingBuffer_Status_OK){
 				return ConfigDataManager_Status_ConfigFileDataError;
 			}
-			if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.frames[frameNr].channels[channelNo].unit, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){ //skip channel unit
+			if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canFrames[frameNr].channels[channelNo].divider) != FileReadingBuffer_Status_OK){
 				return ConfigDataManager_Status_ConfigFileDataError;
 			}
-			if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.frames[frameNr].channels[channelNo].comment, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){ //skip channel comment
+			if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canFrames[frameNr].channels[channelNo].offset) != FileReadingBuffer_Status_OK){
 				return ConfigDataManager_Status_ConfigFileDataError;
 			}
 
-			if ((pSelf->sConfig.frames[frameNr].channels[channelNo].valueType & CONFIG_16_BIT_TYPE_flag) == 0){
+			if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.canFrames[frameNr].channels[channelNo].description, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){ //skip channel descritpion
+				return ConfigDataManager_Status_ConfigFileDataError;
+			}
+			if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.canFrames[frameNr].channels[channelNo].unit, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){ //skip channel unit
+				return ConfigDataManager_Status_ConfigFileDataError;
+			}
+			if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pSelf->sConfig.canFrames[frameNr].channels[channelNo].comment, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){ //skip channel comment
+				return ConfigDataManager_Status_ConfigFileDataError;
+			}
+
+			if ((pSelf->sConfig.canFrames[frameNr].channels[channelNo].valueType & CONFIG_16_BIT_TYPE_flag) == 0){
 				bytesCounter += 1;
 			} else {
 				bytesCounter += 2;
@@ -142,13 +147,13 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_getIDsList(ConfigDataManager_
 		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
-	for (uint16_t i=0; i<MIN(bufferSize, pSelf->sConfig.num_of_frames); i++){
+	for (uint16_t i=0; i<MIN(bufferSize, pSelf->sConfig.numOfFrames); i++){
 
-		pRetIDsBuffer[i] = pSelf->sConfig.frames[i].ID;
+		pRetIDsBuffer[i] = pSelf->sConfig.canFrames[i].ID;
 
 	}
 
-	(*pIDsWritten) = MIN(bufferSize, pSelf->sConfig.num_of_frames);
+	(*pIDsWritten) = MIN(bufferSize, pSelf->sConfig.numOfFrames);
 
 	return ConfigDataManager_Status_OK;
 
@@ -160,11 +165,11 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_checkCorrectnessData(ConfigDa
 		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
-	if (pSelf->sConfig.framesByID[pData->ID] == NULL){
+	if (pSelf->sConfig.canFramesByID[pData->ID] == NULL){
 		return ConfigDataManager_Status_WrongIDError;
 	}
 
-	if (pSelf->sConfig.framesByID[pData->ID]->DLC != pData->DLC){
+	if (pSelf->sConfig.canFramesByID[pData->ID]->DLC != pData->DLC){
 		return ConfigDataManager_Status_WrongDLCError;
 	}
 
@@ -182,7 +187,7 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager
 		return ConfigDataManager_Status_WrongOffsetError;
 	}
 
-	ConfigFrame_TypeDef* pFrame = pSelf->sConfig.framesByID[ID];
+	ConfigFrame_TypeDef* pFrame = pSelf->sConfig.canFramesByID[ID];
 
 	if (pFrame == NULL){
 		return ConfigDataManager_Status_WrongIDError;
@@ -205,5 +210,4 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager
 	}
 
 	return ConfigDataManager_Status_WrongOffsetError;
-
 }
