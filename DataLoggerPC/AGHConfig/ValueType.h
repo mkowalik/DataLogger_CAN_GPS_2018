@@ -11,7 +11,7 @@ public:
     ValueType();
 	ValueType(unsigned char feature);
     ValueType(bool setSigned, bool set16bit, bool setOnOffType, bool setFlagType, bool setCustomType, bool setBigEndianType);
-    int             channelDLC() const;
+    unsigned int    channelDLC() const;
     bool            isSignedType() const;
     bool            is16BitLength() const ;
     bool            isOnOffType() const;

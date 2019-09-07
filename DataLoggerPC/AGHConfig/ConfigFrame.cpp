@@ -13,9 +13,9 @@ int ConfigFrame::get_ID() const {
 	return ID;
 }
 
-int ConfigFrame::get_DLC() const {
+unsigned int ConfigFrame::get_DLC() const {
 	
-    int dlc = 0;
+    unsigned int dlc = 0;
 
     for (vector<ConfigChannel>::const_iterator it = channels.begin(); it != channels.end(); it++){
 		dlc += it->get_DLC();

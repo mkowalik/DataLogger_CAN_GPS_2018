@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include "downloaddatasd_dialog.h"
-#include "configureloggersd_dialog.h"
+#include "configure_logger_sd_dialog.h"
 
 namespace Ui {
 class MainWindow;

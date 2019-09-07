@@ -12,7 +12,7 @@ int Config::get_actualSubVersion(){
     return Config::ACTUAL_SUB_VERSION;
 }
 
-Config::Config() : version(ACTUAL_VERSION), subVersion(ACTUAL_SUB_VERSION), canBitrate(DEFAULT_CAN_BITRATE)
+Config::Config() : version(ACTUAL_VERSION), subVersion(ACTUAL_SUB_VERSION), canBitrate(DEFAULT_CAN_BITRATE), gpsFrequency(DEFAULT_GPS_FREQUENCY)
 {
 }
 
@@ -26,6 +26,10 @@ int Config::get_subVersion() const {
 
 Config::EnCANBitrate Config::get_CANBitrate() const {
     return canBitrate;
+}
+
+Config::EnGPSFrequency Config::get_GPSFrequency() const{
+    return gpsFrequency;
 }
 
 int Config::get_numOfFrames() const {
@@ -47,7 +51,28 @@ void Config::set_subVersion(int sSubVersion){
 }
 
 void Config::set_CANBitrate(EnCANBitrate bitrate){
-    this->canBitrate = bitrate;
+    if (bitrate == EnCANBitrate::bitrate_50kbps ||
+            bitrate == EnCANBitrate::bitrate_125kbps ||
+            bitrate == EnCANBitrate::bitrate_250kbps ||
+            bitrate == EnCANBitrate::bitrate_500kbps ||
+            bitrate == EnCANBitrate::bitrate_1Mbps){
+        this->canBitrate = bitrate;
+    } else {
+        throw std::invalid_argument("Invalid value of CAN bitrate.");
+    }
+}
+
+void Config::set_GPSFrequency(EnGPSFrequency frequency){
+    if (frequency == EnGPSFrequency::freq_GPS_OFF ||
+            frequency == EnGPSFrequency::freq_0_5_Hz ||
+            frequency == EnGPSFrequency::freq_1_Hz ||
+            frequency == EnGPSFrequency::freq_2_Hz ||
+            frequency == EnGPSFrequency::freq_5_Hz ||
+            frequency == EnGPSFrequency::freq_10_Hz){
+        this->gpsFrequency = frequency;
+    } else {
+        throw std::invalid_argument("Invalid value of GPS frequency.");
+    }
 }
 
 ConfigFrame& Config::get_frame_by_id(int id) {
@@ -97,6 +122,7 @@ void Config::write_to_bin(WritingClass& writer){
     writer.write_uint16(static_cast<unsigned int>(get_version()), RawDataParser::UseDefaultEndian);
     writer.write_uint16(static_cast<unsigned int>(get_subVersion()), RawDataParser::UseDefaultEndian);
     writer.write_uint16(static_cast<unsigned int>(get_CANBitrate()), RawDataParser::UseDefaultEndian);
+    writer.write_uint8(static_cast<unsigned int>(get_GPSFrequency()));
     writer.write_uint16(static_cast<unsigned int>(get_numOfFrames()), RawDataParser::UseDefaultEndian);
 
     for (map<int, ConfigFrame>::iterator it=frames_map.begin(); it!=frames_map.end(); it++){
@@ -122,6 +148,7 @@ void Config::read_from_bin(ReadingClass& reader){
     }
 
     set_CANBitrate(static_cast<EnCANBitrate>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
+    set_GPSFrequency(static_cast<EnGPSFrequency>(reader.reading_uint8()));
     int framesNumber = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
 
     for(int i=0; i<framesNumber; i++){

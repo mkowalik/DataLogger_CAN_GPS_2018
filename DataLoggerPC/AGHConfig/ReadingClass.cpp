@@ -24,7 +24,7 @@ unsigned int ReadingClass::reading_uint32(RawDataParser::EndianessMode endianess
     if (bytes_left() < 4){
         throw out_of_range("Less than 4 bytes left while reading uint32.");
     }
-    data.read(buffer, 4);
+    data.read(reinterpret_cast<char*>(buffer), 4);
     return dataParser.interpret_unsigned_int(buffer, 4, endianessMode);
 }
 
@@ -32,7 +32,7 @@ unsigned int ReadingClass::reading_uint16(RawDataParser::EndianessMode endianess
     if (bytes_left() < 2){
         throw out_of_range("Less than 2 bytes left while reading uint16.");
     }
-    data.read(buffer, 2);
+    data.read(reinterpret_cast<char*>(buffer), 2);
     return dataParser.interpret_unsigned_int(buffer, 2, endianessMode);
 }
 
@@ -40,7 +40,7 @@ unsigned int ReadingClass::reading_uint8(){
     if (bytes_left() < 1){
         throw out_of_range("Less than 1 byte left while reading uint8.");
     }
-    data.read(buffer, 1);
+    data.read(reinterpret_cast<char*>(buffer), 1);
     return dataParser.interpret_unsigned_int(buffer, 1, RawDataParser::UseDefaultEndian);
 }
 
@@ -48,7 +48,7 @@ int ReadingClass::reading_int16(RawDataParser::EndianessMode endianessMode){
     if (bytes_left() < 2){
         throw out_of_range("Less than 2 bytes left while reading int16.");
     }
-    data.read(buffer, 2);
+    data.read(reinterpret_cast<char*>(buffer), 2);
     return dataParser.interpret_signed_int(buffer, 2, endianessMode);
 }
 
@@ -70,10 +70,10 @@ string ReadingClass::reading_string(int length, bool readTerminatingZero){
 
     string retString;
 	while (bytesLeft > 0){
-        data.read(buffer, static_cast<streamsize>(min(bytesLeft, BUFFER_SIZE)));
+        data.read(reinterpret_cast<char*>(buffer), static_cast<streamsize>(min(bytesLeft, BUFFER_SIZE)));
         bytesLeft -= static_cast<unsigned int>(data.gcount());
 
-        retString.append(buffer, static_cast<size_t>(data.gcount()));
+        retString.append(reinterpret_cast<char*>(buffer), static_cast<size_t>(data.gcount()));
 	}
 	
 	return retString;

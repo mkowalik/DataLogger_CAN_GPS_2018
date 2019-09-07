@@ -19,13 +19,17 @@ public:
     explicit ConfigureLoggerSDDialog(RawDataParser& rawDataParser, QWidget *parent = nullptr);
     ~ConfigureLoggerSDDialog();
 private:
-    void                 reloadFramesTreeWidget();
-    void                 reloadCANBusSpeedWidget();
-    void                 editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent);
-    void                 prepareFrameWidget(const ConfigFrame& frame, QTreeWidgetItem* pWidget);
-    void                 prepareChannelWidget(const ConfigChannel& channel, QTreeWidgetItem* pWidget);
-    string               canBitrateToString(Config::EnCANBitrate canBitrate);
-    Config::EnCANBitrate stringToCANBitrate(string bitrateStr);
+    void                   reloadFramesTreeWidget();
+    void                   reloadCANBusBitrateWidget();
+    void                   reloadGPSFrequencyWidget();
+    void                   reloadConfigView();
+    void                   editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent);
+    void                   prepareFrameWidget(const ConfigFrame& frame, QTreeWidgetItem* pWidget);
+    void                   prepareChannelWidget(const ConfigChannel& channel, QTreeWidgetItem* pWidget);
+    string                 canBitrateToString(Config::EnCANBitrate canBitrate);
+    Config::EnCANBitrate   stringToCANBitrate(string bitrateStr);
+    string                 gpsFrequencyToString(Config::EnGPSFrequency gpsFrequency);
+    Config::EnGPSFrequency stringToGPSFrequency(string gpsFrequencyString);
 private slots:
     void on_selectOutputFileButton_clicked();
     void on_selectPrototypeFileButton_clicked();

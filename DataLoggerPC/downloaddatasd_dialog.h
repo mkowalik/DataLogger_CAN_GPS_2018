@@ -26,7 +26,10 @@ private slots:
     void fatalErrorInConvertingThreadSlot();
     void on_convertSelectedButton_clicked();
 
+    void on_outputDataLayoutComboBox_currentTextChanged(const QString &arg1);
+
 private:
+    static constexpr unsigned int frameByFrameIndex = 1;
     static const QStringList outputDataLayoutOptionsString;
     static const QList<WritableToCSV::FileTimingMode> outputDataLayoutOptionsTimingMode;
     Ui::DownloadDataSDDialog *ui;

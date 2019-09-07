@@ -21,7 +21,7 @@ private:
 public:
     ConfigChannel();
 
-    int             get_DLC() const ;
+    unsigned int    get_DLC() const ;
     ValueType       get_valueType() const ;
     int             get_multiplier() const ;
     int             get_divider() const ;

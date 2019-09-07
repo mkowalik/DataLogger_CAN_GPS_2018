@@ -20,10 +20,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11 -o0 -g
+CONFIG += c++17 -o0 -g
 
 SOURCES += \
-    configureloggersd_dialog.cpp \
     downloaddatasd_dialog.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -38,10 +37,14 @@ SOURCES += \
     AGHData/data_file_class.cpp \
     AGHData/raw_data_parser.cpp \
     convertfile_thread.cpp \
-    downloadingprogress_dialog.cpp
+    downloadingprogress_dialog.cpp \
+    AGHData/fixed_point.cpp \
+    AGHData/single_can_frame_data.cpp \
+    AGHData/single_gps_frame_data.cpp \
+    configure_logger_sd_dialog.cpp \
+    AGHData/can_channel_with_last_value.cpp
 
 HEADERS += \
-    configureloggersd_dialog.h \
     downloaddatasd_dialog.h \
     mainwindow.h \
     newchannel_dialog.h \
@@ -55,15 +58,20 @@ HEADERS += \
     AGHData/data_file_class.h \
     AGHData/raw_data_parser.h \
     convertfile_thread.h \
-    downloadingprogress_dialog.h
+    downloadingprogress_dialog.h \
+    AGHData/fixed_point.h \
+    AGHData/single_can_frame_data.h \
+    AGHData/single_gps_frame_data.h \
+    configure_logger_sd_dialog.h \
+    AGHData/can_channel_with_last_value.h
 
 FORMS += \
-    configureloggersd_dialog.ui \
     downloaddatasd_dialog.ui \
     mainwindow.ui \
     newchannel_dialog.ui \
     newframe_dialog.ui \
-    downloadingprogress_dialog.ui
+    downloadingprogress_dialog.ui \
+    configure_logger_sd_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

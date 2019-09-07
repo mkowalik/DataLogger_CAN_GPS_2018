@@ -15,23 +15,23 @@ WritingClass::WritingClass(string nameOfFile, RawDataParser& dataParser) :
 
 void WritingClass::write_uint8(unsigned int aValue){
     clear_buffer(4);
-    dataParser.write_unsigned_int(aValue, buffer, 1, RawDataParser::UseDefaultEndian);
+    dataParser.write_unsigned_int(aValue, reinterpret_cast<unsigned char*>(buffer), 1, RawDataParser::UseDefaultEndian);
     fileStream.write(buffer, 1);
 }
 void WritingClass::write_uint16(unsigned int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);
-    dataParser.write_unsigned_int(aValue, buffer, 4, endianessMode);
+    dataParser.write_unsigned_int(aValue, reinterpret_cast<unsigned char*>(buffer), 4, endianessMode);
     fileStream.write(buffer, 2);
 }
 void WritingClass::write_uint32(unsigned int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);
-    dataParser.write_unsigned_int(aValue, buffer, 4, endianessMode);
+    dataParser.write_unsigned_int(aValue, reinterpret_cast<unsigned char*>(buffer), 4, endianessMode);
     fileStream.write(buffer, 4);
 }
 
 void WritingClass::write_int16(int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);
-    dataParser.write_signed_int(aValue, buffer, 2, endianessMode);
+    dataParser.write_signed_int(aValue, reinterpret_cast<unsigned char*>(buffer), 2, endianessMode);
     fileStream.write(buffer, 2);
 }
 
@@ -43,7 +43,7 @@ void WritingClass::write_string(string aStr, bool writeTerminatingZero, int aLen
     if (aLength >= 0){
         bytesLeft = static_cast<unsigned int>(aLength);
     } else {
-        bytesLeft = aStr.length();
+        bytesLeft = static_cast<unsigned int>(aStr.length());
     }
 
     if (writeTerminatingZero){
@@ -90,10 +90,31 @@ void WritingClass::write_double_to_string(double value, int decimal_figures, cha
 
     write_string(buffer, writeTerminatingZero);
 }
-void WritingClass::write_int_to_string(int value, bool writeTerminatingZero){
+void WritingClass::write_int_to_string(int value, bool writeTerminatingZero, unsigned int minSignsNumber){
 
     clear_buffer(BUFFER_SIZE);
-    sprintf (buffer, "%d", value);
+    if (minSignsNumber == 0u){
+        sprintf (buffer, "%d", value);
+    } else {
+        string format = "%0";
+        format.append(to_string(minSignsNumber));
+        format.append("d");
+        sprintf (buffer, format.c_str(), value);
+    }
+
+    write_string(buffer, writeTerminatingZero);
+}
+void WritingClass::write_int_to_string(unsigned int value, bool writeTerminatingZero, unsigned int minSignsNumber){
+
+    clear_buffer(BUFFER_SIZE);
+    if (minSignsNumber == 0u){
+        sprintf (buffer, "%d", value);
+    } else {
+        string format = "%0";
+        format.append(to_string(minSignsNumber));
+        format.append("d");
+        sprintf (buffer, format.c_str(), value);
+    }
 
     write_string(buffer, writeTerminatingZero);
 }

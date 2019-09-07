@@ -11,7 +11,8 @@ ConvertFileThread::ConvertFileThread(RawDataParser& parser, QObject *parent) :
     Cancel(false),
     rawDataParser(parser),
     decimalSeparator(DEFAULT_DECIMAL_SEPARATOR),
-    timingMode(DEFAULT_TIMING_MODE)
+    timingMode(DEFAULT_TIMING_MODE),
+    writeOnlyChangedValues(true)
 {
 
 }
@@ -49,7 +50,7 @@ void ConvertFileThread::run(){
             dataFile.read_from_bin(reader);
 
             WritingClass writer(csvFilename.toStdString(), rawDataParser);
-            dataFile.write_to_csv(this->timingMode, writer, decimalSeparator);
+            dataFile.write_to_csv(this->timingMode, writer, decimalSeparator, writeOnlyChangedValues);
 
             qDebug() << "DONE!";
         } catch (std::logic_error e){
@@ -86,6 +87,9 @@ void ConvertFileThread::setFileTimingMode(WritableToCSV::FileTimingMode mode){
     this->timingMode = mode;
 }
 
+void ConvertFileThread::setWriteOnlyChangedValues(bool val){
+    this->writeOnlyChangedValues = val;
+}
 /*Thread::~Thread(){
     //tutaj sprzatamy
 }*/

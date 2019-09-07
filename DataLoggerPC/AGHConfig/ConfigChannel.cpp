@@ -9,7 +9,7 @@ static const unsigned int COMMENT_LENGTH = 20;
 ConfigChannel::ConfigChannel() : valueType(0) {
 }
 
-int ConfigChannel::get_DLC() const {
+unsigned int ConfigChannel::get_DLC() const {
 	return valueType.channelDLC();
 }
 

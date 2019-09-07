@@ -14,6 +14,7 @@ private:
     string                  moduleName;
     vector <ConfigChannel>  channels;
 public:
+    static constexpr int MAX_FRAME_BYTES_LENGTH = 8;
 
     class iterator : public std::iterator<std::bidirectional_iterator_tag, ConfigChannel> {
         friend class ConfigFrame;
@@ -52,7 +53,7 @@ public:
     };
 
     int                     get_ID() const;
-    int                     get_DLC() const;
+    unsigned int            get_DLC() const;
     string                  get_moduleName() const;
 
     void                    set_ID(int aID);

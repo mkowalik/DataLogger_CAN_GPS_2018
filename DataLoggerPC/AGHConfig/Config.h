@@ -18,14 +18,25 @@ public:
         bitrate_500kbps = 500,
         bitrate_1Mbps = 1000,
     };
+    enum class EnGPSFrequency {
+        freq_GPS_OFF = 0,
+        freq_0_5_Hz  = 1,
+        freq_1_Hz    = 2,
+        freq_2_Hz    = 3,
+        freq_5_Hz    = 4,
+        freq_10_Hz   = 5
+    };
+
 private:
     int             version;
     int             subVersion;
     EnCANBitrate    canBitrate;
+    EnGPSFrequency  gpsFrequency;
     map <int, ConfigFrame> frames_map;
     static const int ACTUAL_VERSION = 0;
-    static const int ACTUAL_SUB_VERSION = 2;
+    static const int ACTUAL_SUB_VERSION = 3;
     static const EnCANBitrate DEFAULT_CAN_BITRATE = EnCANBitrate::bitrate_500kbps;
+    static const EnGPSFrequency DEFAULT_GPS_FREQUENCY = EnGPSFrequency::freq_10_Hz;
 public:
 
     class iterator : public std::iterator<std::forward_iterator_tag, ConfigFrame> {
@@ -66,11 +77,14 @@ public:
     void            set_version(int sVersion);
     void            set_subVersion(int sSubVersion);
     void            set_CANBitrate(EnCANBitrate bitrate);
+    void            set_GPSFrequency(EnGPSFrequency frequency);
 
     int             get_version() const;
     int             get_subVersion() const;
     EnCANBitrate    get_CANBitrate() const;
+    EnGPSFrequency  get_GPSFrequency() const;
     int             get_numOfFrames() const;
+
     ConfigFrame&    get_frame_by_id(int id);
 
     iterator        begin();

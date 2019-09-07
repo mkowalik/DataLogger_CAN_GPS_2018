@@ -11,17 +11,19 @@
 #include <iostream>
 
 const QStringList DownloadDataSDDialog::outputDataLayoutOptionsString = {"Event Timing Mode",
+                                                                         "Frame by Frame Mode",
                                                                          "Static Period - 10Hz Mode",
                                                                          "Static Period - 100Hz Mode",
                                                                          "Static Period - 250Hz Mode",
                                                                          "Static Period - 500Hz Mode",
                                                                          "Static Period - 1000Hz Mode"};
-const QList<WritableToCSV::FileTimingMode> DownloadDataSDDialog::outputDataLayoutOptionsTimingMode = {WritableToCSV::EventMode,
-                                                                                                      WritableToCSV::StaticPeriod10HzMode,
-                                                                                                      WritableToCSV::StaticPeriod100HzMode,
-                                                                                                      WritableToCSV::StaticPeriod250HzMode,
-                                                                                                      WritableToCSV::StaticPeriod500HzMode,
-                                                                                                      WritableToCSV::StaticPeriod1000HzMode};
+const QList<WritableToCSV::FileTimingMode> DownloadDataSDDialog::outputDataLayoutOptionsTimingMode = {WritableToCSV::FileTimingMode::EventMode,
+                                                                                                      WritableToCSV::FileTimingMode::FrameByFrameMode,
+                                                                                                      WritableToCSV::FileTimingMode::StaticPeriod10HzMode,
+                                                                                                      WritableToCSV::FileTimingMode::StaticPeriod100HzMode,
+                                                                                                      WritableToCSV::FileTimingMode::StaticPeriod250HzMode,
+                                                                                                      WritableToCSV::FileTimingMode::StaticPeriod500HzMode,
+                                                                                                      WritableToCSV::FileTimingMode::StaticPeriod1000HzMode};
 
 DownloadDataSDDialog::DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget *parent) :
     QDialog(parent),
@@ -148,6 +150,7 @@ void DownloadDataSDDialog::on_convertSelectedButton_clicked()
     convertFileThread->setFileTimingMode(outputDataLayoutOptionsTimingMode[ui->outputDataLayoutComboBox->currentIndex()]);
     convertFileThread->addFilesToConvert(filesList);
     convertFileThread->setDecimaleSeparator(ui->decimalSeparatorComboBox->currentText()[0].toLatin1());
+    convertFileThread->setWriteOnlyChangedValues(ui->writeChangedCheckBox->checkState() == Qt::Checked);
 
     convertFileThread->setDestinationDirectory(ui->destinationDirComboBox->currentText());
     convertFileThread->start();
@@ -157,4 +160,16 @@ void DownloadDataSDDialog::on_convertSelectedButton_clicked()
     }
 
     convertFileThread->cancelExecution();
+}
+
+void DownloadDataSDDialog::on_outputDataLayoutComboBox_currentTextChanged(const QString &arg1)
+{
+    if (QString::compare(arg1, outputDataLayoutOptionsString[frameByFrameIndex], Qt::CaseSensitive) == 0){
+        ui->writeChangedCheckBox->setCheckState(Qt::CheckState::Unchecked);
+        ui->writeChangedLabel->setEnabled(false);
+        ui->writeChangedCheckBox->setEnabled(false);
+    } else {
+        ui->writeChangedLabel->setEnabled(true);
+        ui->writeChangedCheckBox->setEnabled(true);
+    }
 }

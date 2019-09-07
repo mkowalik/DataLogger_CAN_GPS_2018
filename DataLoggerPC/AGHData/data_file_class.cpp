@@ -4,44 +4,259 @@
 
 using namespace std;
 
-/***************      SingleChannelData       ***************/
+//<----- DataFileClass private methods ----->//
 
-SingleChannelData::SingleChannelData(const ConfigChannel& channel, int value) : channel(channel), value(value){
-}
+void DataFileClass::write_single_gps_row(WritingClass& writer, const SingleGPSFrameData* pGpsData){
+    if (pGpsData != nullptr){
+        writer.write_int_to_string(pGpsData->getGpsDateTime().tm_year, false, 4);
+        writer.write_string("-", false);
+        writer.write_int_to_string(pGpsData->getGpsDateTime().tm_year, false, 2);
+        writer.write_string("-", false);
+        writer.write_int_to_string(pGpsData->getGpsDateTime().tm_year, false, 2);
+        writer.write_string(";", false);
 
-const ConfigChannel& SingleChannelData::get_channel() const{
-    return channel;
-}
-int SingleChannelData::get_value_numeric() const{
-    return value;
-}
-/***************      DataRow       ***************/
+        writer.write_int_to_string(pGpsData->getGpsDateTime().tm_hour, false, 2);
+        writer.write_string(":", false);
+        writer.write_int_to_string(pGpsData->getGpsDateTime().tm_min, false, 2);
+        writer.write_string(":", false);
+        writer.write_int_to_string(pGpsData->getGpsDateTime().tm_sec, false, 2);
+        writer.write_string(";", false);
 
-SingleFrameData::SingleFrameData(unsigned int msTime, const ConfigFrame& frame, char rawValues[8], const RawDataParser& dataParser) : msTime(msTime){
+        writer.write_double_to_string(pGpsData->getLongitude().getDoubleVal(), 3, decimalSeparator, false);
+        writer.write_string(";", false);
 
-    int i=0;
-    for (ConfigFrame::const_iterator it=frame.cbegin(); it!=frame.cend(); ++it){
-        int value = 0;
-        if (it->get_valueType().isSignedType()){
-            value = dataParser.interpret_signed_int(rawValues+i, it->get_DLC(), it->get_valueType().isBigEndianType() ? RawDataParser::BigEndian : RawDataParser::LittleEndian);
-        } else {
-            value = dataParser.interpret_unsigned_int(rawValues+i, it->get_DLC(), it->get_valueType().isBigEndianType() ? RawDataParser::BigEndian : RawDataParser::LittleEndian);
+        writer.write_double_to_string(pGpsData->getLatitude().getDoubleVal(), 3, decimalSeparator, false);
+        writer.write_string(";", false);
+
+        writer.write_int_to_string(pGpsData->getNSatellites(), false);
+        writer.write_string(";", false);
+
+        writer.write_double_to_string(pGpsData->getAltitude().getDoubleVal(), 3, decimalSeparator, false);
+        writer.write_string(";", false);
+
+        writer.write_double_to_string(pGpsData->getSpeed().getDoubleVal(), 3, decimalSeparator, false);
+        writer.write_string(";", false);
+
+        switch(pGpsData->getFixType()){
+        case SingleGPSFrameData::EnGPSFixType::Fix_NoFix:
+            writer.write_string("No fix;", false);
+            break;
+        case SingleGPSFrameData::EnGPSFixType::Fix_2DFix:
+            writer.write_string("2D;", false);
+            break;
+        case SingleGPSFrameData::EnGPSFixType::Fix_3DFix:
+            writer.write_string("3D;", false);
+            break;
         }
-        data.push_back(SingleChannelData(*it, value));
-        i += it->get_DLC();
+
+        writer.write_double_to_string(pGpsData->getHorizontalPrecision().getDoubleVal(), 3, decimalSeparator, false);
+        writer.write_string(";", false);
+
+        writer.write_double_to_string(pGpsData->getVerticalPrecision().getDoubleVal(), 3, decimalSeparator, false);
+        writer.write_string(";", false);
+
+    } else {
+        for (int i=0; i<GPS_DATA_FIELDS_NUMBER; i++){
+            writer.write_string(";", false);
+        }
+    }
+}
+
+void DataFileClass::write_single_csv_data_row(unsigned int msTime,
+                                              WritingClass& writer,
+                                              const SingleGPSFrameData* pGpsData,
+                                              vector<map<int, vector <CANChannelWithLastValue>>::iterator>& csv_frames_columns_order,
+                                              bool writeOnlyChangedValues) {
+
+    writer.write_string(to_string(msTime), false);
+
+    for (map<int, vector <CANChannelWithLastValue>>::iterator& mapIt : csv_frames_columns_order){
+        for (CANChannelWithLastValue& chanWithVal : mapIt->second){
+            writer.write_string(";", false);
+            if (chanWithVal.isLastValueValid()){
+                if (writeOnlyChangedValues && !chanWithVal.wasValueRead()){
+                    if (chanWithVal.getConfigChannel().get_divider() != 1){
+                        writer.write_double_to_string(chanWithVal.getLastValue().get_value_transformed(), 3, decimalSeparator, false);
+                    } else {
+                        writer.write_int_to_string(chanWithVal.getLastValue().get_value_transformed_int(), decimalSeparator, false);
+                    }
+                } else if (!writeOnlyChangedValues){
+                    if (chanWithVal.getConfigChannel().get_divider() != 1){
+                        writer.write_double_to_string(chanWithVal.getLastValue().get_value_transformed(), 3, decimalSeparator, false);
+                    } else {
+                        writer.write_int_to_string(chanWithVal.getLastValue().get_value_transformed_int(), decimalSeparator, false);
+                    }
+                }
+            }
+        }
     }
 
-};
+    if (this->config.get_GPSFrequency() != Config::EnGPSFrequency::freq_GPS_OFF){
+        write_single_gps_row(writer, pGpsData);
+        if (writeOnlyChangedValues){
+            pGpsData = nullptr;
+        }
+    }
 
-const vector<SingleChannelData>& SingleFrameData::getData() const {
-    return data;
+    writer.write_string("\r\n", false);
 }
 
-unsigned int SingleFrameData::getMsTime() const {
-    return msTime;
+void DataFileClass::write_to_csv_static_period_mode(WritingClass& writer,
+                                                    map<int, vector <CANChannelWithLastValue>>& lastValues,
+                                                    const SingleGPSFrameData* pGpsData,
+                                                    vector<map<int, vector <CANChannelWithLastValue>>::iterator>& csv_frames_columns_order,
+                                                    bool writeOnlyChangedValues,
+                                                    unsigned int periodMs) {
+
+    if (periodMs == 0){
+        throw invalid_argument("period may not be equal to 0.");
+    }
+
+
+    vector<SingleCANFrameData>::const_iterator canIt = canData.cbegin();
+    vector<SingleGPSFrameData>::const_iterator gpsIt = gpsData.cbegin();
+
+    vector<SingleCANFrameData>::const_iterator nextCanIt = canData.cbegin();
+    vector<SingleGPSFrameData>::const_iterator nextGpsIt = gpsData.cbegin();
+
+    unsigned int actualMsTime = periodMs;
+    unsigned int lastReadMsTime = 0;
+
+    while (true){
+        if (canIt == canData.cend() && gpsIt == gpsData.cend()){
+            break;
+        }
+
+        if (canIt != canData.cend() && canIt->getMsTime() <= actualMsTime) {
+
+            vector <CANChannelWithLastValue>::iterator lastValIt = lastValues.at(canIt->getFrameID()).begin();
+            for (auto& singleChannelData: canIt->getData()){
+                lastValIt->setValue(singleChannelData);
+                lastValIt++;
+            }
+            lastReadMsTime = canIt->getMsTime();
+            nextCanIt = canIt+1;
+        }
+
+        if (gpsIt != gpsData.cend() && gpsIt->getMsTime() <= actualMsTime) {
+            pGpsData = &(*gpsIt);
+            lastReadMsTime = gpsIt->getMsTime();
+            nextGpsIt = gpsIt+1;
+        }
+
+        if (lastReadMsTime == 0){
+            write_single_csv_data_row(actualMsTime,
+                                      writer,
+                                      pGpsData,
+                                      csv_frames_columns_order,
+                                      writeOnlyChangedValues);
+            actualMsTime += periodMs;
+        }
+        canIt = nextCanIt;
+        gpsIt = nextGpsIt;
+        lastReadMsTime = 0;
+    }
 }
 
-/***************      DataFileClass       ***************/
+void DataFileClass::write_to_csv_event_mode(WritingClass& writer,
+                                            map<int, vector <CANChannelWithLastValue>>& lastValues,
+                                            const SingleGPSFrameData* pGpsData,
+                                            vector<map<int, vector <CANChannelWithLastValue>>::iterator>& csv_frames_columns_order,
+                                            bool writeOnlyChangedValues) {
+
+    vector<SingleCANFrameData>::const_iterator canIt = canData.cbegin();
+    vector<SingleGPSFrameData>::const_iterator gpsIt = gpsData.cbegin();
+
+    vector<SingleCANFrameData>::const_iterator nextCanIt = canData.cbegin();
+    vector<SingleGPSFrameData>::const_iterator nextGpsIt = gpsData.cbegin();
+
+    unsigned int actualMsTime = 0;
+
+    while (true){
+        if (canIt == canData.cend() && gpsIt == gpsData.cend()){
+            break;
+        }
+
+        if ((canIt != canData.cend() && gpsIt != gpsData.cend() && (canIt->getMsTime() <= gpsIt->getMsTime())) ||
+            (canIt != canData.cend() && gpsIt == gpsData.cend())) {
+
+            vector <CANChannelWithLastValue>::iterator lastValIt = lastValues.at(canIt->getFrameID()).begin();
+            for (auto& singleChannelData: canIt->getData()){
+                if (!lastValIt->isLastValueValid() || (lastValIt->getLastValue().get_value_raw() != singleChannelData.get_value_raw())){
+                    lastValIt->setValue(singleChannelData);
+                    lastValIt++;
+                }
+            }
+            actualMsTime = canIt->getMsTime();
+            nextCanIt = canIt+1;
+        }
+
+        if ((canIt != canData.cend() && gpsIt != gpsData.cend() && (gpsIt->getMsTime() <= canIt->getMsTime())) ||
+            (canIt == canData.cend() && gpsIt != gpsData.cend())) {
+            pGpsData = &(*gpsIt);
+            actualMsTime = gpsIt->getMsTime();
+            nextGpsIt = gpsIt+1;
+        }
+
+        write_single_csv_data_row(actualMsTime,
+                                  writer,
+                                  pGpsData,
+                                  csv_frames_columns_order,
+                                  writeOnlyChangedValues);
+
+        canIt = nextCanIt;
+        gpsIt = nextGpsIt;
+    }
+}
+
+void DataFileClass::write_to_csv_frame_by_frame_mode(WritingClass& writer) {
+
+    vector<SingleCANFrameData>::const_iterator canIt = canData.cbegin();
+    vector<SingleGPSFrameData>::const_iterator gpsIt = gpsData.cbegin();
+
+    while (true){
+        if (canIt == canData.cend() && gpsIt == gpsData.cend()){
+            break;
+        }
+
+        if ((canIt != canData.cend() && gpsIt != gpsData.cend() && (canIt->getMsTime() <= gpsIt->getMsTime())) ||
+            (canIt != canData.cend() && gpsIt == gpsData.cend())) {
+
+            writer.write_int_to_string(canIt->getMsTime(), false);
+            writer.write_string(";", false);
+
+            writer.write_int_to_string(canIt->getFrameID(), false);
+            writer.write_string(";", false);
+
+            writer.write_int_to_string(canIt->getFrameDLC(), false);
+            writer.write_string(";", false);
+
+            for (unsigned int i=0; i<canIt->getFrameDLC(); i++){
+                writer.write_int_to_string(static_cast<unsigned int>(canIt->getRawDataValue(i)), false);
+                writer.write_string(";", false);
+            }
+
+            writer.write_string("\n", false);
+            ++canIt;
+        }
+
+        if ((canIt != canData.cend() && gpsIt != gpsData.cend() && (gpsIt->getMsTime() <= canIt->getMsTime())) ||
+            (canIt == canData.cend() && gpsIt != gpsData.cend())) {
+
+            writer.write_int_to_string(gpsIt->getMsTime(), false);
+            writer.write_string(";", false);
+
+            writer.write_string("GPS;", false);
+
+            write_single_gps_row(writer, &(*gpsIt));
+
+            writer.write_string("\n", false);
+            ++gpsIt;
+        }
+    }
+}
+
+//<----- DataFileClass public methods ----->//
 
 const Config& DataFileClass::get_config() const {
     return const_cast<Config&>(config);
@@ -51,161 +266,129 @@ tm DataFileClass::get_start_time() const {
     return startTime;
 }
 
-const vector<SingleFrameData>& DataFileClass::get_data() const {
-    return const_cast<vector<SingleFrameData>&>(data);
+const vector<SingleCANFrameData>& DataFileClass::get_data() const {
+    return const_cast<vector<SingleCANFrameData>&>(canData);
 }
 
-void DataFileClass::append_data_row(SingleFrameData dataRow) {
-    data.push_back(dataRow);
+void DataFileClass::append_data_row(SingleCANFrameData dataRow) {
+    canData.push_back(dataRow);
 }
 
 DataFileClass::iterator DataFileClass::begin(){
-    return iterator(data.begin(), *this);
+    return iterator(canData.begin(), *this);
 }
 
 DataFileClass::iterator DataFileClass::end(){
-    return iterator(data.end(), *this);
+    return iterator(canData.end(), *this);
 }
 
 DataFileClass::const_iterator DataFileClass::cbegin() const {
-    return const_iterator(data.cbegin(), *this);
+    return const_iterator(canData.cbegin(), *this);
 }
 
 DataFileClass::const_iterator DataFileClass::cend() const {
-    return const_iterator(data.cend(), *this);
+    return const_iterator(canData.cend(), *this);
 }
 
-void DataFileClass::write_single_csv_data_row(unsigned int msTime, \
-                                              const map<const ConfigChannel*, int, WrapperLess>& channelValueMap, \
-                                              set<const ConfigChannel*, WrapperLess>& valueChangedSet, \
-                                              char decimalSeparator, \
-                                              WritingClass& writer){ //TODO zamienic na unordered_set
+void DataFileClass::write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator_, bool writeOnlyChangedValues) {
 
-    set<const ConfigChannel*, WrapperLess>::iterator changedIt;
+    /*************  Writing down colums with time, CAN channels and GPS data   *************/
 
-    writer.write_string(to_string(msTime), false);
+    decimalSeparator = decimalSeparator_;
+    map<int, vector <CANChannelWithLastValue>>                  lastValues;
+    SingleGPSFrameData*                                         pGpsData = nullptr;
+    vector<map<int, vector <CANChannelWithLastValue>>::iterator>  csv_frames_columns_order;
 
     for(Config::const_iterator frIt = config.cbegin(); frIt != config.cend(); ++frIt){
-        for (ConfigFrame::const_iterator chIt = frIt->cbegin(); chIt != frIt->cend(); ++chIt){
-            writer.write_string(";", false);
-            if ((changedIt = valueChangedSet.find(&(*chIt))) != valueChangedSet.end()){
+        vector <CANChannelWithLastValue> channels;
+        for (auto chansIt = frIt->cbegin(); chansIt != frIt->cend(); chansIt++){
+            channels.push_back(CANChannelWithLastValue(*frIt, *chansIt));
+        }
+        lastValues.emplace(frIt->get_ID(), channels);
+    }
 
-                if (chIt->get_divider() != 1){
-                    double value = (((static_cast<double>(channelValueMap.at(&(*chIt)))) * chIt->get_multiplier()) / chIt->get_divider()) + chIt->get_offset();
-                    writer.write_double_to_string(value, 2, decimalSeparator, false);
-                } else {
-                    writer.write_int_to_string((channelValueMap.at(&(*chIt)) * chIt->get_multiplier()) + chIt->get_offset(), false);
-                }
-                valueChangedSet.erase(changedIt);
+    if (mode == WritableToCSV::FileTimingMode::FrameByFrameMode){
+
+        writer.write_string("time [ms];", false);
+        writer.write_string("ID;", false);
+        writer.write_string("DLC;", false);
+        for (int i=0; i<ConfigFrame::MAX_FRAME_BYTES_LENGTH; i++){
+            writer.write_string("data[", false);
+            writer.write_int_to_string(i, false);
+            writer.write_string("];", false);
+        }
+
+        writer.write_string("\r\n", false);
+
+        if (config.get_GPSFrequency() != Config::EnGPSFrequency::freq_GPS_OFF){
+            writer.write_string("time [ms];", false);
+            writer.write_string("gps date[YYYY-MM-DD];", false);
+            writer.write_string("gps time[HH:MM:SS];", false);
+            writer.write_string("longitude;", false);
+            writer.write_string("latitude;", false);
+            writer.write_string("satelites available;", false);
+            writer.write_string("altitude [m];", false);
+            writer.write_string("speed [km/h];", false);
+            writer.write_string("fix type {No fix|2D|3D};", false);
+            writer.write_string("horizontalPrecision;", false);
+            writer.write_string("verticalPrecision;", false);
+        }
+
+        writer.write_string("\r\n", false);
+
+    } else {
+
+        writer.write_string("time [ms];", false);
+
+        for(auto frIt = config.cbegin(); frIt != config.cend(); ++frIt){
+            csv_frames_columns_order.push_back(lastValues.find(frIt->get_ID()));
+            for (ConfigFrame::const_iterator chIt = frIt->cbegin(); chIt != frIt->cend(); ++chIt){
+              writer.write_string(chIt->get_channelName() + " [" + chIt->get_unitName() + "]", false);
+              writer.write_string(";", false);
             }
         }
-    }
-    writer.write_string("\r\n", false);
-}
 
-
-void DataFileClass::write_to_csv_static_period_mode(map<const ConfigChannel*, int, WrapperLess>& channelValueMap,
-                                                    WritingClass& writer,
-                                                    unsigned int periodMs,
-                                                    char decimalSeparator) {
-    unsigned int actualMsTime = 0;
-
-    set<const ConfigChannel*, WrapperLess> valueChangedSet;
-
-    for (auto&& row : data){
-        if (row.getMsTime() > actualMsTime + periodMs){
-            write_single_csv_data_row(actualMsTime,
-                                      channelValueMap,
-                                      valueChangedSet,
-                                      decimalSeparator,
-                                      writer);
-            actualMsTime += periodMs;
+        if (config.get_GPSFrequency() != Config::EnGPSFrequency::freq_GPS_OFF){
+            writer.write_string("gps date[YYYY-MM-DD];", false);
+            writer.write_string("gps time[HH:MM:SS];", false);
+            writer.write_string("longitude;", false);
+            writer.write_string("latitude;", false);
+            writer.write_string("satelites available;", false);
+            writer.write_string("altitude [m];", false);
+            writer.write_string("speed [km/h];", false);
+            writer.write_string("fix type {No fix|2D|3D};", false);
+            writer.write_string("horizontalPrecision;", false);
+            writer.write_string("verticalPrecision;", false);
         }
-        for(auto& singleData : row.getData()){
-            channelValueMap[&singleData.get_channel()] = singleData.get_value_numeric();
-            valueChangedSet.insert(&singleData.get_channel());
-        }
+
+        writer.write_string("\r\n", false);
+
     }
-
-    write_single_csv_data_row(actualMsTime + periodMs,
-                              channelValueMap,
-                              valueChangedSet,
-                              decimalSeparator,
-                              writer);
-}
-
-void DataFileClass::write_to_csv_event_mode(map<const ConfigChannel*, int, WrapperLess>& channelValueMap,
-                                            WritingClass& writer, char decimalSeparator) {
-
-    set<const ConfigChannel*, WrapperLess> valueChangedSet;
-
-    for (auto& row : data){
-        for(auto& singleData : row.getData()){
-            const ConfigChannel* tmp = &singleData.get_channel();
-            channelValueMap[tmp] = singleData.get_value_numeric();
-            valueChangedSet.insert(tmp);
-        }
-        write_single_csv_data_row(row.getMsTime(),
-                                  channelValueMap,
-                                  valueChangedSet,
-                                  decimalSeparator,
-                                  writer);
-    }
-
-}
-
-static const int defaultChannelValue = 0;
-
-void DataFileClass::write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator) {
-
-    map<const ConfigChannel*, int, WrapperLess> channelValueMap; //TODO dobrze byłoby zamienić na unordered_map, ale trzeba dorzucic ten hash :-(
-
-    /*************  Preparing map witch channels as keys and int values   *************/
-
-    for(Config::const_iterator frIt = config.cbegin(); frIt != config.cend(); ++frIt){
-        for (ConfigFrame::const_iterator chIt = frIt->cbegin(); chIt != frIt->cend(); ++chIt){
-            channelValueMap.insert(pair<const ConfigChannel*, int>(&(*chIt), defaultChannelValue));
-        }
-    }
-
-    /*************  Writing down colums with time and channels   *************/
-
-    writer.write_string("time [ms];", false);
-
-    for(Config::const_iterator frIt = config.cbegin(); frIt != config.cend(); ++frIt){
-        for (ConfigFrame::const_iterator chIt = frIt->cbegin(); chIt != frIt->cend(); ++chIt){
-            writer.write_string(chIt->get_channelName() + " [" + chIt->get_unitName() + "]", false);
-            writer.write_string(";", false);
-        }
-    }
-
-    writer.write_string("\r\n", false);
-
 
     /*************  Writing down data rows   *************/
 
-    if (mode == WritableToCSV::EventMode){
-        write_to_csv_event_mode(channelValueMap, writer, decimalSeparator);
-    } else {
-        switch(mode){
-        case StaticPeriod10HzMode:
-            write_to_csv_static_period_mode(channelValueMap, writer, 100, decimalSeparator);
-            break;
-        case StaticPeriod100HzMode:
-            write_to_csv_static_period_mode(channelValueMap, writer, 10, decimalSeparator);
-            break;
-        case StaticPeriod250HzMode:
-            write_to_csv_static_period_mode(channelValueMap, writer, 4, decimalSeparator);
-            break;
-        case StaticPeriod500HzMode:
-            write_to_csv_static_period_mode(channelValueMap, writer, 2, decimalSeparator);
-            break;
-        case StaticPeriod1000HzMode:
-            write_to_csv_static_period_mode(channelValueMap, writer, 1, decimalSeparator);
-            break;
-        default:
-            throw std::invalid_argument("No such mode exception!"); //TODO
-        }
+    switch(mode){
+    case WritableToCSV::FileTimingMode::EventMode:
+        write_to_csv_event_mode(writer, lastValues, pGpsData, csv_frames_columns_order, writeOnlyChangedValues);
+        break;
+    case WritableToCSV::FileTimingMode::FrameByFrameMode:
+        write_to_csv_frame_by_frame_mode(writer);
+        break;
+    case WritableToCSV::FileTimingMode::StaticPeriod10HzMode:
+        write_to_csv_static_period_mode(writer, lastValues, pGpsData, csv_frames_columns_order, writeOnlyChangedValues, 100);
+        break;
+    case WritableToCSV::FileTimingMode::StaticPeriod100HzMode:
+        write_to_csv_static_period_mode(writer, lastValues, pGpsData, csv_frames_columns_order, writeOnlyChangedValues, 10);
+        break;
+    case WritableToCSV::FileTimingMode::StaticPeriod250HzMode:
+        write_to_csv_static_period_mode(writer, lastValues, pGpsData, csv_frames_columns_order, writeOnlyChangedValues, 4);
+        break;
+    case WritableToCSV::FileTimingMode::StaticPeriod500HzMode:
+        write_to_csv_static_period_mode(writer, lastValues, pGpsData, csv_frames_columns_order, writeOnlyChangedValues, 2);
+        break;
+    case WritableToCSV::FileTimingMode::StaticPeriod1000HzMode:
+        write_to_csv_static_period_mode(writer, lastValues, pGpsData, csv_frames_columns_order, writeOnlyChangedValues, 1);
+        break;
     }
 
 }
@@ -221,23 +404,26 @@ void DataFileClass::read_from_bin(ReadingClass& reader) {
     startTime.tm_min  = static_cast<int>(reader.reading_uint8());
     startTime.tm_sec  = static_cast<int>(reader.reading_uint8());
 
-    try {
-        while(!reader.eof()){
-            char            buffer[8];
-            unsigned int    msTime   = reader.reading_uint32(RawDataParser::UseDefaultEndian);
-            int             frameID  = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    while(!reader.eof()){
+        unsigned int    msTime   = reader.reading_uint32(RawDataParser::UseDefaultEndian);
+        int             frameID  = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+        if (frameID == DataFileClass::GPS_DATA_ID){
+            SingleGPSFrameData dataRow(msTime, reader.get_dataParser());
+            dataRow.read_from_bin(reader);
+            gpsData.push_back(dataRow);
+        } else {
             ConfigFrame& configFrame = config.get_frame_by_id(frameID);
-            reader.reading_bytes(buffer, configFrame.get_DLC());
-            SingleFrameData dataRow(msTime, configFrame, buffer, reader.get_dataParser());
+            SingleCANFrameData dataRow(msTime, configFrame, reader.get_dataParser());
+            dataRow.read_from_bin(reader);
 
-            data.push_back(dataRow);
+            canData.push_back(dataRow);
         }
-    } catch (exception e){
-        throw e;    //TODO
     }
 }
 
-DataFileClass::iterator::iterator(vector<SingleFrameData>::iterator it, DataFileClass& dataFileRef) :
+//<----- DataFileClass::iterator ----->//
+
+DataFileClass::iterator::iterator(vector<SingleCANFrameData>::iterator it, DataFileClass& dataFileRef) :
         innerIterator(it), dataFileReference(dataFileRef)
 {
 }
@@ -250,11 +436,11 @@ bool DataFileClass::iterator::operator!=(const DataFileClass::iterator &second) 
     return (innerIterator != second.innerIterator);
 }
 
-SingleFrameData& DataFileClass::iterator::operator*(){
+SingleCANFrameData& DataFileClass::iterator::operator*(){
     return (*innerIterator);
 }
 
-SingleFrameData* DataFileClass::iterator::operator->(){
+SingleCANFrameData* DataFileClass::iterator::operator->(){
     return &(*innerIterator);
 }
 
@@ -269,7 +455,9 @@ DataFileClass::iterator DataFileClass::iterator::operator++(int){
     return ret;
 }
 
-DataFileClass::const_iterator::const_iterator(vector<SingleFrameData>::const_iterator it, const DataFileClass& dataFileRef) :
+//<----- DataFileClass::const_iterator ----->//
+
+DataFileClass::const_iterator::const_iterator(vector<SingleCANFrameData>::const_iterator it, const DataFileClass& dataFileRef) :
         innerIterator(it), dataFileReference(dataFileRef) {
 }
 
@@ -281,11 +469,11 @@ bool DataFileClass::const_iterator::operator!=(const DataFileClass::const_iterat
     return (innerIterator != second.innerIterator);
 }
 
-const SingleFrameData& DataFileClass::const_iterator::operator*() {
+const SingleCANFrameData& DataFileClass::const_iterator::operator*() {
     return (*innerIterator);
 }
 
-const SingleFrameData* DataFileClass::const_iterator::operator->() {
+const SingleCANFrameData* DataFileClass::const_iterator::operator->() {
     return &(*innerIterator);
 }
 

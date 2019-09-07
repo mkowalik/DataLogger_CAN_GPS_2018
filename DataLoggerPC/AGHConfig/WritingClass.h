@@ -24,7 +24,8 @@ public:
     void            write_string(string aStr, bool writeTerminatingZero, int aLength = -1);
 
     void            write_double_to_string(double value, int decimal_figures, char decimalSeparator, bool writeTerminatingZero);
-    void            write_int_to_string(int value, bool writeTerminatingZero);
+    void            write_int_to_string(int value, bool writeTerminatingZero, unsigned int minSignsNumber = 0u);
+    void            write_int_to_string(unsigned int value, bool writeTerminatingZero, unsigned int minSignsNumber = 0u);
 };
 
 class WritableToBin {
@@ -35,8 +36,9 @@ public:
 
 class WritableToCSV {
 public:
-    enum FileTimingMode {
-        EventMode = 0,
+    enum class FileTimingMode {
+        EventMode,
+        FrameByFrameMode,
         StaticPeriod10HzMode,
         StaticPeriod100HzMode,
         StaticPeriod250HzMode,
@@ -44,7 +46,7 @@ public:
         StaticPeriod1000HzMode
     };
 
-    virtual void    write_to_csv(FileTimingMode mode, WritingClass& writer, char decimalSeparator) = 0;
+    virtual void    write_to_csv(FileTimingMode mode, WritingClass& writer, char decimalSeparator, bool writeOnlyChangedValues) = 0;
     virtual         ~WritableToCSV() = 0;
 };
 

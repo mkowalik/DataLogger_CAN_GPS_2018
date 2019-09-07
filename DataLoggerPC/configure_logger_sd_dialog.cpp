@@ -1,5 +1,5 @@
-#include "configureloggersd_dialog.h"
-#include "ui_configureloggersd_dialog.h"
+#include "configure_logger_sd_dialog.h"
+#include "ui_configure_logger_sd_dialog.h"
 
 #include <QFileDialog>
 #include <QDebug>
@@ -27,7 +27,7 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
     ui->framesTreeWidget->header()->resizeSection(6, 80);
     ui->framesTreeWidget->header()->resizeSection(7, 120);
 
-    ui->canSpeedComboBox->setCurrentText(QString::fromStdString(this->canBitrateToString(this->config.get_CANBitrate())));
+    reloadConfigView();
 }
 
 ConfigureLoggerSDDialog::~ConfigureLoggerSDDialog()
@@ -70,7 +70,7 @@ void ConfigureLoggerSDDialog::on_selectPrototypeFileButton_clicked()
     ui->prototypeFileComboBox->addItem(prototypeFilePath);
     ui->prototypeFileComboBox->setCurrentText(prototypeFilePath);
 
-    reloadFramesTreeWidget();
+    reloadConfigView();
 }
 
 void ConfigureLoggerSDDialog::on_resetButton_clicked()
@@ -79,7 +79,7 @@ void ConfigureLoggerSDDialog::on_resetButton_clicked()
         ui->prototypeFileComboBox->setCurrentText("");
         config.reset();
     }
-    reloadFramesTreeWidget();
+    reloadConfigView();
 }
 
 void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(const QPoint &pos)
@@ -229,8 +229,7 @@ void ConfigureLoggerSDDialog::on_saveConfigButton_clicked()
 
     QMessageBox::information(this, "Config export completed", "Your config has ben exported to \"" + filePath + "\" file.");
 
-    reloadFramesTreeWidget();
-    reloadCANBusSpeedWidget();
+    reloadConfigView();
 }
 
 Config::EnCANBitrate ConfigureLoggerSDDialog::stringToCANBitrate(string bitrateStr){
@@ -266,25 +265,40 @@ string ConfigureLoggerSDDialog::canBitrateToString(Config::EnCANBitrate canBitra
     }
 }
 
-void ConfigureLoggerSDDialog::reloadCANBusSpeedWidget(){
-    switch(config.get_CANBitrate()){
-    case Config::EnCANBitrate::bitrate_50kbps:
-        ui->canSpeedComboBox->setCurrentText("50kbps");
-        break;
-    case Config::EnCANBitrate::bitrate_125kbps:
-        ui->canSpeedComboBox->setCurrentText("125kbps");
-        break;
-    case Config::EnCANBitrate::bitrate_250kbps:
-        ui->canSpeedComboBox->setCurrentText("250kbps");
-        break;
-    case Config::EnCANBitrate::bitrate_500kbps:
-        ui->canSpeedComboBox->setCurrentText("500kbps");
-        break;
-    case Config::EnCANBitrate::bitrate_1Mbps:
-        ui->canSpeedComboBox->setCurrentText("1Mbps");
-        break;
+string ConfigureLoggerSDDialog::gpsFrequencyToString(Config::EnGPSFrequency gpsFrequency){
+    switch(gpsFrequency){
+    case Config::EnGPSFrequency::freq_GPS_OFF:
+        return "GPS OFF";
+    case Config::EnGPSFrequency::freq_0_5_Hz:
+        return "0.5 Hz";
+    case Config::EnGPSFrequency::freq_1_Hz:
+        return "1 Hz";
+    case Config::EnGPSFrequency::freq_2_Hz:
+        return "2 Hz";
+    case Config::EnGPSFrequency::freq_5_Hz:
+        return "5 Hz";
+    case Config::EnGPSFrequency::freq_10_Hz:
+        return "10 Hz";
     default:
-        throw std::invalid_argument("Invalid value of CAN bitrate string.");
+        throw std::invalid_argument("Invalid value of GPS frequency.");
+    }
+}
+
+Config::EnGPSFrequency ConfigureLoggerSDDialog::stringToGPSFrequency(string gpsFrequencyString){
+    if (gpsFrequencyString == "GPS OFF"){
+        return Config::EnGPSFrequency::freq_GPS_OFF;
+    } else if (gpsFrequencyString == "0.5 Hz"){
+        return Config::EnGPSFrequency::freq_0_5_Hz;
+    } else if (gpsFrequencyString == "1 Hz"){
+        return Config::EnGPSFrequency::freq_1_Hz;
+    } else if (gpsFrequencyString == "2 Hz"){
+        return Config::EnGPSFrequency::freq_2_Hz;
+    } else if (gpsFrequencyString == "5 Hz"){
+        return Config::EnGPSFrequency::freq_5_Hz;
+    } else if (gpsFrequencyString == "10 Hz"){
+        return Config::EnGPSFrequency::freq_10_Hz;
+    } else {
+        throw std::invalid_argument("Invalid value of GPS frequency string.");
     }
 }
 
@@ -305,6 +319,22 @@ void ConfigureLoggerSDDialog::reloadFramesTreeWidget(){
             prepareChannelWidget(*itCh, itemInner);
         }
     }
+}
+
+void ConfigureLoggerSDDialog::reloadCANBusBitrateWidget(){
+    QString canBusBitrateString = QString::fromStdString(this->canBitrateToString(this->config.get_CANBitrate()));
+    ui->canBitrateComboBox->setCurrentText(canBusBitrateString);
+}
+
+void ConfigureLoggerSDDialog::reloadGPSFrequencyWidget(){
+    QString gpsFrequencyString = QString::fromStdString(this->gpsFrequencyToString(this->config.get_GPSFrequency()));
+    ui->gpsFreqComboBox->setCurrentText(gpsFrequencyString);
+}
+
+void ConfigureLoggerSDDialog::reloadConfigView(){
+    reloadFramesTreeWidget();
+    reloadCANBusBitrateWidget();
+    reloadGPSFrequencyWidget();
 }
 
 void ConfigureLoggerSDDialog::editGivenItem(QTreeWidgetItem *clickedItem, QTreeWidgetItem* parent){

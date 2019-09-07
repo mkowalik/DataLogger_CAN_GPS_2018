@@ -10,7 +10,7 @@ class ReadingClass{
 private:
     static const int            BUFFER_SIZE = 128;
     RawDataParser&              dataParser;
-    char                        buffer[BUFFER_SIZE];
+    unsigned char               buffer[BUFFER_SIZE];
     ifstream                    data;
     streamoff                   fileSize;
 

@@ -1,6 +1,8 @@
 #ifndef RAW_DATA_PARSER_H
 #define RAW_DATA_PARSER_H
 
+using namespace std;
+
 class RawDataParser
 {
 public:
@@ -10,11 +12,11 @@ public:
         BigEndian
     };
     RawDataParser(EndianessMode rawDataMode);
-    int             interpret_signed_int(char* raw_data, int bytes, EndianessMode endianessMode) const;
-    unsigned int    interpret_unsigned_int(char* raw_data, int bytes, EndianessMode endianessMode) const;
+    int             interpret_signed_int(unsigned char* raw_data, unsigned int bytesNumber, EndianessMode endianessMode) const;
+    unsigned int    interpret_unsigned_int(unsigned char* raw_data, unsigned int bytesNumber, EndianessMode endianessMode) const;
 
-    void            write_signed_int(int value, char* retBuffer, unsigned int bytes, EndianessMode endianessMode);
-    void            write_unsigned_int(unsigned int value, char* retBuffer, unsigned int bytes, EndianessMode endianessMode);
+    void            write_signed_int(int value, unsigned char* retBuffer, unsigned int bytesNumber, EndianessMode endianessMode);
+    void            write_unsigned_int(unsigned int value, unsigned char* retBuffer, unsigned int bytesNumber, EndianessMode endianessMode);
 private:
     EndianessMode   rawDataMode;
 };
