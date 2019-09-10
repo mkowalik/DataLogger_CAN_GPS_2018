@@ -149,7 +149,7 @@ StringOperations_Status_TypeDef appendUInt8ToString(uint8_t* pRetBuffer, uint8_t
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
-	if (sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), "%u", val) > bufferSize - strlen((char*)pRetBuffer)){
+	if ((size_t)(sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), "%u", val)) > bufferSize - strlen((char*)pRetBuffer)){
 		return StringOperations_Status_BufferOverflowError;
 	}
 	return StringOperations_Status_OK;
@@ -168,7 +168,7 @@ StringOperations_Status_TypeDef appendUint8ToHexString(uint8_t* pRetBuffer, uint
 		return StringOperations_Status_NullPointerError;
 	}
 
-	if (sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), (upperCase == true) ? ("%X") : ("%x"), val) > bufferSize - strlen((char*)pRetBuffer)){
+	if ((size_t)(sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), (upperCase == true) ? ("%X") : ("%x"), val)) > bufferSize - strlen((char*)pRetBuffer)){
 		return StringOperations_Status_BufferOverflowError;
 	}
 	return StringOperations_Status_OK;
@@ -189,7 +189,7 @@ StringOperations_Status_TypeDef appendUInt32ToString(uint8_t* pRetBuffer, uint32
 		return StringOperations_Status_NullPointerError;
 	}
 
-	if (sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), "%lu", val) > bufferSize - strlen((char*)pRetBuffer)){
+	if ((size_t)(sprintf((char*)(pRetBuffer + strlen((char*)pRetBuffer)), "%lu", val)) > bufferSize - strlen((char*)pRetBuffer)){
 		return StringOperations_Status_BufferOverflowError;
 	}
 	return StringOperations_Status_OK;

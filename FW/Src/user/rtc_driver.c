@@ -162,9 +162,7 @@ RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, Date
 			(dateTime.month > RTC_DRIVER_MONTH_MAX_VALUE) || (dateTime.month < RTC_DRIVER_MONTH_MIN_VALUE) ||
 			(dateTime.day > RTC_DRIVER_DAY_MAX_VALUE) || (dateTime.day < RTC_DRIVER_DAY_MIN_VALUE)) {
 		return RTCDriver_Status_WrongDateFormatError;
-	} else if ((dateTime.hour > RTC_DRIVER_HOUR_MAX_VALUE) || (dateTime.hour < RTC_DRIVER_HOUR_MIN_VALUE) ||
-			(dateTime.minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (dateTime.minute < RTC_DRIVER_MINUTE_MIN_VALUE) ||
-			(dateTime.second > RTC_DRIVER_SECOND_MAX_VALUE) || (dateTime.second < RTC_DRIVER_SECOND_MIN_VALUE)) {
+	} else if ((dateTime.hour > RTC_DRIVER_HOUR_MAX_VALUE) || (dateTime.minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (dateTime.second > RTC_DRIVER_SECOND_MAX_VALUE) ) {
 		return RTCDriver_Status_WrongTimeFormatError;
 	}
 

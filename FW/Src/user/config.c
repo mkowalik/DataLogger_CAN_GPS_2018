@@ -210,7 +210,7 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_checkCorrectnessData(ConfigDa
 
 }
 
-ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager_TypeDef* pSelf, uint16_t ID, uint8_t offset, ConfigChannel_TypeDef* pRetChannel){
+ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager_TypeDef* pSelf, uint16_t ID, uint8_t offset, ConfigChannel_TypeDef** pRetChannel){
 
 	if (pSelf->state != ConfigDataManager_State_Initialized){
 		return ConfigDataManager_Status_NotInitialisedError;
@@ -231,7 +231,7 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager
 		if (i > offset){
 			return ConfigDataManager_Status_WrongOffsetError;
 		} else if (i == offset){
-			pRetChannel = &(pFrame->channels[i]);
+			*pRetChannel = &(pFrame->channels[i]);
 			return ConfigDataManager_Status_OK;
 		}
 

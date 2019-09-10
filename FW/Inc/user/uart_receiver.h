@@ -11,7 +11,7 @@
 #define USER_UART_RECEIVER_H_
 
 #define UART_RECEIVER_MAX_READERS_NUMBER	3
-#define UART_RECEIVER_BUFFER_SIZE			128 //< GPS max sentence x 10 (max whole pack) x 4
+#define UART_RECEIVER_BUFFER_SIZE			512 //< GPS max sentence x 10 (max whole pack) x 4
 
 typedef enum {
 	UartReceiver_State_UnInitialized = 0,
