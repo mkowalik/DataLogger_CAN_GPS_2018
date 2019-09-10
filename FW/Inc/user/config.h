@@ -21,7 +21,7 @@
 #define	CONFIG_FILENAME		"logger.aghconf"
 
 #define	CONFIG_FILE_USED_VERSION		0
-#define	CONFIG_FILE_USED_SUBVERSION		2
+#define	CONFIG_FILE_USED_SUBVERSION		3
 
 #define CONFIG_ID_NUMBER			2048
 
@@ -31,6 +31,26 @@
 
 #define	CONFIG_FILE_NAME		"config.aghconf"
 #define	CONFIG_NAMES_LENGTH		21
+
+#define	CONFIG_GPS_FRAME_ID		0x800
+
+typedef enum {
+	Config_GPSFrequency_OFF   = 0,
+	Config_GPSFrequency_0_5Hz = 1,
+	Config_GPSFrequency_1Hz   = 2,
+	Config_GPSFrequency_2Hz   = 3,
+	Config_GPSFrequency_5Hz   = 4,
+	Config_GPSFrequency_10Hz  = 5,
+} Config_GPSFrequency_TypeDef;
+
+
+typedef enum {
+	Config_CANBitrate_50kbps	= 50,
+	Config_CANBitrate_125kbps	= 125,
+	Config_CANBitrate_250kbps	= 250,
+	Config_CANBitrate_500kbps	= 500,
+	Config_CANBitrate_1Mbps		= 1000
+} Config_CANBitrate_TypeDef;
 
 typedef enum {
 	UNSIGNED_8BIT 	= (0x00),
@@ -67,7 +87,6 @@ typedef struct {
 	uint16_t 				numOfFrames;
 	uint16_t				canSpeed;
 	uint8_t					gpsFrequency;
-	uint16_t				gpsFrameId;
 	ConfigFrame_TypeDef 	canFrames[CONFIG_MAX_NO_OF_FRAMES];
 	ConfigFrame_TypeDef* 	canFramesByID[CONFIG_ID_NUMBER];
 } Config_TypeDef;
@@ -84,6 +103,9 @@ typedef enum {
 	ConfigDataManager_Status_WrongIDError,
 	ConfigDataManager_Status_WrongDLCError,
 	ConfigDataManager_Status_NotInitialisedError,
+	ConfigDataManager_Status_FrameIDPreviouslyUsedError,
+	ConfigDataManager_Status_WrongGPSFrequencyError,
+	ConfigDataManager_Status_WrongCANBitrateError,
 	ConfigDataManager_Status_Error
 } ConfigDataManager_Status_TypeDef;
 

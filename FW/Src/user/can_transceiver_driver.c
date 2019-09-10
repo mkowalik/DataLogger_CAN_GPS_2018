@@ -51,19 +51,19 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 	uint32_t prescalerValue;
 
 	switch (pConfig->canSpeed){
-	case 1000:
+	case Config_CANBitrate_1Mbps:
 		prescalerValue = 6;
 		break;
-	case 500:
+	case Config_CANBitrate_500kbps:
 		prescalerValue = 12;
 		break;
-	case 250:
+	case Config_CANBitrate_250kbps:
 		prescalerValue = 24;
 		break;
-	case 125:
+	case Config_CANBitrate_125kbps:
 		prescalerValue = 48;
 		break;
-	case 50:
+	case Config_CANBitrate_50kbps:
 		prescalerValue = 120;
 		break;
 	default:

@@ -47,6 +47,7 @@ typedef enum {
 typedef struct {
 	volatile UartDriver_State_TypeDef					state;
 	UART_HandleTypeDef* volatile						pUartHandler;
+	USART_TypeDef* volatile								pUartInstance;
 	MSTimerDriver_TypeDef* volatile						pMsTimerHandler;
 
 	volatile bool										errorOccuredFlag;

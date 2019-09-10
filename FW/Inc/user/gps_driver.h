@@ -14,6 +14,7 @@
 #include "user/uart_driver.h"
 #include "user/uart_receiver.h"
 #include "user/fifo_queue.h"
+#include "user/config.h"
 
 #define	GPS_DRIVER_MAX_CALLBACK_NUMBER				3
 
@@ -32,7 +33,7 @@
 
 #define GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC	83
 
-#define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			128
+#define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			256
 
 typedef enum {
 	GPSDriver_Status_OK = 0,
@@ -61,14 +62,6 @@ typedef enum {
 	GPSDriver_State_Initialized,
 	GPSDriver_State_Running
 } GPSDriver_State_TypeDef;
-
-typedef enum {
-	GPSDriver_Frequency_0_5Hz = 1,
-	GPSDriver_Frequency_1Hz,
-	GPSDriver_Frequency_2Hz,
-	GPSDriver_Frequency_5Hz,
-	GPSDriver_Frequency_10Hz,
-} GPSDriver_Frequency_TypeDef;
 
 typedef enum {
 	_GPSDriver_ResponseState_Idle = 0,
@@ -102,16 +95,10 @@ typedef struct {
 
 typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, GPSDriver_Frequency_TypeDef frequency);
-
-/*GPSDriver_Status_TypeDef GPSDriver_setReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, void (*foo)(GPSData_TypeDef gpsData, void* pArgs),
-		void* pArgs, UartDriver_ByteReceivedCallbackIterator_TypeDef* pRetCallbackIterator);
-GPSDriver_Status_TypeDef GPSDriver_removeReceivedDataCallback(volatile GPSDriver_TypeDef* pSelf, GPSDriver_CallbackIterator_TypeDef callbackIterator);*/
+GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, Config_GPSFrequency_TypeDef frequency);
 
 GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf);
 GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf);
-
-//GPSDriver_Status_TypeDef GPSDriver_thread(volatile GPSDriver_TypeDef* pSelf);
 
 GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData);
 

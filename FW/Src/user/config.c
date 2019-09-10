@@ -9,22 +9,51 @@
 #include "user/config.h"
 #include "user/utils.h"
 
-uint8_t assertCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint16_t id, uint16_t dlc){
+static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateCorrectFrame(ConfigDataManager_TypeDef* pSelf, uint16_t id, uint16_t dlc){
 
 	if (id >= CONFIG_ID_NUMBER){
-		return 0;
+		return ConfigDataManager_Status_WrongIDError;
 	}
 
 	if (pSelf->sConfig.canFramesByID[id] != NULL){
-		return 0;
+		return ConfigDataManager_Status_FrameIDPreviouslyUsedError;
 	}
 
 	if (dlc > CONFIG_MAX_DLC_VALUE){
-		return 0;
+		return ConfigDataManager_Status_WrongDLCError;
 	}
 
-	return 1;
+	return ConfigDataManager_Status_OK;
 
+}
+
+static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateGPSFrequency(ConfigDataManager_TypeDef* pSelf){
+
+	switch (pSelf->sConfig.gpsFrequency){
+	case Config_GPSFrequency_OFF:
+	case Config_GPSFrequency_0_5Hz:
+	case Config_GPSFrequency_1Hz:
+	case Config_GPSFrequency_2Hz:
+	case Config_GPSFrequency_5Hz:
+	case Config_GPSFrequency_10Hz:
+		return ConfigDataManager_Status_OK;
+	default:
+		return ConfigDataManager_Status_WrongGPSFrequencyError;
+	}
+}
+
+static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateCANSpeed(ConfigDataManager_TypeDef* pSelf){
+
+	switch (pSelf->sConfig.canSpeed){
+	case Config_CANBitrate_50kbps:
+	case Config_CANBitrate_125kbps:
+	case Config_CANBitrate_250kbps:
+	case Config_CANBitrate_500kbps:
+	case Config_CANBitrate_1Mbps:
+		return ConfigDataManager_Status_OK;
+	default:
+		return ConfigDataManager_Status_WrongCANBitrateError;
+	}
 }
 
 //TODO dopisac w dokumentacji, ze file system musi byc init, lub zrobic ze init wywolw
@@ -33,6 +62,7 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 	pSelf->state = ConfigDataManager_State_DuringInit;
 
 	FileSystemWrapper_Status_TypeDef	status;
+	ConfigDataManager_Status_TypeDef	ret = ConfigDataManager_Status_OK;
 
 	status = FileSystemWrapper_open(pFileSystem, &(pSelf->sConfigFileHandler), CONFIG_FILENAME);
 
@@ -60,12 +90,15 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canSpeed) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_ConfigFileDataError;
 	}
+	if ((ret = _ConfigDataManager_validateCANSpeed(pSelf)) != ConfigDataManager_Status_OK){
+		return ret;
+	}
 
 	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &pSelf->sConfig.gpsFrequency) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_ConfigFileDataError;
 	}
-	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.gpsFrameId) != FileReadingBuffer_Status_OK){
-		return ConfigDataManager_Status_ConfigFileDataError;
+	if ((ret = _ConfigDataManager_validateGPSFrequency(pSelf)) != ConfigDataManager_Status_OK){
+		return ret;
 	}
 
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.numOfFrames) != FileReadingBuffer_Status_OK){
@@ -84,8 +117,8 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 			return ConfigDataManager_Status_ConfigFileDataError;
 		}
 
-		if (assertCorrectFrame(pSelf, pSelf->sConfig.canFrames[frameNr].ID, pSelf->sConfig.canFrames[frameNr].DLC) == 0){
-			return ConfigDataManager_Status_ConfigFileDataError;
+		if ((ret = _ConfigDataManager_validateCorrectFrame(pSelf, pSelf->sConfig.canFrames[frameNr].ID, pSelf->sConfig.canFrames[frameNr].DLC)) != ConfigDataManager_Status_OK){
+			return ret;
 		}
 
 		pSelf->sConfig.canFramesByID[pSelf->sConfig.canFrames[frameNr].ID] = &(pSelf->sConfig.canFrames[frameNr]);

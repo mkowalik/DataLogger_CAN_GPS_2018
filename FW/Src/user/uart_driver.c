@@ -9,14 +9,17 @@
 #include "usart.h"
 #include <string.h>
 
+
 //<----- Private functions prototypes ----->//
 
-void					  _UartDriver_synchronousReceiverInnerByteReceivedCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs);
+void								_UartDriver_synchronousReceiverInnerByteReceivedCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs);
+static UartDriver_Status_TypeDef	_UartDriver_initHAL(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate);
 
 //<----- Public functions implementation ----->//
 
 UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate){
 
+	UartDriver_Status_TypeDef ret = UartDriver_Status_OK;
 	if (pSelf == NULL || pUartHandler == NULL || pMsTimerHandler == NULL){
 		return UartDriver_Status_NullPointerError;
 	}
@@ -27,6 +30,7 @@ UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UA
 
 	pSelf->state								= UartDriver_State_DuringInit;
 	pSelf->pUartHandler							= pUartHandler;
+	pSelf->pUartInstance						= pUartInstance;
 	pSelf->pMsTimerHandler						= pMsTimerHandler;
 	pSelf->transmitTimeoutTimestamp				= 0;
 	pSelf->transmitInProgress					= false;
@@ -40,22 +44,8 @@ UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UA
 		pSelf->callbacksByteArgs[i]	= NULL;
 	}
 
-	{	//< HAL init
-		pSelf->pUartHandler->Instance						= pUartInstance;
-		pSelf->pUartHandler->Init.BaudRate					= baudRate;
-		pSelf->pUartHandler->Init.WordLength				= UART_WORDLENGTH_8B;
-		pSelf->pUartHandler->Init.StopBits					= UART_STOPBITS_1;
-		pSelf->pUartHandler->Init.Parity					= UART_PARITY_NONE;
-		pSelf->pUartHandler->Init.Mode						= UART_MODE_TX_RX;
-		pSelf->pUartHandler->Init.HwFlowCtl					= UART_HWCONTROL_NONE;
-		pSelf->pUartHandler->Init.OverSampling				= UART_OVERSAMPLING_16;
-		pSelf->pUartHandler->Init.OneBitSampling			= UART_ONE_BIT_SAMPLE_DISABLE;
-		pSelf->pUartHandler->AdvancedInit.AdvFeatureInit	= UART_ADVFEATURE_NO_INIT;
-
-		if (HAL_UART_Init(pSelf->pUartHandler) != HAL_OK)
-		{
-			return UartDriver_Status_HALError;
-		}
+	if ((ret = _UartDriver_initHAL(pSelf, baudRate)) != UartDriver_Status_OK){
+		return ret;
 	}
 
 	pSelf->state = UartDriver_State_Ready;
@@ -90,10 +80,6 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 
 	UartDriver_Status_TypeDef ret;
 
-	if (pSelf->state != UartDriver_State_DuringInit && pSelf->state != UartDriver_State_Ready){
-		return UartDriver_Status_Error;
-	}
-
 	if ((ret = UartDriver_waitForTxTimeout(pSelf)) != UartDriver_Status_OK){
 		return ret;
 	}
@@ -102,7 +88,9 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 		return ret;
 	}
 
-	if (pSelf->state == UartDriver_State_Receiving){
+	UartDriver_State_TypeDef prevState = pSelf->state;
+
+	if (prevState == UartDriver_State_Receiving){
 		if ((ret = UartDriver_stopReceiver(pSelf)) != UartDriver_Status_OK){
 			return ret;
 		}
@@ -112,24 +100,15 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 		return UartDriver_Status_Error;
 	}
 
-	if (HAL_UART_DeInit((UART_HandleTypeDef*)pSelf->pUartHandler) != HAL_OK){
+	/*if (HAL_UART_DeInit((UART_HandleTypeDef*)pSelf->pUartHandler) != HAL_OK){
 		return UartDriver_Status_Error;
+	}*/
+
+	if ((ret = _UartDriver_initHAL(pSelf, baudRate)) != UartDriver_Status_OK){
+		return ret;
 	}
 
-	pSelf->pUartHandler->Init.BaudRate = baudRate;
-
-	{
-		if (HAL_UART_Init(pSelf->pUartHandler) != HAL_OK)
-		{
-			return UartDriver_Status_HALError;
-		}
-	}
-
-	if (pSelf->pUartHandler->gState != HAL_UART_STATE_READY){
-		return UartDriver_Status_Error;
-	}
-
-	if (pSelf->state == UartDriver_State_Receiving){
+	if (prevState == UartDriver_State_Receiving){
 		return UartDriver_startReceiver(pSelf);
 	}
 
@@ -160,6 +139,7 @@ UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* p
 		}
 	}
 
+	pSelf->transmitInProgress = true;
 	if (HAL_UART_Transmit_DMA(pSelf->pUartHandler, pBuffer, length) != HAL_OK){
 		return UartDriver_Status_Error;
 	}
@@ -169,8 +149,6 @@ UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* p
 		return UartDriver_Status_Error;
 	}
 	pSelf->transmitTimeoutTimestamp	= actualTimesamp + timeout;
-
-	pSelf->transmitInProgress = true;
 
 	return UartDriver_Status_OK;
 }
@@ -487,10 +465,6 @@ UartDriver_Status_TypeDef UartDriver_stopTransmitter(volatile UartDriver_TypeDef
 		return UartDriver_Status_NullPointerError;
 	}
 
-	if (pSelf->state != UartDriver_State_Receiving){
-		return UartDriver_Status_NotReceivingErrror;
-	}
-
 	if (HAL_UART_AbortTransmit(pSelf->pUartHandler) != HAL_OK){
 		return UartDriver_Status_HALError;
 	}
@@ -538,7 +512,7 @@ void _UartDriver_synchronousReceiverInnerByteReceivedCallback(uint8_t dataByte, 
 
 #define	UART_DRIVER_FULL_ASSER_IN_CALLBACK 0
 
-static UartDriver_Status_TypeDef UartDriver_receivedBytesCallback(volatile UartDriver_TypeDef* pSelf){
+static UartDriver_Status_TypeDef _UartDriver_receivedBytesCallback(volatile UartDriver_TypeDef* pSelf){
 
 #if UART_DRIVER_FULL_ASSER_IN_CALLBACK
 
@@ -576,7 +550,7 @@ static UartDriver_Status_TypeDef UartDriver_receivedBytesCallback(volatile UartD
 	return UartDriver_Status_OK;
 }
 
-static UartDriver_Status_TypeDef UartDriver_errorCallback(volatile UartDriver_TypeDef* pSelf){
+static UartDriver_Status_TypeDef _UartDriver_errorCallback(volatile UartDriver_TypeDef* pSelf){
 
 #if UART_DRIVER_FULL_ASSER_IN_CALLBACK
 
@@ -593,21 +567,13 @@ static UartDriver_Status_TypeDef UartDriver_errorCallback(volatile UartDriver_Ty
 	}
 
 #endif
-/*
-	if (HAL_UART_AbortReceive(pSelf->pUartHandler) != HAL_OK){
-		return UartDriver_Status_HALError;
-	}
 
-	if (HAL_UART_Receive_IT(pSelf->pUartHandler, (uint8_t*)&pSelf->actuallyReceivingByte, 1) != HAL_OK){
-		return UartDriver_Status_HALError;
-	}
-*/
 	pSelf->errorOccuredFlag = true;
 
 	return UartDriver_Status_OK;
 }
 
-static UartDriver_Status_TypeDef UartDriver_transmitCompleteCallback(volatile UartDriver_TypeDef* pSelf){
+static UartDriver_Status_TypeDef _UartDriver_transmitCompleteCallback(volatile UartDriver_TypeDef* pSelf){
 
 #if UART_DRIVER_FULL_ASSER_IN_CALLBACK
 
@@ -626,6 +592,32 @@ static UartDriver_Status_TypeDef UartDriver_transmitCompleteCallback(volatile Ua
 	return UartDriver_Status_OK;
 }
 
+static UartDriver_Status_TypeDef _UartDriver_initHAL(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate){
+
+	pSelf->pUartHandler->Instance							= pSelf->pUartInstance;
+	pSelf->pUartHandler->Init.BaudRate						= baudRate;
+	pSelf->pUartHandler->Init.WordLength					= UART_WORDLENGTH_8B;
+	pSelf->pUartHandler->Init.StopBits						= UART_STOPBITS_1;
+	pSelf->pUartHandler->Init.Parity						= UART_PARITY_NONE;
+	pSelf->pUartHandler->Init.Mode							= UART_MODE_TX_RX;
+	pSelf->pUartHandler->Init.HwFlowCtl						= UART_HWCONTROL_NONE;
+	pSelf->pUartHandler->Init.OverSampling					= UART_OVERSAMPLING_16;
+	pSelf->pUartHandler->Init.OneBitSampling				= UART_ONE_BIT_SAMPLE_DISABLE;
+	pSelf->pUartHandler->AdvancedInit.AdvFeatureInit		= UART_ADVFEATURE_DMADISABLEONERROR_INIT;
+	pSelf->pUartHandler->AdvancedInit.DMADisableonRxError	= UART_ADVFEATURE_DMA_DISABLEONRXERROR;
+
+	if (HAL_UART_Init(pSelf->pUartHandler) != HAL_OK)
+	{
+		return UartDriver_Status_HALError;
+	}
+
+	if (pSelf->pUartHandler->gState != HAL_UART_STATE_READY){
+		return UartDriver_Status_Error;
+	}
+
+	return UartDriver_Status_OK;
+}
+
 
 /****************************** Implementations of stm32f7xx_hal_uart.h __weak functions placeholders ******************************/
 
@@ -633,7 +625,7 @@ extern volatile UartDriver_TypeDef uart1Driver;
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 
-	if (UartDriver_transmitCompleteCallback(&uart1Driver) != UartDriver_Status_OK){
+	if (_UartDriver_transmitCompleteCallback(&uart1Driver) != UartDriver_Status_OK){
 		Error_Handler();
 	}
 }
@@ -641,7 +633,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 	UartDriver_Status_TypeDef ret;
-	if ((ret = UartDriver_receivedBytesCallback(&uart1Driver)) != UartDriver_Status_OK){
+	if ((ret = _UartDriver_receivedBytesCallback(&uart1Driver)) != UartDriver_Status_OK){
 		Error_Handler();
 	}
 }
@@ -649,7 +641,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 
 	UartDriver_Status_TypeDef ret;
-	if ((ret = UartDriver_errorCallback(&uart1Driver)) != UartDriver_Status_OK){
+	if ((ret = _UartDriver_errorCallback(&uart1Driver)) != UartDriver_Status_OK){
 		Error_Handler();
 	}
 }

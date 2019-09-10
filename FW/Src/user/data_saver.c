@@ -129,26 +129,26 @@ DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSDat
 	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTime) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->gpsFrameId) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, CONFIG_GPS_FRAME_ID) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 
-	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pData->dateTime.year) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pData->gpsDateTime.year) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.month) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->gpsDateTime.month) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.day) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->gpsDateTime.day) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.hour) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->gpsDateTime.hour) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.minute) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->gpsDateTime.minute) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->dateTime.second) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->gpsDateTime.second) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->longitude) != FileWritingBuffer_Status_OK){
@@ -201,9 +201,6 @@ static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, D
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pSelf->pConfig->gpsFrequency) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->gpsFrameId) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pSelf->pConfig->numOfFrames) != FileWritingBuffer_Status_OK){

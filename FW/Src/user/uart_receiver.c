@@ -165,7 +165,7 @@ UartReceiver_Status_TypeDef UartReceiver_pullLastSentence(volatile UartReceiver_
 	volatile FIFOMultiread_Status_TypeDef	fifoStatus;
 
 	if (pSelf == NULL || pRetSentence == NULL || pRetLength == NULL){
-		return UartDriver_Status_NullPointerError;
+		return UartReceiver_Status_NullPointerError;
 	}
 
 	if (pSelf->readerRegistered[readerIt] == false){
@@ -179,7 +179,7 @@ UartReceiver_Status_TypeDef UartReceiver_pullLastSentence(volatile UartReceiver_
 		if (fifoStatus == FIFOMultiread_Status_Empty){
 			break;
 		} else if (fifoStatus != FIFOMultiread_Status_OK ){
-			return UartDriver_Status_FIFOError;
+			return UartReceiver_Status_FIFOError;
 		}
 
 		if (elemBuffer.dataByte == pSelf->startSignVal[readerIt]){ //< it's start start sign. Leave it.
@@ -191,7 +191,7 @@ UartReceiver_Status_TypeDef UartReceiver_pullLastSentence(volatile UartReceiver_
 			fifoStatus = FIFOMultiread_dequeue(&pSelf->startAndTerminationSignFIFOReaders[readerIt], &elemBuffer);
 
 			if (fifoStatus != FIFOMultiread_Status_OK){
-				return UartDriver_Status_FIFOError;
+				return UartReceiver_Status_FIFOError;
 			}
 		}
 	}
@@ -208,7 +208,7 @@ UartReceiver_Status_TypeDef UartReceiver_pullLastSentence(volatile UartReceiver_
 			fifoStatus = FIFOMultiread_dequeue(&pSelf->startAndTerminationSignFIFOReaders[readerIt], &elemBuffer);
 
 			if (fifoStatus != FIFOMultiread_Status_OK){ //< queue should not be empty. Minimum one start sign and minimum one termination sign are threre
-				return UartDriver_Status_Error;
+				return UartReceiver_Status_FIFOError;
 			}
 
 			if (elemBuffer.dataByte == pSelf->startSignVal[readerIt]){ //< found start sign
@@ -226,7 +226,7 @@ UartReceiver_Status_TypeDef UartReceiver_pullLastSentence(volatile UartReceiver_
 			fifoStatus = FIFOMultiread_dequeue(&pSelf->startAndTerminationSignFIFOReaders[readerIt], &elemBuffer);
 
 			if (fifoStatus != FIFOMultiread_Status_OK){ //< queue should not be empty. Minimum one start sign and minimum one termination sign are threre
-				return UartDriver_Status_FIFOError;
+				return UartReceiver_Status_FIFOError;
 			}
 
 			if (elemBuffer.dataByte == pSelf->startSignVal[readerIt]){ //< found another start sign. Remove everything what was before

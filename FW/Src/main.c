@@ -233,7 +233,7 @@ int main(void)
   if (UartReceiver_init(&uart1Receiver, &uart1Driver) != UartReceiver_Status_OK){
 	  Error_Handler();
   }
-
+/*
   //DEBUG BEGIN
   UartReceiver_ReaderIterator_TypeDef reader = {0};
 
@@ -264,9 +264,9 @@ int main(void)
 		HAL_Delay(10);
 	}
 	//DEBUG END
-
+*/
   GPSDriver_Status_TypeDef retGps;
-  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, GPSDriver_Frequency_5Hz)) != GPSDriver_Status_OK){
+  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, Config_GPSFrequency_5Hz)) != GPSDriver_Status_OK){
 	  Error_Handler();
   }
 
@@ -284,6 +284,12 @@ int main(void)
 	  Error_Handler();
   }
 
+  //DEBUG BEGIN
+  if (GPSDriver_startReceiver(&gpsDriver) != GPSDriver_Status_OK){
+	  Error_Handler();
+  }
+  //DEBUG END
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -300,7 +306,10 @@ int main(void)
 
 //DEBUG begin
 	GPSData_TypeDef retGPSData;
-	if (GPSDriver_pullLastFrame(&gpsDriver, &retGPSData) != GPSDriver_Status_OK){
+	retGps = GPSDriver_pullLastFrame(&gpsDriver, &retGPSData);
+	if (retGps == GPSDriver_Status_OK){
+		LedDriver_OnLed(&ledDebug1Driver);
+	} else if (retGps != GPSDriver_Status_Empty){
 		Error_Handler();
 	}
 //DEBUG end

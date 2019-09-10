@@ -19,8 +19,8 @@ typedef enum {
 } GPSFixType;
 
 typedef struct {
-	DateTime_TypeDef	dateTime;
 	uint32_t			msTime;
+	DateTime_TypeDef	gpsDateTime;
 	FixedPoint			longitude;
 	FixedPoint			latitude;
 	uint8_t				nSatellites;
