@@ -77,7 +77,7 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	pSelf->pUartDriverHandler		= pUartDriverHandler;
 	pSelf->pUartReceiverHandler		= pUartReceiverHandler;
 	pSelf->pMSTimer					= pMSTimer;
-	pSelf->pUartReaderIterator		= 0;
+	pSelf->uartReaderIterator		= 0;
 
 	pSelf->gpggaPartialSegmentReceived	= false;
 	pSelf->gpgsaPartialSegmentReceived	= false;
@@ -88,6 +88,11 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	memset((void*)&pSelf->partialGPSData, 0, sizeof(GPSData_TypeDef));
 
 	uint32_t actualUartBaudrate;
+
+	if (frequency == Config_GPSFrequency_OFF){
+		pSelf->state = GPSDriver_State_OFF;
+		return GPSDriver_Status_OK;
+	}
 
 	if (UartDriver_getBaudRate(pSelf->pUartDriverHandler, &actualUartBaudrate) != UartDriver_Status_OK){
 		return GPSDriver_Status_UartDriverError;
@@ -101,13 +106,14 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 
 	if (UartReceiver_registerStartAndTerminationSignReader(
 			pSelf->pUartReceiverHandler,
-			&pSelf->pUartReaderIterator,
+			&pSelf->uartReaderIterator,
 			GPS_NMEA_START_SIGN,
 			GPS_NMEA_TERMINATION_SIGN
 		) != UartReceiver_Status_OK){
 
 		return GPSDriver_Status_UartReceiverError;
 	}
+	pSelf->uartReaderIteratorSet	= true;
 
 	HAL_Delay(GPS_DEVICE_START_TIME_MS);
 
@@ -144,6 +150,10 @@ GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSe
 		return GPSDriver_Status_NullPointerError;
 	}
 
+	if (pSelf->state == GPSDriver_State_OFF){
+		return GPSDriver_Status_OK;
+	}
+
 	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
 		return GPSDriver_Status_UnInitializedError;
 	}
@@ -165,6 +175,10 @@ GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSel
 
 	if (pSelf == NULL){
 		return GPSDriver_Status_NullPointerError;
+	}
+
+	if (pSelf->state == GPSDriver_State_OFF){
+		return GPSDriver_Status_OK;
 	}
 
 	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
@@ -190,8 +204,12 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSe
 		return GPSDriver_Status_NullPointerError;
 	}
 
-	if (pSelf->state != GPSDriver_State_Running){
+	if (pSelf->state == GPSDriver_State_OFF){
+		return GPSDriver_Status_Empty;
+	}
 
+	if (pSelf->state != GPSDriver_State_Running){
+		return GPSDriver_Status_NotRunningError;
 	}
 
 	GPSDriver_Status_TypeDef		ret						= GPSDriver_Status_OK;;
@@ -201,7 +219,7 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSe
 
 	while (1) {
 
-		retUR = UartReceiver_pullLastSentence(pSelf->pUartReceiverHandler, pSelf->pUartReaderIterator, nmeaRxSentenceString.sentenceString, &nmeaRxSentenceString.sentenceLength, &nmeaRxSentenceString.timestamp); //TODO dodac buffer size
+		retUR = UartReceiver_pullLastSentence(pSelf->pUartReceiverHandler, pSelf->uartReaderIterator, nmeaRxSentenceString.sentenceString, &nmeaRxSentenceString.sentenceLength, &nmeaRxSentenceString.timestamp); //TODO dodac buffer size
 		if (retUR == UartReceiver_Status_Empty){
 			return GPSDriver_Status_Empty;
 		} else if (retUR != UartReceiver_Status_OK){
@@ -264,6 +282,30 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSe
 	return GPSDriver_Status_Error;
 }
 
+GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile GPSDriver_TypeDef* pSelf){
+
+	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
+	if (pSelf == NULL){
+		return GPSDriver_Status_NullPointerError;
+	}
+
+	if (pSelf->uartReaderIteratorSet){
+		if (UartReceiver_removeStartAndTerminationSignReader(pSelf->pUartReceiverHandler, pSelf->uartReaderIterator) != UartReceiver_Status_OK){
+			ret = GPSDriver_Status_UartReceiverError;
+		}
+	}
+
+	if (pSelf->state == GPSDriver_State_Running){
+		if (UartReceiver_stop(pSelf->pUartReceiverHandler) != UartReceiver_Status_OK){
+			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverError : ret;
+		}
+	}
+
+	pSelf->state = GPSDriver_State_OFF;
+
+	return ret;
+}
+
 //< ----- Private functions ----- >//
 
 static GPSDriver_Status_TypeDef _GPSDriver_getNMEAChecksumValue(const uint8_t* pSentence, uint8_t* retChecksumValue){
@@ -294,14 +336,15 @@ static GPSDriver_Status_TypeDef _GPSDriver_checkNMEAChecksum(const uint8_t* pSen
     }
 
     uint8_t checksumStr[3];
-    if (uInt8ToHexString(checksumStr, checksumVal, true) != StringOperations_Status_OK){
+    if (uInt8ToHexStringMinDigits(checksumStr, checksumVal, true, 2) != StringOperations_Status_OK){
     	return GPSDriver_Status_Error;
     }
 
     uint16_t i = 0;
-    while (i < strlen((char*)pSentence) && pSentence[i++] != GPS_NMEA_CHECKSUM_SEPARATOR_SIGN){ }
+    uint16_t length = strlen((char*)pSentence);
+    while (i < length && pSentence[i++] != GPS_NMEA_CHECKSUM_SEPARATOR_SIGN){ }
 
-    if (i == strlen((char*)pSentence)){
+    if (i == length){
     	return GPSDriver_Status_NMEASentenceError;
     }
 
@@ -315,14 +358,15 @@ static GPSDriver_Status_TypeDef _GPSDriver_checkNMEAChecksum(const uint8_t* pSen
 static GPSDriver_Status_TypeDef _GPSDriver_appendNMEAChecksumString(uint8_t* pSentence, uint16_t bufferSize){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
-	if (pSentence[strlen((char*)pSentence)-1] != GPS_NMEA_CHECKSUM_SEPARATOR_SIGN){
-		if (strlen((char*)pSentence) + 1 > bufferSize){
+    uint16_t length = strlen((char*)pSentence);
+	if (pSentence[length-1] != GPS_NMEA_CHECKSUM_SEPARATOR_SIGN){
+		if (length + 1 > bufferSize){
 			return GPSDriver_Status_BufferOverflowError;
 		}
 		strCharCat(pSentence, GPS_NMEA_CHECKSUM_SEPARATOR_SIGN); //append '*' if not at the end of the pSentence
 	}
 
-	if (strlen((char*)pSentence) + GPS_NMEA_CHECKSUM_LENGTH > bufferSize){
+	if (length + GPS_NMEA_CHECKSUM_LENGTH > bufferSize){
 		return GPSDriver_Status_BufferOverflowError;
 	}
 
@@ -376,7 +420,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatil
 				pSelf->pUartReceiverHandler,
 				&tempReaderIterator,
 				pExpectedOKResponseBuffer[0],
-				pExpectedOKResponseBuffer[strlen((char*)pExpectedOKResponseBuffer)-1]
+				pExpectedOKResponseBuffer[expectedResponseLength-1]
 			) != UartReceiver_Status_OK ) {
 
 		return GPSDriver_Status_UartReceiverError;
@@ -510,6 +554,8 @@ static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile
 	strCharCat(commandBuffer, GPS_NMEA_DATA_SEPARATOR_SIGN);
 
 	switch(frequency){
+	case Config_GPSFrequency_OFF:
+		break;
 	case Config_GPSFrequency_0_5Hz:
 		strcat((char*)commandBuffer, "2000");
 		break;
@@ -837,6 +883,12 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDrive
 
 	uint8_t*					it = pNmeaSentenceString->sentenceString + strlen(GPS_NMEA_GPGGA_PREFIX) + sizeof(GPS_NMEA_DATA_SEPARATOR_SIGN);
 
+	//< ----- Auto selection of 2D or 3D fix ----- >//
+	if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
+		return GPSDriver_Status_NMEASentenceError;
+	}
+	it += tmp_u16 + sizeof(GPS_NMEA_DATA_SEPARATOR_SIGN); //< Ignore auto selection of 2D or 3D fix
+
 	//< ----- Parse fix type ----- >//
 	if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
 		return GPSDriver_Status_NMEASentenceError;
@@ -845,7 +897,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDrive
 		return GPSDriver_Status_NMEASentenceError;
 	}
 
-	switch (tmp_u16){
+	switch (tmp_u32){
 	case 1:
 		pSelf->partialGPSData.fixType = GPSFixType_NoFix;
 		break;
@@ -862,7 +914,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDrive
 
 	//< ----- Parse/ignore PRNs of satellites used for fix (space for 12) and PDOP (dilution of precision) ----- >//
 	#define GPS_GPGSA_FIELDS_TO_IGNORE	13 //< PRNs of satellites used for fix (space for 12)  and PDOP (dilution of precision)
-	for (uint8_t i=0; i<13; i++){ //TODO mocno do sprawdzenia
+	for (uint8_t i=0; i<12; i++){ //TODO mocno do sprawdzenia
 		if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
 			return GPSDriver_Status_NMEASentenceError;
 		}
@@ -960,7 +1012,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDrive
 	if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
 		return GPSDriver_Status_NMEASentenceError;
 	}
-	if ((ret = _GPSDriver_parseFixedPoint(it, tmp_u16, &pSelf->partialGPSData.speed)) != GPSDriver_Status_OK){ //< Horizontal dilution of position
+	if ((ret = _GPSDriver_parseFixedPoint(it, tmp_u16, &pSelf->partialGPSData.trackAngle)) != GPSDriver_Status_OK){ //< Horizontal dilution of position
 		return ret;
 	}
 	it += tmp_u16 + sizeof(GPS_NMEA_DATA_SEPARATOR_SIGN);
@@ -975,4 +1027,51 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDrive
 	it += tmp_u16 + sizeof(GPS_NMEA_DATA_SEPARATOR_SIGN);
 
 	return ret;
+}
+
+//< ----- test functions ----- >//
+
+
+bool GPSDriver_testGPGGA(volatile GPSDriver_TypeDef* pSelf){
+
+	GPSDriver_Status_TypeDef		ret;
+	_GPSDriver_NMEASentenceString	nmeaString;
+	strcpy((char*)nmeaString.sentenceString, "$GPGGA,074650.000,5005.0470,N,02000.6291,E,1,3,7.25,108.0,M,42.0,M,,*5D\r\n");
+	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
+	nmeaString.timestamp		= 100;
+	if ((ret = _GPSDriver_handleGPGGASentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
+		return false;
+	}
+	assert(pSelf->partialGPSData.gpsDateTime.hour == 7);
+	assert(pSelf->partialGPSData.gpsDateTime.minute == 46);
+	assert(pSelf->partialGPSData.gpsDateTime.second == 7);
+	return true;
+}
+
+bool GPSDriver_testGPGSA(volatile GPSDriver_TypeDef* pSelf){
+
+	GPSDriver_Status_TypeDef		ret;
+	_GPSDriver_NMEASentenceString	nmeaString;
+	strcpy((char*)nmeaString.sentenceString, "$GPGSA,A,2,26,10,16,,,,,,,,,,7.32,7.25,1.00*06\r\n");
+	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
+	nmeaString.timestamp		= 100;
+	if ((ret = _GPSDriver_handleGPGSASentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
+		return false;
+	}
+	return true;
+}
+
+bool GPSDriver_testGPRMC(volatile GPSDriver_TypeDef* pSelf){
+
+	GPSDriver_Status_TypeDef		ret;
+	_GPSDriver_NMEASentenceString	nmeaString;
+	strcpy((char*)nmeaString.sentenceString, "$GPRMC,074650.000,A,5005.0470,N,02000.6291,E,0.43,43.07,110919,,,A*55\r\n");
+	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
+	nmeaString.timestamp		= 100;
+	if ((ret = _GPSDriver_handleGPRMCSentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
+		return false;
+	}
+	return true;
+
+
 }

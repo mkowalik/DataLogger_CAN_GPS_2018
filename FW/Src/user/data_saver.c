@@ -166,6 +166,9 @@ DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSDat
 	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->speed) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
+	if (FileWritingBuffer_writeFixedPoint32(&pSelf->sWritingBuffer, pData->trackAngle) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
 	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, pData->fixType) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}

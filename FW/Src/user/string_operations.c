@@ -105,10 +105,10 @@ StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint8_t length,
 
 	for (int16_t i = length-1; i >= 0; i--){
 		uint8_t tmp;
-		if ((ret = decChar2Uint8(*(sentence + i) * multiplier, &tmp)) != StringOperations_Status_OK){
+		if ((ret = decChar2Uint8(*(sentence + i), &tmp)) != StringOperations_Status_OK){
 			return ret;
 		}
-		*pRetInt	+= tmp;
+		*pRetInt	+= (tmp * multiplier);
 		multiplier	*= 10;
 	}
 
@@ -160,6 +160,19 @@ StringOperations_Status_TypeDef uInt8ToHexString(uint8_t* pRetBuffer, uint8_t va
 		return StringOperations_Status_NullPointerError;
 	}
 	sprintf((char*)pRetBuffer, (upperCase == true) ? ("%X") : ("%x"), val);
+	return StringOperations_Status_OK;
+}
+
+StringOperations_Status_TypeDef uInt8ToHexStringMinDigits(uint8_t* pRetBuffer, uint8_t val, bool upperCase, uint8_t minDigitsNumber){
+	if (pRetBuffer == NULL){
+		return StringOperations_Status_NullPointerError;
+	}
+	char formatStr[20];
+	memset(formatStr, 0, 20);
+	sprintf (formatStr, (upperCase == true) ? ("%%0%uX") : ("%%0%ux"), ((unsigned int)minDigitsNumber)); //< prepare format string
+
+	sprintf ((char*)pRetBuffer, formatStr, val);
+
 	return StringOperations_Status_OK;
 }
 

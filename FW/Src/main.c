@@ -233,41 +233,21 @@ int main(void)
   if (UartReceiver_init(&uart1Receiver, &uart1Driver) != UartReceiver_Status_OK){
 	  Error_Handler();
   }
-/*
-  //DEBUG BEGIN
-  UartReceiver_ReaderIterator_TypeDef reader = {0};
 
-	if (UartReceiver_registerStartAndTerminationSignReader(
-			&uart1Receiver,
-			&reader,
-			'$',
-			'\n'
-		) != UartReceiver_Status_OK){
-
-		return GPSDriver_Status_UartReceiverError;
-	}
-	if (UartReceiver_start(&uart1Receiver) != UartReceiver_Status_OK){
-		return GPSDriver_Status_UartReceiverError;
-	}
-	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
-		HAL_Delay(10);
-
-	while (1){
-		uint8_t buffer[80];
-		uint16_t length;
-		UartReceiver_Status_TypeDef ret = UartReceiver_pullLastSentence(&uart1Receiver, reader, buffer, &length, NULL);
-		if (ret != UartReceiver_Status_Empty){
-			  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
-			  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
-		}
-		HAL_Delay(10);
-	}
-	//DEBUG END
-*/
   GPSDriver_Status_TypeDef retGps;
   if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, Config_GPSFrequency_5Hz)) != GPSDriver_Status_OK){
-	  Error_Handler();
+	  char warningBuffer[80]; memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS Initialization error: %d", retGps);
+	  Warning_Handler(warningBuffer);
+	  Config_TypeDef* pConfig = NULL;
+	  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) == ConfigDataManager_Status_OK){
+		  pConfig->gpsFrequency = GPSDriver_State_OFF;
+	  } else {
+		  Warning_Handler("ConfigDataManager_getConfigPointer returned error.");
+	  }
+	  if ((retGps = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
+		  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps);
+		  Warning_Handler(warningBuffer);
+	  }
   }
 
   if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
@@ -284,12 +264,6 @@ int main(void)
 	  Error_Handler();
   }
 
-  //DEBUG BEGIN
-  if (GPSDriver_startReceiver(&gpsDriver) != GPSDriver_Status_OK){
-	  Error_Handler();
-  }
-  //DEBUG END
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -300,19 +274,9 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-//	if (ActionScheduler_thread(&actionScheduler) != ActionScheduler_Status_OK){
-//		Warning_Handler("ActionScheduler_thread returned error.");
-//	}
-
-//DEBUG begin
-	GPSData_TypeDef retGPSData;
-	retGps = GPSDriver_pullLastFrame(&gpsDriver, &retGPSData);
-	if (retGps == GPSDriver_Status_OK){
-		LedDriver_OnLed(&ledDebug1Driver);
-	} else if (retGps != GPSDriver_Status_Empty){
-		Error_Handler();
+	if (ActionScheduler_thread(&actionScheduler) != ActionScheduler_Status_OK){
+		Warning_Handler("ActionScheduler_thread returned error.");
 	}
-//DEBUG end
 
   }
   /* USER CODE END 3 */
@@ -344,7 +308,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLN = 96;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

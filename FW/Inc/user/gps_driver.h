@@ -60,7 +60,8 @@ typedef enum {
 	GPSDriver_State_UnInitialized = 0,
 	GPSDriver_State_DuringInit,
 	GPSDriver_State_Initialized,
-	GPSDriver_State_Running
+	GPSDriver_State_Running,
+	GPSDriver_State_OFF,
 } GPSDriver_State_TypeDef;
 
 typedef enum {
@@ -82,7 +83,8 @@ typedef struct {
 	volatile UartDriver_TypeDef* volatile			pUartDriverHandler;
 	volatile UartReceiver_TypeDef* volatile			pUartReceiverHandler;
 	volatile MSTimerDriver_TypeDef* volatile 		pMSTimer;
-	volatile UartReceiver_ReaderIterator_TypeDef	pUartReaderIterator;
+	volatile UartReceiver_ReaderIterator_TypeDef	uartReaderIterator;
+	volatile bool									uartReaderIteratorSet;
 
 	volatile bool									gpggaPartialSegmentReceived;
 	volatile bool									gpgsaPartialSegmentReceived;
@@ -101,5 +103,14 @@ GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSe
 GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf);
 
 GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData);
+
+GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile GPSDriver_TypeDef* pSelf);
+
+//< ----- Unit-test-like functions ----- >//
+
+bool GPSDriver_testGPGGA(volatile GPSDriver_TypeDef* pSelf);
+bool GPSDriver_testGPGSA(volatile GPSDriver_TypeDef* pSelf);
+bool GPSDriver_testGPRMC(volatile GPSDriver_TypeDef* pSelf);
+
 
 #endif /* USER_GPS_DRIVER_H_ */
