@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-#if (USED_GPS == SIM28_GPS)
+#if (defined(USED_GPS) && (USED_GPS == SIM28_GPS))
 
 #include "string.h"
 #include "user/sim28_gps_driver.h"

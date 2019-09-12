@@ -52,7 +52,7 @@ extern "C" {
 #define	UBLOX_M8_GPS	0
 #define	SIM28_GPS		1
 
-#define	USED_GPS		SIM28_GPS
+#define	USED_GPS		UBLOX_M8_GPS
 
 /* USER CODE END EM */
 

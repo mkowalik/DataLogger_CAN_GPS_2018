@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include <user/sim28_gps_driver.h>
 #include "main.h"
 #include "can.h"
 #include "dma.h"
@@ -43,6 +42,7 @@
 #include "user/file_writing_buffer.h"
 #include "user/led_driver.h"
 #include "user/uart_driver.h"
+#include "user/gps_driver.h"
 
 /* USER CODE END Includes */
 
@@ -73,7 +73,7 @@ DataSaver_TypeDef				dataSaver;
 
 CANReceiver_TypeDef				canReceiver;
 RTCDriver_TypeDef				rtcDriver;
-SIM28GPSDriver_TypeDef			gpsDriver;
+Ublox8MGPSDriver_TypeDef		gpsDriver;
 
 ActionScheduler_TypeDef			actionScheduler;
 
@@ -99,7 +99,6 @@ static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 void FIFOTest(){
-
 
 	volatile FIFOMultiread_TypeDef						rxFifo = {0};
 	volatile UartReceiver_FIFOElem_TypeDef				receiveBuffer[128];
