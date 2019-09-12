@@ -5,8 +5,12 @@
  *      Author: Michal Kowalik
  */
 
-#ifndef USER_GPS_DRIVER_H_
-#define USER_GPS_DRIVER_H_
+#include "main.h"
+
+#if (USED_GPS == SIM28_GPS)
+
+#ifndef USER_SIM28_GPS_DRIVER_H_
+#define USER_SIM28_GPS_DRIVER_H_
 
 #include "stdint.h"
 
@@ -93,24 +97,23 @@ typedef struct {
 	volatile uint32_t								gpgsaPartialSegmentTimestamp;
 	volatile uint32_t								gprmcPartialSegmentTimestamp;
 	volatile GPSData_TypeDef						partialGPSData;
-} GPSDriver_TypeDef;
+} SIM28GPSDriver_TypeDef;
 
 typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, Config_GPSFrequency_TypeDef frequency);
+GPSDriver_Status_TypeDef GPSDriver_init(volatile SIM28GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, Config_GPSFrequency_TypeDef frequency);
 
-GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf);
-GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf);
+GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile SIM28GPSDriver_TypeDef* pSelf);
+GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile SIM28GPSDriver_TypeDef* pSelf);
 
-GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData);
+GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile SIM28GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData);
 
-GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile GPSDriver_TypeDef* pSelf);
+GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile SIM28GPSDriver_TypeDef* pSelf);
 
 //< ----- Unit-test-like functions ----- >//
 
-bool GPSDriver_testGPGGA(volatile GPSDriver_TypeDef* pSelf);
-bool GPSDriver_testGPGSA(volatile GPSDriver_TypeDef* pSelf);
-bool GPSDriver_testGPRMC(volatile GPSDriver_TypeDef* pSelf);
+void GPSDriver_test();
 
+#endif /* USER_SIM28_GPS_DRIVER_H_ */
 
-#endif /* USER_GPS_DRIVER_H_ */
+#endif

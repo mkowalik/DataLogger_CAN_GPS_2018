@@ -5,9 +5,12 @@
  *      Author: Michal Kowalik
  */
 
-#include "string.h"
 #include "main.h"
-#include "user/gps_driver.h"
+
+#if (USED_GPS == SIM28_GPS)
+
+#include "string.h"
+#include "user/sim28_gps_driver.h"
 #include "user/string_operations.h"
 #include "user/utils.h"
 #include "user/fixed_point.h"
@@ -45,14 +48,14 @@
 static GPSDriver_Status_TypeDef _GPSDriver_getNMEAChecksumValue(const uint8_t* pSentence, uint8_t* retChecksumValue);
 static GPSDriver_Status_TypeDef _GPSDriver_checkNMEAChecksum(const uint8_t* pSentence);
 static GPSDriver_Status_TypeDef _GPSDriver_appendNMEAChecksumString(uint8_t* pSentence, uint16_t bufferSize);
-static GPSDriver_Status_TypeDef _GPSDriver_appendCommandSufix(volatile GPSDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bufferSize);
+static GPSDriver_Status_TypeDef _GPSDriver_appendCommandSufix(volatile SIM28GPSDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bufferSize);
 
-static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatile GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer, uint8_t* pExpectedOKResponseBuffer);
-static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer);
-static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile GPSDriver_TypeDef* pSelf);
+static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatile SIM28GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer, uint8_t* pExpectedOKResponseBuffer);
+static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile SIM28GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer);
+static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile SIM28GPSDriver_TypeDef* pSelf);
 
-static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GPSDriver_TypeDef* pSelf, uint32_t baudRate);
-static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile GPSDriver_TypeDef* pSelf, Config_GPSFrequency_TypeDef frequency);
+static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile SIM28GPSDriver_TypeDef* pSelf, uint32_t baudRate);
+static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile SIM28GPSDriver_TypeDef* pSelf, Config_GPSFrequency_TypeDef frequency);
 
 static GPSDriver_Status_TypeDef _GPSDriver_parseTime(uint8_t* pSentence, uint16_t length, volatile DateTime_TypeDef* pRetDateTime);
 static GPSDriver_Status_TypeDef _GPSDriver_parseDate(uint8_t* pSentence, uint16_t length, volatile DateTime_TypeDef* pRetDateTime);
@@ -60,13 +63,13 @@ static GPSDriver_Status_TypeDef _GPSDriver_parseLatitude(uint8_t* pSentence, uin
 static GPSDriver_Status_TypeDef _GPSDriver_parseLongitude(uint8_t* pSentence, uint16_t length, volatile GPSData_TypeDef* pRetGPSData);
 static GPSDriver_Status_TypeDef _GPSDriver_parseFixedPoint(uint8_t* pSentence, uint16_t length, volatile FixedPoint* pRetFixedPoint);
 
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile SIM28GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile SIM28GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile SIM28GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
 
 //< ----- Public functions ----- >//
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, Config_GPSFrequency_TypeDef frequency){
+GPSDriver_Status_TypeDef GPSDriver_init(volatile SIM28GPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, Config_GPSFrequency_TypeDef frequency){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	if (pSelf == NULL || pUartDriverHandler == NULL || pUartReceiverHandler == NULL){
@@ -144,7 +147,7 @@ GPSDriver_Status_TypeDef GPSDriver_init(volatile GPSDriver_TypeDef* pSelf, UartD
 	return ret;
 }
 
-GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSelf) {
+GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile SIM28GPSDriver_TypeDef* pSelf) {
 
 	if (pSelf == NULL){
 		return GPSDriver_Status_NullPointerError;
@@ -171,7 +174,7 @@ GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile GPSDriver_TypeDef* pSe
 
 }
 
-GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSelf) {
+GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile SIM28GPSDriver_TypeDef* pSelf) {
 
 	if (pSelf == NULL){
 		return GPSDriver_Status_NullPointerError;
@@ -198,7 +201,7 @@ GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile GPSDriver_TypeDef* pSel
 
 }
 
-GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData) {
+GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile SIM28GPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData) {
 
 	if (pSelf == NULL || pRetGPSData == NULL){
 		return GPSDriver_Status_NullPointerError;
@@ -282,7 +285,7 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile GPSDriver_TypeDef* pSe
 	return GPSDriver_Status_Error;
 }
 
-GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile GPSDriver_TypeDef* pSelf){
+GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile SIM28GPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	if (pSelf == NULL){
@@ -383,7 +386,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_appendNMEAChecksumString(uint8_t* pSe
     return GPSDriver_Status_OK;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_appendCommandSufix(volatile GPSDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bufferSize){
+static GPSDriver_Status_TypeDef _GPSDriver_appendCommandSufix(volatile SIM28GPSDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t bufferSize){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 
@@ -403,7 +406,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_appendCommandSufix(volatile GPSDriver
 	return ret;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatile GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer, uint8_t* pExpectedOKResponseBuffer){
+static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatile SIM28GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer, uint8_t* pExpectedOKResponseBuffer){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 
@@ -467,7 +470,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendCommandAndWaitForResponse(volatil
 	return ret;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer){
+static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile SIM28GPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer){
 
 	if (UartDriver_sendBytesDMA(pSelf->pUartDriverHandler, pCommandBuffer, strlen((char*)pCommandBuffer), GPS_TX_TIMEOUT_MS) != UartDriver_Status_OK){
 		return GPSDriver_Status_UartDriverError;
@@ -484,7 +487,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile GPSDriver_TypeDe
 	return GPSDriver_Status_OK;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile GPSDriver_TypeDef* pSelf){
+static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile SIM28GPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	uint8_t commandBuffer[GPS_MAX_COMMAND_LENGTH] = {0};
@@ -503,7 +506,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendTestCommand(volatile GPSDriver_Ty
 	return _GPSDriver_sendCommandAndWaitForResponse(pSelf, commandBuffer, responseBuffer);
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GPSDriver_TypeDef* pSelf, uint32_t baudRate){
+static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile SIM28GPSDriver_TypeDef* pSelf, uint32_t baudRate){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	if (pSelf->state == GPSDriver_State_UnInitialized){
@@ -536,7 +539,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile GP
 	return _GPSDriver_sendTestCommand(pSelf);
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile GPSDriver_TypeDef* pSelf, Config_GPSFrequency_TypeDef frequency){
+static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile SIM28GPSDriver_TypeDef* pSelf, Config_GPSFrequency_TypeDef frequency){
 
 	if (pSelf->state == GPSDriver_State_UnInitialized){
 		return GPSDriver_Status_Error;
@@ -778,7 +781,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_parseFixedPoint(uint8_t* pSentence, u
 	return GPSDriver_Status_OK;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString){
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile SIM28GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString){
 
 	GPSDriver_Status_TypeDef	ret = GPSDriver_Status_OK;
 	uint16_t					tmp_u16;
@@ -871,7 +874,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPGGASentence(volatile GPSDrive
 	return ret;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString){
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile SIM28GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString){
 
 	GPSDriver_Status_TypeDef	ret = GPSDriver_Status_OK;
 	uint16_t					tmp_u16;
@@ -942,7 +945,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPGSASentence(volatile GPSDrive
 	return ret;
 }
 
-static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString){
+static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile SIM28GPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString){
 
 	GPSDriver_Status_TypeDef	ret = GPSDriver_Status_OK;
 	uint16_t					tmp_u16;
@@ -1031,8 +1034,15 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGPRMCSentence(volatile GPSDrive
 
 //< ----- test functions ----- >//
 
+void GPSDriver_test(){
+	SIM28GPSDriver_TypeDef self;
+	assert_param(GPSDriver_testGPGGA1(&self));
+	assert_param(GPSDriver_testGPGSA1(&self));
+	assert_param(GPSDriver_testGPRMC1(&self));
+}
 
-bool GPSDriver_testGPGGA(volatile GPSDriver_TypeDef* pSelf){
+
+bool GPSDriver_testGPGGA1(volatile SIM28GPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef		ret;
 	_GPSDriver_NMEASentenceString	nmeaString;
@@ -1042,13 +1052,18 @@ bool GPSDriver_testGPGGA(volatile GPSDriver_TypeDef* pSelf){
 	if ((ret = _GPSDriver_handleGPGGASentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
 		return false;
 	}
-	assert(pSelf->partialGPSData.gpsDateTime.hour == 7);
-	assert(pSelf->partialGPSData.gpsDateTime.minute == 46);
-	assert(pSelf->partialGPSData.gpsDateTime.second == 7);
+	assert_param(pSelf->partialGPSData.gpsDateTime.hour				== 7);
+	assert_param(pSelf->partialGPSData.gpsDateTime.minute			== 46);
+	assert_param(pSelf->partialGPSData.gpsDateTime.second			== 7);
+	assert_param(pSelf->partialGPSData.latitude.integer				== ((5005 << 12) + ((470<<12)/10000)) );
+	assert_param(pSelf->partialGPSData.longitude.integer			== ((2000 << 12) + ((6291<<12)/10000)) );
+	assert_param(pSelf->partialGPSData.nSatellites					== 3);
+	assert_param(pSelf->partialGPSData.verticalPrecision.integer	== ((7 << 12) + ((25<<12)/100)) );
+	assert_param(pSelf->partialGPSData.altitude.integer				== ((108 << 12)) );
 	return true;
 }
 
-bool GPSDriver_testGPGSA(volatile GPSDriver_TypeDef* pSelf){
+bool GPSDriver_testGPGSA1(volatile SIM28GPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef		ret;
 	_GPSDriver_NMEASentenceString	nmeaString;
@@ -1058,10 +1073,13 @@ bool GPSDriver_testGPGSA(volatile GPSDriver_TypeDef* pSelf){
 	if ((ret = _GPSDriver_handleGPGSASentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
 		return false;
 	}
+	assert_param(pSelf->partialGPSData.fixType						== GPSFixType_2DFix);
+	assert_param(pSelf->partialGPSData.horizontalPrecision.integer	== ((7 << 12) + ((32<<12)/100)) );
+	assert_param(pSelf->partialGPSData.verticalPrecision.integer	== ((7 << 12) + ((25<<12)/100)) );
 	return true;
 }
 
-bool GPSDriver_testGPRMC(volatile GPSDriver_TypeDef* pSelf){
+bool GPSDriver_testGPRMC1(volatile SIM28GPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef		ret;
 	_GPSDriver_NMEASentenceString	nmeaString;
@@ -1069,9 +1087,19 @@ bool GPSDriver_testGPRMC(volatile GPSDriver_TypeDef* pSelf){
 	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
 	nmeaString.timestamp		= 100;
 	if ((ret = _GPSDriver_handleGPRMCSentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
+		assert_param(pSelf->partialGPSData.gpsDateTime.hour				== 7);
+		assert_param(pSelf->partialGPSData.gpsDateTime.minute			== 46);
+		assert_param(pSelf->partialGPSData.gpsDateTime.second			== 50);
+		assert_param(pSelf->partialGPSData.latitude.integer				== ((5005 << 12) + ((470<<12)/10000)) );
+		assert_param(pSelf->partialGPSData.longitude.integer			== ((2000 << 12) + ((6291<<12)/10000)) );
+		assert_param(pSelf->partialGPSData.speed.integer				== ((7963<<12)/10000) );
+		assert_param(pSelf->partialGPSData.trackAngle.integer			== ((43 << 12) + ((7<<12)/100)) );
+		assert_param(pSelf->partialGPSData.gpsDateTime.day				== 11);
+		assert_param(pSelf->partialGPSData.gpsDateTime.month			== 9);
+		assert_param(pSelf->partialGPSData.gpsDateTime.year				== 19);
 		return false;
 	}
 	return true;
-
-
 }
+
+#endif

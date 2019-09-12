@@ -20,7 +20,7 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_logCloseState(ActionSched
 //< ----- Public functions ----- >//
 
 ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager,
-		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, GPSDriver_TypeDef* pGPSDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver) {
+		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, SIM28GPSDriver_TypeDef* pGPSDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver) {
 
 	if (pSelf == NULL || pConfigManager == NULL || pDataSaver == NULL || pCANReceiver == NULL || pGPSDriver == NULL || pRTCDriver == NULL || pStatusLedDriver == NULL){
 		return ActionScheduler_Status_NullPointerError;

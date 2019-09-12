@@ -49,6 +49,11 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
+#define	UBLOX_M8_GPS	0
+#define	SIM28_GPS		1
+
+#define	USED_GPS		SIM28_GPS
+
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

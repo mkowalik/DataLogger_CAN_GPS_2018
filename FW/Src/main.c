@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <user/sim28_gps_driver.h>
 #include "main.h"
 #include "can.h"
 #include "dma.h"
@@ -28,6 +29,7 @@
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
+#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -41,7 +43,6 @@
 #include "user/file_writing_buffer.h"
 #include "user/led_driver.h"
 #include "user/uart_driver.h"
-#include "user/gps_driver.h"
 
 /* USER CODE END Includes */
 
@@ -52,6 +53,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define INITIALIZATION_LED_ON	950
+#define INITIALIZATION_LED_OFF	50
 
 /* USER CODE END PD */
 
@@ -69,7 +73,7 @@ DataSaver_TypeDef				dataSaver;
 
 CANReceiver_TypeDef				canReceiver;
 RTCDriver_TypeDef				rtcDriver;
-GPSDriver_TypeDef				gpsDriver;
+SIM28GPSDriver_TypeDef			gpsDriver;
 
 ActionScheduler_TypeDef			actionScheduler;
 
@@ -180,6 +184,10 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+#ifdef  USE_FULL_ASSERT
+	GPSDriver_test();
+#endif
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -197,6 +205,10 @@ int main(void)
   }
   if (LedDriver_init(&ledDebug2Driver, (LedDriver_Port_TypeDef*)my_LED_DEBUG2_GPIO_Port, &ledDebug2Pin) != LedDriver_Status_OK){
 	  Error_Handler();
+  }
+
+  if (LedDriver_BlinkingLed(&ledDebug2Driver, INITIALIZATION_LED_ON, INITIALIZATION_LED_OFF) != LedDriver_Status_OK){
+	  return ActionScheduler_Status_Error;
   }
 
   if (RTCDriver_init(&rtcDriver, &hrtc) != RTCDriver_Status_OK){
@@ -227,26 +239,31 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600) != UartDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (UartReceiver_init(&uart1Receiver, &uart1Driver) != UartReceiver_Status_OK){
-	  Error_Handler();
-  }
 
-  GPSDriver_Status_TypeDef retGps;
-  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, Config_GPSFrequency_5Hz)) != GPSDriver_Status_OK){
-	  char warningBuffer[80]; memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS Initialization error: %d", retGps);
-	  Warning_Handler(warningBuffer);
-	  Config_TypeDef* pConfig = NULL;
-	  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) == ConfigDataManager_Status_OK){
-		  pConfig->gpsFrequency = GPSDriver_State_OFF;
+
+
+  GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
+  UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
+  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600)) != UartDriver_Status_OK){
+	  Warning_Handler("UartDriver initialization problem.");
+	  retGps = GPSDriver_Status_Error;
+  } else {
+	  UartReceiver_Status_TypeDef retUartRcv = UartReceiver_Status_OK;
+	  if ((retUartRcv = UartReceiver_init(&uart1Receiver, &uart1Driver)) != UartReceiver_Status_OK){
+		  Warning_Handler("UartReceiver initialization problem.");
+		  retGps = GPSDriver_Status_Error;
 	  } else {
-		  Warning_Handler("ConfigDataManager_getConfigPointer returned error.");
-	  }
-	  if ((retGps = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
-		  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps);
-		  Warning_Handler(warningBuffer);
+		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
+			  char warningBuffer[80];
+			  memset(warningBuffer, 0, 80);
+			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);
+			  Warning_Handler(warningBuffer);
+			  GPSDriver_Status_TypeDef retGps2 = GPSDriver_Status_OK;
+			  if ((retGps2 = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
+				  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps2);
+				  Warning_Handler(warningBuffer);
+			  }
+		  }
 	  }
   }
 
@@ -262,6 +279,16 @@ int main(void)
   }
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
 	  Error_Handler();
+  }
+
+  if (retGps == GPSDriver_Status_OK){
+	  if (LedDriver_OnLed(&ledDebug1Driver) != LedDriver_Status_OK){
+		  Warning_Handler("LED driver problem.");
+	  }
+  } else {
+	  if (LedDriver_OffLed(&ledDebug1Driver) != LedDriver_Status_OK){
+		  Warning_Handler("LED driver problem.");
+	  }
   }
 
   /* USER CODE END 2 */
