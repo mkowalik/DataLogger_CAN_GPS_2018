@@ -12,7 +12,7 @@
 #include "user/file_system_wrapper.h"
 #include "user/fixed_point.h"
 
-#define FILE_WRITING_BUFFER_SIZE	32
+#define FILE_WRITING_BUFFER_SIZE	256
 
 typedef enum {
 	FileWritingBuffer_State_UnInitialized = 0,

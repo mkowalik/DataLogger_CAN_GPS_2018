@@ -24,9 +24,6 @@ static FileWritingBuffer_Status_TypeDef FileWritingBuffer_checkIfFull(FileWritin
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_init(FileWritingBuffer_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile){
 
-	if (pSelf->state != FileWritingBuffer_State_UnInitialized){
-		return FileWritingBuffer_Status_Error;
-	}
 	if (pFile == NULL){
 		return FileWritingBuffer_Status_Error;
 	}

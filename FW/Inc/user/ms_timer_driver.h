@@ -19,7 +19,8 @@ typedef enum {
 
 typedef enum {
 	MSTimerDriver_Status_OK = 0,
-	MSTimerDriver_Status_Error_NotInitialised,
+	MSTimerDriver_Status_NotInitialisedError,
+	MSTimerDriver_Status_NullPointerError,
 	MSTimerDriver_Status_Error
 } MSTimerDriver_Status_TypeDef;
 

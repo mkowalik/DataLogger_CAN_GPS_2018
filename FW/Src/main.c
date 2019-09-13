@@ -28,21 +28,16 @@
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
-#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include "string.h"
+#include "ff.h"
 
-#include "user/config.h"
-#include "user/can_receiver.h"
-#include "user/action_scheduler.h"
-#include "user/file_reading_buffer.h"
 #include "user/file_writing_buffer.h"
 #include "user/led_driver.h"
-#include "user/uart_driver.h"
-#include "user/gps_driver.h"
+#include "user/ms_timer_driver.h"
 
 /* USER CODE END Includes */
 
@@ -68,25 +63,12 @@
 
 /* USER CODE BEGIN PV */
 
-ConfigDataManager_TypeDef		configDataManager;
-DataSaver_TypeDef				dataSaver;
-
-CANReceiver_TypeDef				canReceiver;
-RTCDriver_TypeDef				rtcDriver;
-Ublox8MGPSDriver_TypeDef		gpsDriver;
-
-ActionScheduler_TypeDef			actionScheduler;
-
 FileSystemWrapper_TypeDef		fileSystem;
-
-CANTransceiverDriver_TypeDef	canTransceiverDriver;
+FileWritingBuffer_TypeDef		writingBuffer;
 MSTimerDriver_TypeDef			msTimerDriver;
 
 LedDriver_TypeDef				ledDebug1Driver;
 LedDriver_TypeDef				ledDebug2Driver;
-
-UartDriver_TypeDef				uart1Driver;
-UartReceiver_TypeDef			uart1Receiver;
 
 LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
 LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
@@ -97,47 +79,6 @@ LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-
-void FIFOTest(){
-
-	volatile FIFOMultiread_TypeDef						rxFifo = {0};
-	volatile UartReceiver_FIFOElem_TypeDef				receiveBuffer[128];
-
-	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiver_FIFOElem_TypeDef), 128);
-	FIFOMultireadReaderIdentifier_TypeDef id;
-	FIFOMultiread_registerReader(&rxFifo, &id);
-
-	UartReceiver_FIFOElem_TypeDef byteWithTimestamp;
-
-  for (uint16_t i=0; i<128; i++){
-	  byteWithTimestamp.dataByte = i;
-	  byteWithTimestamp.msTime = i+128;
-	if (FIFOMultiread_enqueue(&rxFifo, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
-		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
-	}
-  }
-
-  for (uint8_t i=0; i<128; i++){
-  	if (FIFOMultiread_dequeue(&id, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
-  		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
-  	}
-  }
-
-  for (uint16_t i=0; i<128; i++){
-	  byteWithTimestamp.dataByte = i;
-	  byteWithTimestamp.msTime = i+128;
-	if (FIFOMultiread_enqueue(&rxFifo, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
-		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
-	}
-  }
-
-  for (uint16_t i=0; i<128; i++){
-  	if (FIFOMultiread_dequeue(&id, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
-  		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
-  	}
-  }
-
-}
 
 /* USER CODE END PFP */
 
@@ -206,89 +147,98 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (LedDriver_BlinkingLed(&ledDebug2Driver, INITIALIZATION_LED_ON, INITIALIZATION_LED_OFF) != LedDriver_Status_OK){
-	  return ActionScheduler_Status_Error;
-  }
-
-  if (RTCDriver_init(&rtcDriver, &hrtc) != RTCDriver_Status_OK){
-	  Error_Handler();
-  }
-
-  if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (MSTimerDriver_startCounting(&msTimerDriver) != MSTimerDriver_Status_OK){
-	  Error_Handler();
-  }
-
   if (FileSystemWrapper_init(&fileSystem) != FileSystemWrapper_Status_OK){
 	  Error_Handler();
   }
 
-  if (ConfigDataManager_init(&configDataManager, &fileSystem) != ConfigDataManager_Status_OK){
+  FileSystemWrapper_File_TypeDef file1;
+
+  uint32_t result[50];
+  uint16_t rIt = 0;
+
+  uint16_t btw[] = {1000, 100, 1000};
+  uint16_t loops[] = {1000, 1000, 100};
+
+  if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
 	  Error_Handler();
   }
 
-  Config_TypeDef* pConfig;
-  if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
+  if (MSTimerDriver_startCounting(&msTimerDriver) != MSTimerDriver_Status_OK){
 	  Error_Handler();
   }
 
-  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
-	  Error_Handler();
-  }
+  for (int it = 0; it < 3; it++){
+  	  for (int retry = 0; retry < 2; retry++){
 
+		  if (FileSystemWrapper_open(&fileSystem, &file1, "file1.out") != FileSystemWrapper_Status_OK){
+			  Error_Handler();
+		  }
 
+		  FileWritingBuffer_TypeDef fwb;
 
+		  if (FileWritingBuffer_init(&fwb, &file1) != FileWritingBuffer_Status_OK){
+			  Error_Handler();
+		  }
 
-  GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
-  UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
-  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600)) != UartDriver_Status_OK){
-	  Warning_Handler("UartDriver initialization problem.");
-	  retGps = GPSDriver_Status_Error;
-  } else {
-	  UartReceiver_Status_TypeDef retUartRcv = UartReceiver_Status_OK;
-	  if ((retUartRcv = UartReceiver_init(&uart1Receiver, &uart1Driver)) != UartReceiver_Status_OK){
-		  Warning_Handler("UartReceiver initialization problem.");
-		  retGps = GPSDriver_Status_Error;
-	  } else {
-		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
-			  char warningBuffer[80];
-			  memset(warningBuffer, 0, 80);
-			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);
-			  Warning_Handler(warningBuffer);
-			  GPSDriver_Status_TypeDef retGps2 = GPSDriver_Status_OK;
-			  if ((retGps2 = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
-				  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps2);
-				  Warning_Handler(warningBuffer);
+		  uint32_t startTime, endTime, diffTime;
+
+		  uint32_t i=0;
+		  uint8_t data[100000];
+
+		  uint16_t bytesToWrite = btw[it];
+		  for (int i=0; i<bytesToWrite; i++){
+			  data[i] = i;
+		  }
+
+		  LedDriver_OnLed(&ledDebug1Driver);
+
+		  if (MSTimerDriver_getMSTime(&msTimerDriver, &startTime) != MSTimerDriver_Status_OK){
+			  Error_Handler();
+		  }
+
+		  uint8_t off = 1;
+		  for (int i=0; i<loops[it]; i++){
+			  if (FileWritingBuffer_writeString(&fwb, data, bytesToWrite) != FileWritingBuffer_Status_OK){
+				  Error_Handler();
+			  }
+			  /*
+			  uint32_t bytesWritten;
+			  FileSystemWrapper_Status_TypeDef status = FileSystemWrapper_writeBinaryData(&file1, data, bytesToWrite, &bytesWritten);
+			  if (status != FileSystemWrapper_Status_OK){
+				  Error_Handler();
+			  }
+			  if (bytesWritten != bytesToWrite){
+				  Error_Handler();
+			  }*/
+			  if (off){
+				  off = 0;
+				  LedDriver_OffLed(&ledDebug2Driver);
+			  } else {
+				  off = 1;
+				  LedDriver_OnLed(&ledDebug2Driver);
 			  }
 		  }
-	  }
+
+		  if (MSTimerDriver_getMSTime(&msTimerDriver, &endTime) != MSTimerDriver_Status_OK){
+			  Error_Handler();
+		  }
+
+		  LedDriver_OnLed(&ledDebug2Driver);
+
+		  result[rIt++] = endTime - startTime;
+
+		  if (FileWritingBuffer_deInit(&fwb) != FileWritingBuffer_Status_OK){
+			  Error_Handler();
+		  }
+
+		  if (FileSystemWrapper_close(&file1) != FileSystemWrapper_Status_OK){
+			  Error_Handler();
+		  }
+
+  	  }
+
   }
 
-  if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (CANReceiver_init(&canReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
-	  Error_Handler();
-  }
-
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
-	  Error_Handler();
-  }
-  if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
-	  Error_Handler();
-  }
-
-  if (retGps == GPSDriver_Status_OK){
-	  if (LedDriver_OnLed(&ledDebug1Driver) != LedDriver_Status_OK){
-		  Warning_Handler("LED driver problem.");
-	  }
-  } else {
-	  if (LedDriver_OffLed(&ledDebug1Driver) != LedDriver_Status_OK){
-		  Warning_Handler("LED driver problem.");
-	  }
-  }
 
   /* USER CODE END 2 */
 
@@ -299,11 +249,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	if (ActionScheduler_thread(&actionScheduler) != ActionScheduler_Status_OK){
-		Warning_Handler("ActionScheduler_thread returned error.");
-	}
-
   }
   /* USER CODE END 3 */
 }
@@ -334,7 +279,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 96;
+  RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
