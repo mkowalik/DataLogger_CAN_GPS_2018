@@ -8,6 +8,16 @@
 #include "user/can_receiver.h"
 #include "main.h"
 
+//< ----- Private functions prototypes ----- >//
+
+CANReceiver_Status_TypeDef	CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
+void						CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf);
+
+CANReceiver_Status_TypeDef	CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANTransceiverDriver_ErrorCode_TypeDef errorcode);
+void						CANReceiver_ErrorCallbackWrapper(CANTransceiverDriver_ErrorCode_TypeDef errorcode, void* pVoidSelf);
+
+//< ----- Public functions ----- >//
+
 CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler){
 
 	pSelf->pConfig = pConfig;
@@ -22,13 +32,13 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 		pSelf->aReceiverQueueBuffer[i] = (CANData_TypeDef){0};
 	}
 
-	uint16_t aFilterIDsTab[pConfig->num_of_frames];
+	uint16_t aFilterIDsTab[pConfig->numOfFrames];
 
-	for (uint16_t i=0; i<pConfig->num_of_frames; i++){
-		aFilterIDsTab[i] = pConfig->frames[i].ID;
+	for (uint16_t i=0; i<pConfig->numOfFrames; i++){
+		aFilterIDsTab[i] = pConfig->canFrames[i].ID;
 	}
 
-	if (CANTransceiverDriver_configFiltering(pSelf->pCanTransceiverHandler, aFilterIDsTab, pConfig->num_of_frames) != CANTransceiverDriver_Status_OK){
+	if (CANTransceiverDriver_configFiltering(pSelf->pCanTransceiverHandler, aFilterIDsTab, pConfig->numOfFrames) != CANTransceiverDriver_Status_OK){
 		return CANReceiver_Status_InitError;
 	}
 
@@ -46,15 +56,16 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 
 CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 
-	if (MSTimerDriver_startCounting(pSelf->pMsTimerDriverHandler) != MSTimerDriver_Status_OK){
-		return CANReceiver_Status_Error;
-	}
-
 	if (CANTransceiverDriver_start(pSelf->pCanTransceiverHandler) != CANTransceiverDriver_Status_OK){
 		return CANReceiver_Status_Error;
 	}
 
 	return CANReceiver_Status_OK;
+}
+
+CANReceiver_Status_TypeDef CANReceiver_stop(CANReceiver_TypeDef* pSelf){
+
+	//TODO to nigdzie nie jest wywolywane, a powinno byc
 }
 
 
@@ -77,6 +88,8 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 	return CANReceiver_Status_OK;
 
 }
+
+//< ----- Callback functions ----- >//
 
 CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData){
 

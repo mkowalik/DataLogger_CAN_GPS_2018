@@ -19,13 +19,14 @@ typedef enum {
 } GPSFixType;
 
 typedef struct {
-	DateTime_TypeDef	dateTime;
 	uint32_t			msTime;
+	DateTime_TypeDef	gpsDateTime;
 	FixedPoint			longitude;
 	FixedPoint			latitude;
 	uint8_t				nSatellites;
 	FixedPoint			altitude; //< in meters
 	FixedPoint			speed; //< in km/h
+	FixedPoint			trackAngle; //< in degrees
 	GPSFixType			fixType;//< GPGSA
 	FixedPoint			horizontalPrecision;//< GPGSA
 	FixedPoint			verticalPrecision; //< GPGSA

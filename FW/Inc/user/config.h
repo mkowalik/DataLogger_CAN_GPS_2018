@@ -21,7 +21,7 @@
 #define	CONFIG_FILENAME		"logger.aghconf"
 
 #define	CONFIG_FILE_USED_VERSION		0
-#define	CONFIG_FILE_USED_SUBVERSION		2
+#define	CONFIG_FILE_USED_SUBVERSION		3
 
 #define CONFIG_ID_NUMBER			2048
 
@@ -31,6 +31,26 @@
 
 #define	CONFIG_FILE_NAME		"config.aghconf"
 #define	CONFIG_NAMES_LENGTH		21
+
+#define	CONFIG_GPS_FRAME_ID		0x800
+
+typedef enum {
+	Config_GPSFrequency_OFF   = 0,
+	Config_GPSFrequency_0_5Hz = 1,
+	Config_GPSFrequency_1Hz   = 2,
+	Config_GPSFrequency_2Hz   = 3,
+	Config_GPSFrequency_5Hz   = 4,
+	Config_GPSFrequency_10Hz  = 5,
+} Config_GPSFrequency_TypeDef;
+
+
+typedef enum {
+	Config_CANBitrate_50kbps	= 50,
+	Config_CANBitrate_125kbps	= 125,
+	Config_CANBitrate_250kbps	= 250,
+	Config_CANBitrate_500kbps	= 500,
+	Config_CANBitrate_1Mbps		= 1000
+} Config_CANBitrate_TypeDef;
 
 typedef enum {
 	UNSIGNED_8BIT 	= (0x00),
@@ -64,10 +84,11 @@ typedef struct {
 typedef struct {
 	uint16_t 				version;
 	uint16_t 				subversion;
-	uint16_t 				num_of_frames;
-	uint16_t				can_speed;
-	ConfigFrame_TypeDef 	frames[CONFIG_MAX_NO_OF_FRAMES];
-	ConfigFrame_TypeDef* 	framesByID[CONFIG_ID_NUMBER];
+	uint16_t 				numOfFrames;
+	uint16_t				canSpeed;
+	uint8_t					gpsFrequency;
+	ConfigFrame_TypeDef 	canFrames[CONFIG_MAX_NO_OF_FRAMES];
+	ConfigFrame_TypeDef* 	canFramesByID[CONFIG_ID_NUMBER];
 } Config_TypeDef;
 
 
@@ -82,11 +103,15 @@ typedef enum {
 	ConfigDataManager_Status_WrongIDError,
 	ConfigDataManager_Status_WrongDLCError,
 	ConfigDataManager_Status_NotInitialisedError,
+	ConfigDataManager_Status_FrameIDPreviouslyUsedError,
+	ConfigDataManager_Status_WrongGPSFrequencyError,
+	ConfigDataManager_Status_WrongCANBitrateError,
 	ConfigDataManager_Status_Error
 } ConfigDataManager_Status_TypeDef;
 
 typedef enum {
 	ConfigDataManager_State_UnInitialized = 0,
+	ConfigDataManager_State_DuringInit,
 	ConfigDataManager_State_Initialized
 } ConfigDataManager_State_TypeDef;
 
@@ -102,7 +127,7 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 ConfigDataManager_Status_TypeDef ConfigDataManager_getConfigPointer(ConfigDataManager_TypeDef* pSelf, Config_TypeDef** ppRetConfig);
 ConfigDataManager_Status_TypeDef ConfigDataManager_getIDsList(ConfigDataManager_TypeDef* pSelf, uint16_t* pRetIDsBuffer, uint16_t bufferSize, uint16_t* pIDsWritten);
 ConfigDataManager_Status_TypeDef ConfigDataManager_checkCorrectnessData(ConfigDataManager_TypeDef* pSelf, CANData_TypeDef* pData);
-ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager_TypeDef* pSelf, uint16_t ID, uint8_t offset, ConfigChannel_TypeDef* pRetChannel);
+ConfigDataManager_Status_TypeDef ConfigDataManager_findChannel(ConfigDataManager_TypeDef* pSelf, uint16_t ID, uint8_t offset, ConfigChannel_TypeDef** pRetChannel);
 
 
 

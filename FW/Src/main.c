@@ -21,12 +21,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "dma.h"
 #include "fatfs.h"
 #include "gfxsimulator.h"
 #include "rtc.h"
 #include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
+#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -52,6 +54,9 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define INITIALIZATION_LED_ON	950
+#define INITIALIZATION_LED_OFF	50
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -66,8 +71,9 @@
 ConfigDataManager_TypeDef		configDataManager;
 DataSaver_TypeDef				dataSaver;
 
-CANReceiver_TypeDef				CANReceiver;
+CANReceiver_TypeDef				canReceiver;
 RTCDriver_TypeDef				rtcDriver;
+Ublox8MGPSDriver_TypeDef		gpsDriver;
 
 ActionScheduler_TypeDef			actionScheduler;
 
@@ -80,7 +86,10 @@ LedDriver_TypeDef				ledDebug1Driver;
 LedDriver_TypeDef				ledDebug2Driver;
 
 UartDriver_TypeDef				uart1Driver;
-GPSDriver_TypeDef				gpsDriver;
+UartReceiver_TypeDef			uart1Receiver;
+
+LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
+LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
 
 /* USER CODE END PV */
 
@@ -88,6 +97,47 @@ GPSDriver_TypeDef				gpsDriver;
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
+
+void FIFOTest(){
+
+	volatile FIFOMultiread_TypeDef						rxFifo = {0};
+	volatile UartReceiver_FIFOElem_TypeDef				receiveBuffer[128];
+
+	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiver_FIFOElem_TypeDef), 128);
+	FIFOMultireadReaderIdentifier_TypeDef id;
+	FIFOMultiread_registerReader(&rxFifo, &id);
+
+	UartReceiver_FIFOElem_TypeDef byteWithTimestamp;
+
+  for (uint16_t i=0; i<128; i++){
+	  byteWithTimestamp.dataByte = i;
+	  byteWithTimestamp.msTime = i+128;
+	if (FIFOMultiread_enqueue(&rxFifo, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+	}
+  }
+
+  for (uint8_t i=0; i<128; i++){
+  	if (FIFOMultiread_dequeue(&id, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+  		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+  	}
+  }
+
+  for (uint16_t i=0; i<128; i++){
+	  byteWithTimestamp.dataByte = i;
+	  byteWithTimestamp.msTime = i+128;
+	if (FIFOMultiread_enqueue(&rxFifo, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+	}
+  }
+
+  for (uint16_t i=0; i<128; i++){
+  	if (FIFOMultiread_dequeue(&id, (void*) &byteWithTimestamp) != FIFOMultiread_Status_OK){
+  		Warning_Handler("UartDriver_receivedByteCallback function. FIFOMultiread_enqueue returned error.");
+  	}
+  }
+
+}
 
 /* USER CODE END PFP */
 
@@ -105,6 +155,7 @@ void HAL_SYSTICK_Callback(void){
 		Error_Handler();
 	}*/
 }
+
 
 /* USER CODE END 0 */
 
@@ -132,20 +183,21 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+#ifdef  USE_FULL_ASSERT
+	GPSDriver_test();
+#endif
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_SDMMC1_SD_Init();
-  MX_USART1_UART_Init();
   MX_FATFS_Init();
 
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-
-  LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
-  LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
 
   if (LedDriver_init(&ledDebug1Driver, (LedDriver_Port_TypeDef*)my_LED_DEBUG1_GPIO_Port, &ledDebug1Pin) != LedDriver_Status_OK){
 	  Error_Handler();
@@ -153,10 +205,19 @@ int main(void)
   if (LedDriver_init(&ledDebug2Driver, (LedDriver_Port_TypeDef*)my_LED_DEBUG2_GPIO_Port, &ledDebug2Pin) != LedDriver_Status_OK){
 	  Error_Handler();
   }
+
+  if (LedDriver_BlinkingLed(&ledDebug2Driver, INITIALIZATION_LED_ON, INITIALIZATION_LED_OFF) != LedDriver_Status_OK){
+	  return ActionScheduler_Status_Error;
+  }
+
   if (RTCDriver_init(&rtcDriver, &hrtc) != RTCDriver_Status_OK){
 	  Error_Handler();
   }
+
   if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
+	  Error_Handler();
+  }
+  if (MSTimerDriver_startCounting(&msTimerDriver) != MSTimerDriver_Status_OK){
 	  Error_Handler();
   }
 
@@ -176,18 +237,57 @@ int main(void)
   if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
 	  Error_Handler();
   }
+
+
+
+
+  GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
+  UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
+  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600)) != UartDriver_Status_OK){
+	  Warning_Handler("UartDriver initialization problem.");
+	  retGps = GPSDriver_Status_Error;
+  } else {
+	  UartReceiver_Status_TypeDef retUartRcv = UartReceiver_Status_OK;
+	  if ((retUartRcv = UartReceiver_init(&uart1Receiver, &uart1Driver)) != UartReceiver_Status_OK){
+		  Warning_Handler("UartReceiver initialization problem.");
+		  retGps = GPSDriver_Status_Error;
+	  } else {
+		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
+			  char warningBuffer[80];
+			  memset(warningBuffer, 0, 80);
+			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);
+			  Warning_Handler(warningBuffer);
+			  GPSDriver_Status_TypeDef retGps2 = GPSDriver_Status_OK;
+			  if ((retGps2 = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
+				  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps2);
+				  Warning_Handler(warningBuffer);
+			  }
+		  }
+	  }
+  }
+
   if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
 	  Error_Handler();
   }
-  if (CANReceiver_init(&CANReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
+  if (CANReceiver_init(&canReceiver, pConfig, &canTransceiverDriver, &msTimerDriver) != CANReceiver_Status_OK){
 	  Error_Handler();
   }
 
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &CANReceiver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
 	  Error_Handler();
+  }
+
+  if (retGps == GPSDriver_Status_OK){
+	  if (LedDriver_OnLed(&ledDebug1Driver) != LedDriver_Status_OK){
+		  Warning_Handler("LED driver problem.");
+	  }
+  } else {
+	  if (LedDriver_OffLed(&ledDebug1Driver) != LedDriver_Status_OK){
+		  Warning_Handler("LED driver problem.");
+	  }
   }
 
   /* USER CODE END 2 */
@@ -199,7 +299,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Error_Handler();
+
+	if (ActionScheduler_thread(&actionScheduler) != ActionScheduler_Status_OK){
+		Warning_Handler("ActionScheduler_thread returned error.");
+	}
+
   }
   /* USER CODE END 3 */
 }
@@ -275,26 +379,29 @@ void SystemClock_Config(void)
 static void MX_NVIC_Init(void)
 {
   /* RCC_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(RCC_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(RCC_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(RCC_IRQn);
   /* CAN1_TX_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(CAN1_TX_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(CAN1_TX_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
   /* CAN1_RX0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
   /* CAN1_RX1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
   /* CAN1_SCE_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(CAN1_SCE_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(CAN1_SCE_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(CAN1_SCE_IRQn);
   /* USART1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* SDMMC1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SDMMC1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(SDMMC1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(SDMMC1_IRQn);
+  /* DMA2_Stream7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 }
 
 /* USER CODE BEGIN 4 */

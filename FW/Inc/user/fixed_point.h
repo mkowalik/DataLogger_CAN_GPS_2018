@@ -10,7 +10,7 @@
 
 #include "stdint.h"
 
-//TODO for construction FixedPoint objects from float or two integers
+//TODO for construction FixedPoint objects from float
 
 typedef struct {
 	int32_t	integer;
@@ -18,7 +18,7 @@ typedef struct {
 } FixedPoint;
 
 FixedPoint	FixedPoint_constr(int32_t valueConverted, int32_t divider, int32_t multiplier, int32_t offset, uint8_t fractionalBits);
-FixedPoint	FixedPoint_constrDeimalFrac(int32_t decimalPart, uint32_t fractionalNumerator, uint32_t fractionalDenominator, uint8_t fractionalBits);
+FixedPoint	FixedPoint_constrDecimalFrac(int32_t decimalPart, uint32_t fractionalNumerator, uint32_t fractionalDenominator, uint8_t fractionalBits);
 
 uint8_t		FixedPoint_a_equal_b(FixedPoint a, FixedPoint b);
 uint8_t		FixedPoint_a_lessorequal_b(FixedPoint a, FixedPoint b);
