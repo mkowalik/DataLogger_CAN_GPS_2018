@@ -24,9 +24,6 @@ static FileWritingBuffer_Status_TypeDef FileWritingBuffer_checkIfFull(FileWritin
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_init(FileWritingBuffer_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile){
 
-	if (pSelf->state != FileWritingBuffer_State_UnInitialized){
-		return FileWritingBuffer_Status_Error;
-	}
 	if (pFile == NULL){
 		return FileWritingBuffer_Status_Error;
 	}
@@ -154,6 +151,11 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer
 	}
 
 	return FileWritingBuffer_Status_OK;
+}
+
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWritingBuffer_TypeDef* pSelf, FixedPoint value){
+
+	return FileWritingBuffer_writeUInt32(pSelf, value.integer);
 }
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeDef* pSelf){

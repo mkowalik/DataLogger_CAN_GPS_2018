@@ -102,8 +102,9 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_putString(FileSystemWrapper_F
 	if (pFile->pFileSystem->bInitialized == 0){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
-
-	if (f_puts (pBuffer, (FIL*) &(pFile->sFile)) != strlen(pBuffer)){
+	size_t a = (size_t)(f_puts (pBuffer, (FIL*) &(pFile->sFile)));
+	size_t b = strlen(pBuffer) + 1;
+	if (a != b){
 		return FileSystemWrapper_Status_DISK_ERR;
 	}
 	return FileSystemWrapper_Status_OK;

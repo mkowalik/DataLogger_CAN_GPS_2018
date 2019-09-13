@@ -10,8 +10,8 @@
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf){
 
-	if (pSelf->state != MSTimerDriver_State_NotInitialised){
-		return MSTimerDriver_Status_Error;
+	if (pSelf == NULL){
+		return MSTimerDriver_Status_NullPointerError;
 	}
 
 	pSelf->state = MSTimerDriver_State_Idle;
@@ -20,6 +20,10 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* 
 }
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return MSTimerDriver_Status_NullPointerError;
+	}
 
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
@@ -47,6 +51,10 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(volatile MSTimerDriver_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return MSTimerDriver_Status_NullPointerError;
+	}
+
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
 	}
@@ -63,6 +71,10 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(volatile MSTimerDriver_T
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return MSTimerDriver_Status_NullPointerError;
+	}
+
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
 	}
@@ -78,6 +90,10 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_T
 }
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime){
+
+	if (pSelf == NULL || pRetTime == NULL){
+		return MSTimerDriver_Status_NullPointerError;
+	}
 
 	if (pSelf->state == MSTimerDriver_State_NotInitialised){
 		return MSTimerDriver_State_NotInitialised;
