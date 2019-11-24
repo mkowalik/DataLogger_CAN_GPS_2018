@@ -20,7 +20,7 @@
 #define MEMORY_MSG_QUEUE_SIZE	128
 
 #define	LOG_FILE_VERSION	0
-#define	LOG_FILE_SUBVERSION	2
+#define	LOG_FILE_SUBVERSION	3
 
 #define	LOG_FILE_PREFIX				"grazyna"
 #define	LOG_FILE_EXTENSION			"aghlog"

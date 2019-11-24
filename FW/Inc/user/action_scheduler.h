@@ -8,10 +8,12 @@
 #ifndef ACTION_SCHEDULER_H_
 #define ACTION_SCHEDULER_H_
 
-#define	CAR_DEF_GRAZYNA	1
-#define	CAR_DEF_LEM		2
+#define	CAR_DEF_GRAZYNA				1
+#define	CAR_DEF_LEM					2
+#define	CAR_DEF_GRAZYNA_TPS			3
+#define	CAR_DEF_LEM_WHEEL_MODULE	4
 
-#define CAR_DEF			CAR_DEF_LEM
+#define CAR_DEF						CAR_DEF_LEM_WHEEL_MODULE
 
 #include <user/data_saver.h>
 #include <user/ms_timer_driver.h>
@@ -52,13 +54,16 @@ typedef enum {
 
 typedef struct {
 	ActionScheduler_State_TypeDef	state;
-	ConfigDataManager_TypeDef*		pConfigManager;
+	Config_TypeDef*					pConfig;
 	DataSaver_TypeDef*				pDataSaver;
 	CANReceiver_TypeDef*			pCANReceiver;
 	GPSDriver_TypeDef*				pGPSDriver;
 	LedDriver_TypeDef*				pStatusLedDriver;
 	RTCDriver_TypeDef*				pRTCDriver;
 	uint32_t						logStartMsTime;
+#if CAR_DEF == CAR_DEF_LEM_WHEEL_MODULE
+	DateTime_TypeDef				stopLoggingTimeout;
+#endif
 } ActionScheduler_TypeDef;
 
 

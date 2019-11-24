@@ -77,7 +77,7 @@ DataSaver_Status_TypeDef DataSaver_stopLogging(DataSaver_TypeDef* pSelf){
 		return DataSaver_Status_FileNotOpenedError;
 	}
 
-	if (FileWritingBuffer_flush(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeToFileSystem(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_deInit(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
@@ -113,7 +113,7 @@ DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANDat
 		}
 	}
 
-	if (FileWritingBuffer_flush(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeToFileSystem(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 
@@ -182,15 +182,12 @@ DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSDat
 		return DataSaver_Status_Error;
 	}
 
-	if (FileWritingBuffer_flush(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeToFileSystem(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 
 	return DataSaver_Status_OK;
 }
-
-#define	DATA_SAVER_HEADER_BUFFER_SIZE	16
-#define	DATA_SAVER_VERSION_BYTES_COUNT	16
 
 static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime){
 
@@ -276,7 +273,7 @@ static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, D
 	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.second) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
-	if (FileWritingBuffer_flush(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeToFileSystem(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 

@@ -9,6 +9,7 @@
 #define RTC_MIDDLEWARE_H_
 
 #include "stdint.h"
+#include "stdbool.h"
 #include "rtc.h"
 #include "date_time_data.h"
 
@@ -50,5 +51,8 @@ RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleType
 RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef* pRetDateTime);
 RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef dateTime);
 
+RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds);
+
+bool RTCDriver_isAfter(DateTime_TypeDef dateTimeExpectedBefore, DateTime_TypeDef dateTimeExpectedAfter);
 
 #endif /* RTC_MIDDLEWARE_H_ */

@@ -33,6 +33,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "string.h"
+#include "stdio.h"
 
 #include "user/config.h"
 #include "user/can_receiver.h"
@@ -239,28 +240,31 @@ int main(void)
 
   GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
   UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
-  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600)) != UartDriver_Status_OK){
-	  Warning_Handler("UartDriver initialization problem.");
-	  retGps = GPSDriver_Status_Error;
-  } else {
-	  UartReceiver_Status_TypeDef retUartRcv = UartReceiver_Status_OK;
-	  if ((retUartRcv = UartReceiver_init(&uart1Receiver, &uart1Driver)) != UartReceiver_Status_OK){
-		  Warning_Handler("UartReceiver initialization problem.");
+  if (pConfig->gpsFrequency != Config_GPSFrequency_OFF){
+	  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600)) != UartDriver_Status_OK){
+		  Warning_Handler("UartDriver initialization problem.");
 		  retGps = GPSDriver_Status_Error;
 	  } else {
-		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
-			  char warningBuffer[80];
-			  memset(warningBuffer, 0, 80);
-			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);
-			  Warning_Handler(warningBuffer);
-			  GPSDriver_Status_TypeDef retGps2 = GPSDriver_Status_OK;
-			  if ((retGps2 = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
-				  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps2);
-				  Warning_Handler(warningBuffer);
-			  }
-		  }
+		  UartReceiver_Status_TypeDef retUartRcv = UartReceiver_Status_OK;
+		  if ((retUartRcv = UartReceiver_init(&uart1Receiver, &uart1Driver)) != UartReceiver_Status_OK){
+	  		  Warning_Handler("UartReceiver initialization problem.");
+	  		  retGps = GPSDriver_Status_Error;
+	  	  } else {
+	  		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
+	  			  char warningBuffer[80];
+	  			  memset(warningBuffer, 0, 80);
+	  			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);
+	  			  Warning_Handler(warningBuffer);
+	  			  GPSDriver_Status_TypeDef retGps2 = GPSDriver_Status_OK;
+	  			  if ((retGps2 = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
+	  				  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps2);
+	  				  Warning_Handler(warningBuffer);
+	  			  }
+	  		  }
+	  	  }
 	  }
   }
+
 
   if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
 	  Error_Handler();
@@ -276,7 +280,12 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (retGps == GPSDriver_Status_OK){
+  GPSDriver_State_TypeDef gpsState;
+  if ((retGps = GPSDriver_getState(&gpsDriver, &gpsState)) != GPSDriver_Status_OK){
+	  Warning_Handler("GPS initialization error");
+  }
+
+  if ((retGps == GPSDriver_Status_OK) && (gpsState == GPSDriver_State_Initialized)){
 	  if (LedDriver_OnLed(&ledDebug1Driver) != LedDriver_Status_OK){
 		  Warning_Handler("LED driver problem.");
 	  }
@@ -330,7 +339,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLN = 96;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

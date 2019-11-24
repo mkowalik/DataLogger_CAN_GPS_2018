@@ -123,3 +123,16 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_close(FileSystemWrapper_File_
 	return remapResult(res);
 }
 
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_sync(FileSystemWrapper_File_TypeDef* pFile){
+
+	if (pFile == NULL){
+		return FileSystemWrapper_Status_Error;
+	}
+	if (pFile->pFileSystem->bInitialized == 0){
+		return FileSystemWrapper_Status_NotInitializedError;
+	}
+
+	FRESULT res = f_sync( (FIL*) &(pFile->sFile));
+	return remapResult(res);
+}
+

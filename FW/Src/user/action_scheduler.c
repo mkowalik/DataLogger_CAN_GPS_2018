@@ -30,12 +30,17 @@ ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSe
 		return ActionScheduler_Status_Error;
 	}
 
-	pSelf->pConfigManager	= pConfigManager;
+	ConfigDataManager_getConfigPointer(pConfigManager, &pSelf->pConfig);
 	pSelf->pDataSaver		= pDataSaver;
 	pSelf->pCANReceiver		= pCANReceiver;
 	pSelf->pGPSDriver		= pGPSDriver;
 	pSelf->pRTCDriver		= pRTCDriver;
 	pSelf->pStatusLedDriver	= pStatusLedDriver;
+#if CAR_DEF == CAR_DEF_LEM_WHEEL_MODULE
+	if (RTCDriver_getDateAndTime(pSelf->pRTCDriver, &(pSelf->stopLoggingTimeout)) != RTCDriver_Status_OK){
+		return ActionScheduler_Status_Error;
+	}
+#endif
 
 	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){
 		return ActionScheduler_Status_Error;
@@ -54,6 +59,12 @@ ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_Ty
 	if (CANReceiver_start(pSelf->pCANReceiver) != CANReceiver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
+
+#if CAR_DEF == CAR_DEF_LEM_WHEEL_MODULE
+	if (RTCDriver_getDateAndTime(pSelf->pRTCDriver, &(pSelf->stopLoggingTimeout)) != RTCDriver_Status_OK){
+		return ActionScheduler_Status_Error;
+	}
+#endif
 
 	pSelf->state = ActionScheduler_State_Idle;
 
@@ -129,6 +140,26 @@ static bool _AcionScheduler_StartLogTrigger(ActionScheduler_TypeDef* pSelf, CAND
 		return true;
 	}
 	return false;
+#elif CAR_DEF == CAR_DEF_GRAZYNA_TPS
+	if (pData->ID == 0x600){
+		if (pData->Data[2] > 10){
+			return true;
+		}
+	}
+	return false;
+#elif CAR_DEF == CAR_DEF_LEM_WHEEL_MODULE
+	if (pData->ID == 0x380){
+		DateTime_TypeDef actualTime;
+		if (RTCDriver_getDateAndTime(pSelf->pRTCDriver, &actualTime) != RTCDriver_Status_OK){
+			return false;
+		}
+		if (RTCDriver_addSeconds(&actualTime, 3) != RTCDriver_Status_OK){
+			return false;
+		}
+		pSelf->stopLoggingTimeout	= actualTime;
+		return true;
+	}
+	return false;
 #else
 	#error "Unexpected value of CAR_DEF definition."
 #endif
@@ -149,9 +180,36 @@ static bool _AcionScheduler_StopLogTrigger(ActionScheduler_TypeDef* pSelf, CANDa
 	if ((pData->ID == 0x550) &&
 			pData->Data[0] == 0 &&
 			pData->Data[1] == 1){
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
+#elif CAR_DEF == CAR_DEF_GRAZYNA_TPS
+	if ((pData->ID == 0x600) &&
+			(pData->Data[2] <5)){
+			return true;
+	}
+	return false;
+#elif CAR_DEF == CAR_DEF_LEM_WHEEL_MODULE
+	DateTime_TypeDef actualTime;
+	if (pData->ID == 0x380){
+		if (RTCDriver_getDateAndTime(pSelf->pRTCDriver, &actualTime) != RTCDriver_Status_OK){
+			return false;
+		}
+		if (RTCDriver_addSeconds(&actualTime, 3) != RTCDriver_Status_OK){
+			return false;
+		}
+		pSelf->stopLoggingTimeout	= actualTime;
+		return false;
+	}
+
+	if (RTCDriver_getDateAndTime(pSelf->pRTCDriver, &actualTime) != RTCDriver_Status_OK){
+		return false;
+	}
+
+	if (RTCDriver_isAfter(pSelf->stopLoggingTimeout, actualTime)) {
+		return true;
+	}
+	return false;
 #else
 	#error "Unexpected value of CAR_DEF definition."
 #endif
@@ -192,8 +250,10 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_logInitState(ActionSchedu
 		return ActionScheduler_Status_Error;
 	}
 
-	if (GPSDriver_startReceiver(pSelf->pGPSDriver) != GPSDriver_Status_OK){
-		return ActionScheduler_Status_Error;
+	if (pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF){
+		if (GPSDriver_startReceiver(pSelf->pGPSDriver) != GPSDriver_Status_OK){
+			return ActionScheduler_Status_Error;
+		}
 	}
 
 	if (DataSaver_startLogging(pSelf->pDataSaver, dateTime) != DataSaver_Status_OK){
@@ -218,7 +278,10 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_loggingState(ActionSchedu
 
 	ActionScheduler_Status_TypeDef	ret;
 
-	while(1) {
+	bool							breakFlagCAN = false;
+	bool							breakFlagGPS = false;
+
+	while(breakFlagCAN == false || breakFlagGPS == false) {
 		canStatus = CANReceiver_pullLastFrame(pSelf->pCANReceiver, &canData);
 
 		if (canStatus == CANReceiver_Status_OK){
@@ -227,7 +290,7 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_loggingState(ActionSchedu
 
 			if (_AcionScheduler_StopLogTrigger(pSelf, &canData) != 0){
 				pSelf->state = ActionScheduler_State_LogClose;
-				break;
+				breakFlagCAN = true;
 			}
 
 			if (DataSaver_writeCANData(pSelf->pDataSaver, &canData) != DataSaver_Status_OK){
@@ -239,21 +302,26 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_loggingState(ActionSchedu
 			}
 
 		} else if (canStatus ==  CANReceiver_Status_Empty) {
-			break;
+			breakFlagCAN = true;
 		} else { //CANReceiver_Status_Error:
 			return ActionScheduler_Status_Error;
 		}
 
-		gpsStatus = GPSDriver_pullLastFrame(pSelf->pGPSDriver, &gpsData);
+		if (pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF){
+			gpsStatus = GPSDriver_pullLastFrame(pSelf->pGPSDriver, &gpsData);
 
-		if (gpsStatus == GPSDriver_Status_OK){
-			if (DataSaver_writeGPSData(pSelf->pDataSaver, &gpsData) != DataSaver_Status_OK){
+			if (gpsStatus == GPSDriver_Status_OK){
+				if (DataSaver_writeGPSData(pSelf->pDataSaver, &gpsData) != DataSaver_Status_OK){
+					return ActionScheduler_Status_Error;
+				}
+				breakFlagGPS = false;
+			} else if (gpsStatus == GPSDriver_Status_Empty){
+				breakFlagGPS = true;
+			} else {
 				return ActionScheduler_Status_Error;
 			}
-		} else if (gpsStatus == GPSDriver_Status_Empty){
-			break;
 		} else {
-			return ActionScheduler_Status_Error;
+			breakFlagGPS = true;
 		}
 	}
 
@@ -262,8 +330,10 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_loggingState(ActionSchedu
 
 static ActionScheduler_Status_TypeDef _ActionScheduler_logCloseState(ActionScheduler_TypeDef* pSelf){
 
-	if (GPSDriver_stopReceiver(pSelf->pGPSDriver) != GPSDriver_Status_OK){
-		return ActionScheduler_Status_Error;
+	if (pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF){
+		if (GPSDriver_stopReceiver(pSelf->pGPSDriver) != GPSDriver_Status_OK){
+			return ActionScheduler_Status_Error;
+		}
 	}
 
 	if (DataSaver_stopLogging(pSelf->pDataSaver) != DataSaver_Status_OK){

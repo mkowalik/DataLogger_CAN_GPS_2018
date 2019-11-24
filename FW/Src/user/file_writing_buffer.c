@@ -14,7 +14,7 @@ static FileWritingBuffer_Status_TypeDef FileWritingBuffer_checkIfFull(FileWritin
 	if (pSelf->bytesLeft == 0){
 
 		FileWritingBuffer_Status_TypeDef status;
-		if ((status = FileWritingBuffer_flush(pSelf)) != FileWritingBuffer_Status_OK){
+		if ((status = FileWritingBuffer_writeToFileSystem(pSelf)) != FileWritingBuffer_Status_OK){
 			return status;
 		}
 	}
@@ -24,7 +24,7 @@ static FileWritingBuffer_Status_TypeDef FileWritingBuffer_checkIfFull(FileWritin
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_init(FileWritingBuffer_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile){
 
-	if (pFile == NULL){
+	if ((pSelf == NULL) || (pFile == NULL)) {
 		return FileWritingBuffer_Status_Error;
 	}
 
@@ -39,8 +39,8 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_init(FileWritingBuffer_TypeDe
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_deInit(FileWritingBuffer_TypeDef* pSelf){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
-		return FileWritingBuffer_Status_Error;
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
+		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
 	pSelf->state 			= FileWritingBuffer_State_UnInitialized;
@@ -53,7 +53,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_deInit(FileWritingBuffer_Type
 }
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_resetBuffer(FileWritingBuffer_TypeDef* pSelf){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
@@ -65,7 +65,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_resetBuffer(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt8(FileWritingBuffer_TypeDef* pSelf, uint8_t value){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
@@ -83,7 +83,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt8(FileWritingBuffer_
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer_TypeDef* pSelf, uint16_t value){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
@@ -100,7 +100,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer_TypeDef* pSelf, uint32_t value){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
@@ -123,7 +123,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
@@ -137,7 +137,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_T
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, char* string, uint16_t length){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
@@ -158,17 +158,18 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWriting
 	return FileWritingBuffer_writeUInt32(pSelf, value.integer);
 }
 
-FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeDef* pSelf){
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeToFileSystem(FileWritingBuffer_TypeDef* pSelf){
 
-	if (pSelf->state != FileWritingBuffer_State_Initialized){
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
-	uint32_t							bytesWrittern;
-	FileSystemWrapper_Status_TypeDef	status;
+	if (pSelf->state == FileWritingBuffer_State_Flushing){
+		return FileWritingBuffer_Status_OK;
+	}
 
-	status = FileSystemWrapper_writeBinaryData(pSelf->pFile, pSelf->buffer, pSelf->bytesBuffered, &bytesWrittern);
-	if (status != FileSystemWrapper_Status_OK){
+	uint32_t							bytesWrittern;
+	if (FileSystemWrapper_writeBinaryData(pSelf->pFile, pSelf->buffer, pSelf->bytesBuffered, &bytesWrittern) != FileSystemWrapper_Status_OK){
 		return FileWritingBuffer_Status_Error;
 	}
 	if (bytesWrittern != pSelf->bytesBuffered){
@@ -177,6 +178,32 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeD
 
 	pSelf->bytesBuffered	= 0;
 	pSelf->bytesLeft		= FILE_WRITING_BUFFER_SIZE;
+
+	return FileWritingBuffer_Status_OK;
+}
+
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_flushingThread(FileWritingBuffer_TypeDef* pSelf) {
+
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized) {
+		return FileWritingBuffer_Status_OK;
+	}
+
+	if (pSelf->state == FileWritingBuffer_State_Flushing){
+		return FileWritingBuffer_Status_FlushingError;
+	}
+
+	FileWritingBuffer_Status_TypeDef ret	= FileWritingBuffer_Status_OK;
+	if ((ret = FileWritingBuffer_writeToFileSystem(pSelf)) != FileWritingBuffer_Status_OK){
+		return ret;
+	}
+
+	pSelf->state = FileWritingBuffer_State_Flushing;
+
+	if (FileSystemWrapper_sync(pSelf->pFile) != FileSystemWrapper_Status_OK){
+		return FileWritingBuffer_Status_FileSystemError;
+	}
+
+	pSelf->state = FileWritingBuffer_State_Initialized;
 
 	return FileWritingBuffer_Status_OK;
 }

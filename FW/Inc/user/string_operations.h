@@ -36,6 +36,7 @@ StringOperations_Status_TypeDef	uInt8ToString(uint8_t* pRetBuffer, uint8_t val);
 StringOperations_Status_TypeDef appendUInt8ToString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize);
 
 StringOperations_Status_TypeDef uInt8ToHexString(uint8_t* pRetBuffer, uint8_t val, bool upperCase);
+StringOperations_Status_TypeDef uInt8ToHexStringMinDigits(uint8_t* pRetBuffer, uint8_t val, bool upperCase, uint8_t minDigitsNumber);
 StringOperations_Status_TypeDef appendUint8ToHexString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize, bool upperCase);
 
 StringOperations_Status_TypeDef	uInt32ToString(uint32_t val, uint8_t* pRetString);

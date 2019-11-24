@@ -52,7 +52,7 @@ extern "C" {
 #define	UBLOX_M8_GPS	0
 #define	SIM28_GPS		1
 
-#define	USED_GPS		SIM28_GPS
+#define	USED_GPS		UBLOX_8M_GPS
 
 /* USER CODE END EM */
 
@@ -72,6 +72,8 @@ void Warning_Handler(char* description);
 #define my_GPS_UART_TX_GPIO_Port GPIOB
 #define my_GPS_UART_RX_Pin GPIO_PIN_15
 #define my_GPS_UART_RX_GPIO_Port GPIOB
+#define my_GPS_RESET_N_Pin GPIO_PIN_9
+#define my_GPS_RESET_N_GPIO_Port GPIOD
 #define my_SDMMC_IRQ_Pin GPIO_PIN_0
 #define my_SDMMC_IRQ_GPIO_Port GPIOD
 #define my_SDMMC_CS_CD_Pin GPIO_PIN_1

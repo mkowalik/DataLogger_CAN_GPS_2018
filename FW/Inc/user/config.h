@@ -82,13 +82,13 @@ typedef struct {
 } ConfigFrame_TypeDef;
 
 typedef struct {
-	uint16_t 				version;
-	uint16_t 				subversion;
-	uint16_t 				numOfFrames;
-	uint16_t				canSpeed;
-	uint8_t					gpsFrequency;
-	ConfigFrame_TypeDef 	canFrames[CONFIG_MAX_NO_OF_FRAMES];
-	ConfigFrame_TypeDef* 	canFramesByID[CONFIG_ID_NUMBER];
+	uint16_t 					version;
+	uint16_t 					subversion;
+	uint16_t 					numOfFrames;
+	Config_CANBitrate_TypeDef	canSpeed;
+	Config_GPSFrequency_TypeDef	gpsFrequency;
+	ConfigFrame_TypeDef 		canFrames[CONFIG_MAX_NO_OF_FRAMES];
+	ConfigFrame_TypeDef* 		canFramesByID[CONFIG_ID_NUMBER];
 } Config_TypeDef;
 
 

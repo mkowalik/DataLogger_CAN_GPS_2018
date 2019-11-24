@@ -50,8 +50,10 @@ typedef struct {
 
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_init(FileSystemWrapper_TypeDef* pSelf);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile, char* pFilename);
-FileSystemWrapper_Status_TypeDef FileSystemWrapper_putString(FileSystemWrapper_File_TypeDef* pFile, const char* pBuffer);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_close(FileSystemWrapper_File_TypeDef* pFile);
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_sync(FileSystemWrapper_File_TypeDef* pFile);
+
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_putString(FileSystemWrapper_File_TypeDef* pFile, const char* pBuffer);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_writeBinaryData(FileSystemWrapper_File_TypeDef* pFile, const void* pBuffer, uint32_t uiBytesToWrite, uint32_t* pBytesWritten);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, void* pBuffer, uint32_t uiBytesToRead, uint32_t* pBytesRead);
 

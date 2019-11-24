@@ -179,3 +179,99 @@ RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, Date
 	return RTCDriver_HALSetTimeAndDate(pSelf, &time, &date);
 }
 
+RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds){
+
+	if (pDateTime == NULL){
+		return RTCDriver_Status_Error;
+	}
+
+	if ((pDateTime->year > RTC_DRIVER_YEAR_MAX_VALUE) || (pDateTime->year < RTC_DRIVER_YEAR_MIN_VALUE) ||
+			(pDateTime->month > RTC_DRIVER_MONTH_MAX_VALUE) || (pDateTime->month < RTC_DRIVER_MONTH_MIN_VALUE) ||
+			(pDateTime->day > RTC_DRIVER_DAY_MAX_VALUE) || (pDateTime->day < RTC_DRIVER_DAY_MIN_VALUE)) {
+		return RTCDriver_Status_WrongDateFormatError;
+	} else if ((pDateTime->hour > RTC_DRIVER_HOUR_MAX_VALUE) || (pDateTime->minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (pDateTime->second > RTC_DRIVER_SECOND_MAX_VALUE) ) {
+		return RTCDriver_Status_WrongTimeFormatError;
+	}
+
+	pDateTime->second += (seconds % 60);
+	seconds /= 60; //< minutes in the variable 'seconds'
+
+	pDateTime->minute += (seconds % 60);
+	seconds /= 60; //< hours in the variable 'seconds'
+
+	pDateTime->hour += (seconds % 24);
+	seconds /= 24;
+
+	switch (pDateTime->month){
+		case 1:
+		case 3:
+		case 5:
+		case 7:
+		case 8:
+		case 10:
+		case 12:
+			pDateTime->month += (seconds % 31);
+			seconds /= 31;
+		case 4:
+		case 6:
+		case 9:
+		case 11:
+			pDateTime->month += (seconds % 30);
+			seconds /= 30;
+		case 2:
+			if (pDateTime->year % 4 == 0){
+				pDateTime->month += (seconds % 29);
+				seconds /= 29;
+			} else {
+				pDateTime->month += (seconds % 28);
+				seconds /= 28;
+			}
+	}
+
+	pDateTime->year += (seconds % 12);
+
+	return RTCDriver_Status_OK;
+}
+
+bool RTCDriver_isAfter(DateTime_TypeDef dateTimeExpectedBefore, DateTime_TypeDef dateTimeExpectedAfter){
+
+	if (dateTimeExpectedAfter.month < dateTimeExpectedBefore.month) {
+		return false;
+	}
+	if (dateTimeExpectedAfter.month > dateTimeExpectedBefore.month) {
+		return true;
+	}
+
+
+	if (dateTimeExpectedAfter.day < dateTimeExpectedBefore.day) {
+		return false;
+	}
+	if (dateTimeExpectedAfter.day > dateTimeExpectedBefore.day) {
+		return true;
+	}
+
+	if (dateTimeExpectedAfter.hour < dateTimeExpectedBefore.hour) {
+		return false;
+	}
+	if (dateTimeExpectedAfter.hour > dateTimeExpectedBefore.hour) {
+		return true;
+	}
+
+	if (dateTimeExpectedAfter.minute < dateTimeExpectedBefore.minute) {
+		return false;
+	}
+	if (dateTimeExpectedAfter.minute > dateTimeExpectedBefore.minute) {
+		return true;
+	}
+
+
+	if (dateTimeExpectedAfter.second < dateTimeExpectedBefore.second) {
+		return false;
+	}
+	if (dateTimeExpectedAfter.second > dateTimeExpectedBefore.second) {
+		return true;
+	}
+
+	return false;
+}
+
