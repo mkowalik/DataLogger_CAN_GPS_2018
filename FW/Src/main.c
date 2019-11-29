@@ -90,8 +90,9 @@ UartDriver_TypeDef				uart1Driver;
 UartReceiverStartTerm_TypeDef	uart1Receiver;
 DODriver_TypeDef				gpsResetDriver;
 
-LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
-LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
+LedDriver_Pin_TypeDef ledDebug1Pin	= my_LED_DEBUG1_Pin;
+LedDriver_Pin_TypeDef ledDebug2Pin	= my_LED_DEBUG2_Pin;
+DODriver_Pin_TypeDef gpsResetPin	= my_GPS_RESET_N_Pin;
 
 /* USER CODE END PV */
 
@@ -165,6 +166,7 @@ void HAL_SYSTICK_Callback(void){
   * @brief  The application entry point.
   * @retval int
   */
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -240,14 +242,16 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (DODriver_init(&gpsResetDriver, my_GPS_RESET_N_GPIO_Port, my_GPS_RESET_N_Pin, false) != DODriver_Status_OK){
+  if (DODriver_init(&gpsResetDriver, (DODriver_Port_TypeDef*)my_GPS_RESET_N_GPIO_Port, &gpsResetPin, false) != DODriver_Status_OK){
 	  Error_Handler();
   }
+
+  DODriver_SetHigh(&gpsResetDriver);
 
   GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
   UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
   if (pConfig->gpsFrequency != Config_GPSFrequency_OFF){
-	  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 9600)) != UartDriver_Status_OK){
+	  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 115200)) != UartDriver_Status_OK){
 		  Warning_Handler("UartDriver initialization problem.");
 		  retGps = GPSDriver_Status_Error;
 	  } else {

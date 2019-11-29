@@ -37,7 +37,7 @@ DODriver_Status_TypeDef DODriver_SetHigh(volatile DODriver_TypeDef* pSelf){
 		return DODriver_Status_UnInitializedError;
 	}
 
-	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_SET);
 
 	pSelf->state = DODriver_State_High;
 
@@ -54,7 +54,7 @@ DODriver_Status_TypeDef DODriver_SetLow(volatile DODriver_TypeDef* pSelf){
 		return DODriver_Status_UnInitializedError;
 	}
 
-	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_RESET);
 
 	pSelf->state = DODriver_State_Low;
 

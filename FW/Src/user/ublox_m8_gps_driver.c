@@ -40,7 +40,7 @@
 
 #define GPS_KNOT_TO_KPH_FACTOR				FixedPoint_constrDecimalFrac(1, 852, 1000, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS)
 
-#define GPS_UART_DEFAULT_AT_START_BAUDRATE	9600
+#define GPS_UART_DEFAULT_AT_START_BAUDRATE	115200
 
 //< ----- Private functions prototypes ----- >//
 
@@ -111,11 +111,11 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 		return GPSDriver_Status_UartDriverError;
 	}
 
-	if (actualUartBaudrate != GPS_UART_DEFAULT_AT_START_BAUDRATE){
+	/*if (actualUartBaudrate != GPS_UART_DEFAULT_AT_START_BAUDRATE){
 		if (UartDriver_setBaudRate(pSelf->pUartDriverHandler, GPS_UART_DEFAULT_AT_START_BAUDRATE) != UartDriver_Status_OK){
 			return GPSDriver_Status_UartDriverError;
 		}
-	}
+	}*/
 
 	if (UartReceiverStartTerm_registerReader(
 			pSelf->pUartReceiverHandler,
@@ -158,10 +158,6 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 */
 	if (UartReceiverStartTerm_stop(pSelf->pUartReceiverHandler) != UartReceiverStartTerm_Status_OK){
 		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverError : ret;
-	}
-
-	if (UartDriver_stopReceiver(pSelf->pUartDriverHandler) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartDriverError;
 	}
 
 	if (ret == GPSDriver_Status_OK){
@@ -625,7 +621,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_getUBXChecksumValue(volatile Ublox8MG
 #define UBX_ID_TIMEUTC		0x21
 
 static GPSDriver_Status_TypeDef _GPSDriver_sendUbxNavTimeUTCCommand(volatile Ublox8MGPSDriver_TypeDef* pSelf){
-
+/*
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	uint8_t buffer[GPS_MAX_COMMAND_LENGTH];
 	memset(buffer, 0, GPS_MAX_COMMAND_LENGTH);
@@ -646,44 +642,11 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUbxNavTimeUTCCommand(volatile Ubl
 	_GPSDriver_sendUBXCommandAndWaitForResponse(pSelf, buffer, 8, buffer);
 
 
-
-}
-
-static GPSDriver_Status_TypeDef _GPSDriver_changeUartBaudrateCommand(volatile Ublox8MGPSDriver_TypeDef* pSelf, uint32_t baudRate){
-
-	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
-	if (pSelf->state == GPSDriver_State_UnInitialized){
-		return GPSDriver_Status_UnInitializedError;
-	}
-
-	uint8_t buffer[GPS_MAX_COMMAND_LENGTH];
-	memset(buffer, 0, GPS_MAX_COMMAND_LENGTH);
-
-	strcpy((char*)buffer, GPS_CONFIG_CHANGE_UART_SPEED_CMD_PREFIX);
-	strCharCat(buffer, GPS_NMEA_DATA_SEPARATOR_SIGN);
-	if (appendUInt32ToString(buffer, baudRate, GPS_MAX_COMMAND_LENGTH) != StringOperations_Status_OK){
-		return GPSDriver_Status_Error;
-	}
-
-	if ((ret = _GPSDriver_appendCommandSufix(pSelf, buffer, GPS_MAX_COMMAND_LENGTH)) != GPSDriver_Status_OK){
-		return ret;
-	}
-
-	if ((ret = _GPSDriver_sendCommand(pSelf, buffer)) != GPSDriver_Status_OK){
-		return ret;
-	}
-
-	if (UartDriver_setBaudRate(pSelf->pUartDriverHandler, GPS_UART_BAUDRATE) != UartDriver_Status_OK){
-		return GPSDriver_Status_UartDriverError;
-	}
-
-	HAL_Delay(GPS_SET_BAUDRATE_DELAY);
-
-//	return _GPSDriver_sendTestCommand(pSelf);
+*/
 }
 
 static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile Ublox8MGPSDriver_TypeDef* pSelf, Config_GPSFrequency_TypeDef frequency){
-
+/*
 	if (pSelf->state == GPSDriver_State_UnInitialized){
 		return GPSDriver_Status_Error;
 	}
@@ -729,7 +692,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_changeUpdateFrequemcyCommand(volatile
 		return ret;
 	}
 
-	return _GPSDriver_sendCommandAndWaitForResponse(pSelf, commandBuffer, responseBuffer);
+	return _GPSDriver_sendCommandAndWaitForResponse(pSelf, commandBuffer, responseBuffer);*/
 }
 
 static GPSDriver_Status_TypeDef _GPSDriver_parseTime(uint8_t* pSentence, uint16_t length, volatile DateTime_TypeDef* pRetDateTime){
@@ -739,6 +702,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_parseTime(uint8_t* pSentence, uint16_
 	}
 
 	uint8_t tmp;
+	uint16_t dotIndex;
 
 	if (decChar2Uint8(*pSentence, &tmp) != StringOperations_Status_OK){
 		return GPSDriver_Status_NMEASentenceError;
@@ -771,6 +735,23 @@ static GPSDriver_Status_TypeDef _GPSDriver_parseTime(uint8_t* pSentence, uint16_
 		return GPSDriver_Status_NMEASentenceError;
 	}
 	pRetDateTime->second	+= tmp;
+
+	pRetDateTime->miliseconds	= 0;
+	StringOperations_Status_TypeDef strOperStat = findChar(pSentence, GPS_NMEA_DECIMAL_SEPARATOR_SIGN, length, &dotIndex);
+	if (strOperStat == StringOperations_Status_CharNotFoundError){
+		return GPSDriver_Status_OK;
+	} else if (strOperStat != StringOperations_Status_OK){
+		return GPSDriver_Status_NMEASentenceError;
+	}
+
+	uint16_t factor				= 100;
+	for (uint16_t i = dotIndex+1; i < length && factor > 0; i++){
+		if (decChar2Uint8(*(pSentence+i), &tmp) != StringOperations_Status_OK){
+			return GPSDriver_Status_NMEASentenceError;
+		}
+		pRetDateTime->miliseconds += (factor * tmp);
+		factor /= 10;
+	}
 
 	return GPSDriver_Status_OK;
 }
@@ -1060,7 +1041,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNGSASentence(volatile Ublox8MG
 
 	//< ----- Parse/ignore PRNs of satellites used for fix (space for 12) and PDOP (dilution of precision) ----- >//
 	#define GPS_GPGSA_FIELDS_TO_IGNORE	13 //< PRNs of satellites used for fix (space for 12)  and PDOP (dilution of precision)
-	for (uint8_t i=0; i<12; i++){ //TODO mocno do sprawdzenia
+	for (uint8_t i=0; i<GPS_GPGSA_FIELDS_TO_IGNORE; i++){ //TODO mocno do sprawdzenia
 		if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
 			return GPSDriver_Status_NMEASentenceError;
 		}
@@ -1077,7 +1058,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNGSASentence(volatile Ublox8MG
 	it += tmp_u16 + sizeof(GPS_NMEA_DATA_SEPARATOR_SIGN);
 
 	//< ----- Parse Vertical dilution of precision (HDOP) ----- >//
-	if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
+	if (findChar(it, GPS_NMEA_CHECKSUM_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
 		return GPSDriver_Status_NMEASentenceError;
 	}
 	if ((ret = _GPSDriver_parseFixedPoint(it, tmp_u16, &pSelf->partialGPSData.verticalPrecision)) != GPSDriver_Status_OK){ //< Horizontal dilution of position
@@ -1158,7 +1139,9 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNRMCSentence(volatile Ublox8MG
 	if (findChar(it, GPS_NMEA_DATA_SEPARATOR_SIGN, pNmeaSentenceString->sentenceString + pNmeaSentenceString->sentenceLength - it, &tmp_u16) != StringOperations_Status_OK){
 		return GPSDriver_Status_NMEASentenceError;
 	}
-	if ((ret = _GPSDriver_parseFixedPoint(it, tmp_u16, &pSelf->partialGPSData.trackAngle)) != GPSDriver_Status_OK){ //< Horizontal dilution of position
+	if (tmp_u16 == 0){
+		pSelf->partialGPSData.trackAngle = FixedPoint_constrDecimalFrac(0, 0, 1, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS); //< zero
+	} else if ((ret = _GPSDriver_parseFixedPoint(it, tmp_u16, &pSelf->partialGPSData.trackAngle)) != GPSDriver_Status_OK){ //< Horizontal dilution of position
 		return ret;
 	}
 	it += tmp_u16 + sizeof(GPS_NMEA_DATA_SEPARATOR_SIGN);
@@ -1177,71 +1160,73 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNRMCSentence(volatile Ublox8MG
 
 //< ----- test functions ----- >//
 
-void GPSDriver_test(){
-	Ublox8MGPSDriver_TypeDef self;
-	assert_param(GPSDriver_testGPGGA1(&self));
-	assert_param(GPSDriver_testGPGSA1(&self));
-	assert_param(GPSDriver_testGPRMC1(&self));
-}
-
-bool GPSDriver_testGPGGA1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
+bool GPSDriver_testGNGGA1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef		ret;
 	_GPSDriver_NMEASentenceString	nmeaString;
-	strcpy((char*)nmeaString.sentenceString, "$GPGGA,074650.000,5005.0470,N,02000.6291,E,1,3,7.25,108.0,M,42.0,M,,*5D\r\n");
+	strcpy((char*)nmeaString.sentenceString, "$GNGGA,012219.40,5005.00694,N,02000.64285,E,2,10,1.17,260.7,M,39.8,M,,0000*4F\r\n");
 	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
 	nmeaString.timestamp		= 100;
 	if ((ret = _GPSDriver_handleGNGGASentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
 		return false;
 	}
-	assert_param(pSelf->partialGPSData.gpsDateTime.hour				== 7);
-	assert_param(pSelf->partialGPSData.gpsDateTime.minute			== 46);
-	assert_param(pSelf->partialGPSData.gpsDateTime.second			== 7);
-	assert_param(pSelf->partialGPSData.latitude.integer				== ((5005 << 12) + ((470<<12)/10000)) );
-	assert_param(pSelf->partialGPSData.longitude.integer			== ((2000 << 12) + ((6291<<12)/10000)) );
-	assert_param(pSelf->partialGPSData.nSatellites					== 3);
-	assert_param(pSelf->partialGPSData.verticalPrecision.integer	== ((7 << 12) + ((25<<12)/100)) );
-	assert_param(pSelf->partialGPSData.altitude.integer				== ((108 << 12)) );
+	assert_param(pSelf->partialGPSData.gpsDateTime.hour				== 1);
+	assert_param(pSelf->partialGPSData.gpsDateTime.minute			== 22);
+	assert_param(pSelf->partialGPSData.gpsDateTime.second			== 19);
+	assert_param(pSelf->partialGPSData.gpsDateTime.miliseconds		== 400);
+	assert_param(pSelf->partialGPSData.latitude.integer				== ((5005 << 12) + ((694<<12)/100000)) );
+	assert_param(pSelf->partialGPSData.longitude.integer			== ((2000 << 12) + ((64285<<12)/100000)) );
+	assert_param(pSelf->partialGPSData.nSatellites					== 10);
+	assert_param(pSelf->partialGPSData.horizontalPrecision.integer	== ((1 << 12) + ((17<<12)/100)) );
+	assert_param(pSelf->partialGPSData.altitude.integer				== ((260 << 12) + ((7<<12)/10)) );
 	return true;
 }
 
-bool GPSDriver_testGPGSA1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
+bool GPSDriver_testGNGSA1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef		ret;
 	_GPSDriver_NMEASentenceString	nmeaString;
-	strcpy((char*)nmeaString.sentenceString, "$GPGSA,A,2,26,10,16,,,,,,,,,,7.32,7.25,1.00*06\r\n");
+	strcpy((char*)nmeaString.sentenceString, "$GNGSA,A,3,21,26,29,20,27,05,31,10,,,,,2.44,1.58,1.87*11\r\n");
 	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
 	nmeaString.timestamp		= 100;
 	if ((ret = _GPSDriver_handleGNGSASentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
 		return false;
 	}
-	assert_param(pSelf->partialGPSData.fixType						== GPSFixType_2DFix);
-	assert_param(pSelf->partialGPSData.horizontalPrecision.integer	== ((7 << 12) + ((32<<12)/100)) );
-	assert_param(pSelf->partialGPSData.verticalPrecision.integer	== ((7 << 12) + ((25<<12)/100)) );
+	assert_param(pSelf->partialGPSData.fixType						== GPSFixType_3DFix);
+	assert_param(pSelf->partialGPSData.horizontalPrecision.integer	== ((1 << 12) + ((58<<12)/100)) );
+	assert_param(pSelf->partialGPSData.verticalPrecision.integer	== ((1 << 12) + ((87<<12)/100)) );
 	return true;
 }
 
-bool GPSDriver_testGPRMC1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
+bool GPSDriver_testGNRMC1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef		ret;
 	_GPSDriver_NMEASentenceString	nmeaString;
-	strcpy((char*)nmeaString.sentenceString, "$GPRMC,074650.000,A,5005.0470,N,02000.6291,E,0.43,43.07,110919,,,A*55\r\n");
+	strcpy((char*)nmeaString.sentenceString, "$GNRMC,012219.60,A,5005.00694,N,02000.64286,E,0.087,,291119,,,D*6F\r\n");
 	nmeaString.sentenceLength	= strlen((char*)nmeaString.sentenceString);
 	nmeaString.timestamp		= 100;
 	if ((ret = _GPSDriver_handleGNRMCSentence(pSelf, &nmeaString)) != GPSDriver_Status_OK){
-		assert_param(pSelf->partialGPSData.gpsDateTime.hour				== 7);
-		assert_param(pSelf->partialGPSData.gpsDateTime.minute			== 46);
-		assert_param(pSelf->partialGPSData.gpsDateTime.second			== 50);
-		assert_param(pSelf->partialGPSData.latitude.integer				== ((5005 << 12) + ((470<<12)/10000)) );
-		assert_param(pSelf->partialGPSData.longitude.integer			== ((2000 << 12) + ((6291<<12)/10000)) );
-		assert_param(pSelf->partialGPSData.speed.integer				== ((7963<<12)/10000) );
-		assert_param(pSelf->partialGPSData.trackAngle.integer			== ((43 << 12) + ((7<<12)/100)) );
-		assert_param(pSelf->partialGPSData.gpsDateTime.day				== 11);
-		assert_param(pSelf->partialGPSData.gpsDateTime.month			== 9);
-		assert_param(pSelf->partialGPSData.gpsDateTime.year				== 19);
 		return false;
 	}
+	assert_param(pSelf->partialGPSData.gpsDateTime.hour				== 1);
+	assert_param(pSelf->partialGPSData.gpsDateTime.minute			== 22);
+	assert_param(pSelf->partialGPSData.gpsDateTime.second			== 19);
+	assert_param(pSelf->partialGPSData.gpsDateTime.miliseconds		== 600);
+	assert_param(pSelf->partialGPSData.latitude.integer				== ((5005 << 12) + ((694<<12)/100000)) );
+	assert_param(pSelf->partialGPSData.longitude.integer			== ((2000 << 12) + ((64286<<12)/100000)) );
+	assert_param(pSelf->partialGPSData.speed.integer				== 659);
+	assert_param(pSelf->partialGPSData.trackAngle.integer			== 0);
+	assert_param(pSelf->partialGPSData.gpsDateTime.day				== 29);
+	assert_param(pSelf->partialGPSData.gpsDateTime.month			== 11);
+	assert_param(pSelf->partialGPSData.gpsDateTime.year				== 19);
 	return true;
+}
+
+void GPSDriver_test(){
+	Ublox8MGPSDriver_TypeDef self;
+	assert_param(GPSDriver_testGNGGA1(&self));
+	assert_param(GPSDriver_testGNGSA1(&self));
+	assert_param(GPSDriver_testGNRMC1(&self));
 }
 
 #endif

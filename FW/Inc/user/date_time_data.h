@@ -15,6 +15,7 @@ typedef struct {
 	uint8_t		hour;
 	uint8_t		minute;
 	uint8_t		second;
+	uint16_t	miliseconds;
 } DateTime_TypeDef;
 
 #endif /* USER_DATE_TIME_DATA_H_ */
