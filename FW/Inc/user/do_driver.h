@@ -5,8 +5,10 @@
  *      Author: Michal Kowalik
  */
 
-#ifndef USER_LED_DRIVER_H_
-#define USER_LED_DRIVER_H_
+#ifndef USER_DO_DRIVER_H_
+#define USER_DO_DRIVER_H_
+
+#include "stdbool.h"
 
 #include "stdint.h"
 #include "gpio.h"
@@ -34,10 +36,10 @@ typedef struct {
 	bool					invertLogic;
 } DODriver_TypeDef;
 
-DODriver_Status_TypeDef DODriver_init(DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* port, DODriver_Pin_TypeDef* pin, bool invertLogic);
-DODriver_Status_TypeDef DODriver_SetHigh(DODriver_TypeDef* pSelf);
-DODriver_Status_TypeDef DODriver_SetLow(DODriver_TypeDef* pSelf);
-DODriver_Status_TypeDef DODriver_Toggle(DODriver_TypeDef* pSelf);
+DODriver_Status_TypeDef DODriver_init(volatile DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* port, DODriver_Pin_TypeDef* pin, bool invertLogic);
+DODriver_Status_TypeDef DODriver_SetHigh(volatile DODriver_TypeDef* pSelf);
+DODriver_Status_TypeDef DODriver_SetLow(volatile DODriver_TypeDef* pSelf);
+DODriver_Status_TypeDef DODriver_Toggle(volatile DODriver_TypeDef* pSelf);
 
 
-#endif /* USER_LED_DRIVER_H_ */
+#endif /* USER_DO_DRIVER_H_ */

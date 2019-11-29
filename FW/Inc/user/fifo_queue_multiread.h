@@ -21,6 +21,7 @@ typedef enum {
 	FIFOMultiread_Status_TooManyRegisteredReadedsError,
 	FIFOMultiread_Status_UnInitializedError,
 	FIFOMultiread_Status_NotRegisteredReaderError,
+	FIFOMultiread_Status_InvalidPositionArgumentError,
 	FIFOMultiread_Status_Error
 } FIFOMultiread_Status_TypeDef;
 
@@ -45,19 +46,20 @@ typedef struct {
 typedef struct {
 	volatile FIFOMultiread_TypeDef* volatile	pFifoHandler;
 	volatile uint8_t							readerId;
-} FIFOMultireadReaderIdentifier_TypeDef;
+} FIFOMultireadReader_TypeDef;
 
 FIFOMultiread_Status_TypeDef	FIFOMultiread_init(volatile FIFOMultiread_TypeDef* pSelf, volatile void* pTabPtrArg, uint8_t elementSize, uint16_t queueSize);
-FIFOMultiread_Status_TypeDef	FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReaderIdentifier_TypeDef* pReaderHandler);
-FIFOMultiread_Status_TypeDef	FIFOMultiread_unregisterReader(volatile FIFOMultireadReaderIdentifier_TypeDef* pReaderHandler);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReader_TypeDef* pReaderHandler);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_unregisterReader(volatile FIFOMultireadReader_TypeDef* pReaderHandler);
 
 FIFOMultiread_Status_TypeDef	FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, volatile void* volatile pElement);
 bool							FIFOMultiread_isFull(volatile FIFOMultiread_TypeDef* volatile pSelf);
-bool							FIFOMultiread_isEmpty(volatile FIFOMultireadReaderIdentifier_TypeDef* volatile pSelf);
+bool							FIFOMultiread_isEmpty(volatile FIFOMultireadReader_TypeDef* volatile pSelf);
 
-FIFOMultiread_Status_TypeDef	FIFOMultiread_dequeue(volatile FIFOMultireadReaderIdentifier_TypeDef* volatile pSelf, volatile void* volatile pRetElement);
-FIFOMultiread_Status_TypeDef	FIFOMultiread_lastElement(volatile FIFOMultireadReaderIdentifier_TypeDef* volatile pSelf, volatile void* volatile pRetElement);
-FIFOMultiread_Status_TypeDef	FIFOMultiread_elementsNumber(volatile FIFOMultireadReaderIdentifier_TypeDef* volatile pSelf, volatile uint16_t* volatile retElementsNumber);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_dequeue(volatile FIFOMultireadReader_TypeDef* volatile pSelf, volatile void* volatile pRetElement);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_lastElement(volatile FIFOMultireadReader_TypeDef* volatile pSelf, volatile void* volatile pRetElement);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_elementValOnPosition(volatile FIFOMultireadReader_TypeDef* volatile pSelf, uint16_t positionIndex, volatile void* volatile pRetElement);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_elementsNumber(volatile FIFOMultireadReader_TypeDef* volatile pSelf, volatile uint16_t* volatile retElementsNumber);
 
 
 #endif /* USER_FIFO_QUEUE_MULTIREAD_H_ */

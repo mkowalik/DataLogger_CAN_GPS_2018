@@ -43,6 +43,7 @@
 #include "user/led_driver.h"
 #include "user/uart_driver.h"
 #include "user/gps_driver.h"
+#include "user/do_driver.h"
 
 /* USER CODE END Includes */
 
@@ -86,7 +87,8 @@ LedDriver_TypeDef				ledDebug1Driver;
 LedDriver_TypeDef				ledDebug2Driver;
 
 UartDriver_TypeDef				uart1Driver;
-UartReceiver_TypeDef			uart1Receiver;
+UartReceiverStartTerm_TypeDef	uart1Receiver;
+DODriver_TypeDef				gpsResetDriver;
 
 LedDriver_Pin_TypeDef ledDebug1Pin = my_LED_DEBUG1_Pin;
 LedDriver_Pin_TypeDef ledDebug2Pin = my_LED_DEBUG2_Pin;
@@ -101,13 +103,13 @@ static void MX_NVIC_Init(void);
 void FIFOTest(){
 
 	volatile FIFOMultiread_TypeDef						rxFifo = {0};
-	volatile UartReceiver_FIFOElem_TypeDef				receiveBuffer[128];
+	volatile UartReceiverStartTerm_FIFOElem_TypeDef				receiveBuffer[128];
 
-	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiver_FIFOElem_TypeDef), 128);
-	FIFOMultireadReaderIdentifier_TypeDef id;
+	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiverStartTerm_FIFOElem_TypeDef), 128);
+	FIFOMultireadReader_TypeDef id;
 	FIFOMultiread_registerReader(&rxFifo, &id);
 
-	UartReceiver_FIFOElem_TypeDef byteWithTimestamp;
+	UartReceiverStartTerm_FIFOElem_TypeDef byteWithTimestamp;
 
   for (uint16_t i=0; i<128; i++){
 	  byteWithTimestamp.dataByte = i;
@@ -238,6 +240,10 @@ int main(void)
 	  Error_Handler();
   }
 
+  if (DODriver_init(&gpsResetDriver, my_GPS_RESET_N_GPIO_Port, my_GPS_RESET_N_Pin, false) != DODriver_Status_OK){
+	  Error_Handler();
+  }
+
   GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
   UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
   if (pConfig->gpsFrequency != Config_GPSFrequency_OFF){
@@ -245,12 +251,12 @@ int main(void)
 		  Warning_Handler("UartDriver initialization problem.");
 		  retGps = GPSDriver_Status_Error;
 	  } else {
-		  UartReceiver_Status_TypeDef retUartRcv = UartReceiver_Status_OK;
-		  if ((retUartRcv = UartReceiver_init(&uart1Receiver, &uart1Driver)) != UartReceiver_Status_OK){
+		  UartReceiverStartTerm_Status_TypeDef retUartRcv = UartReceiverStartTerm_Status_OK;
+		  if ((retUartRcv = UartReceiverStartTerm_init(&uart1Receiver, &uart1Driver)) != UartReceiverStartTerm_Status_OK){
 	  		  Warning_Handler("UartReceiver initialization problem.");
 	  		  retGps = GPSDriver_Status_Error;
 	  	  } else {
-	  		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
+	  		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, &gpsResetDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
 	  			  char warningBuffer[80];
 	  			  memset(warningBuffer, 0, 80);
 	  			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);

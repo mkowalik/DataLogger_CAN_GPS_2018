@@ -14,9 +14,10 @@
 
 #include "stdint.h"
 
+#include "user/do_driver.h"
 #include "user/gps_data.h"
 #include "user/uart_driver.h"
-#include "user/uart_receiver.h"
+#include <user/uart_receiver_start_term.h>
 #include "user/fifo_queue.h"
 #include "user/config.h"
 
@@ -29,6 +30,7 @@
 #define GPS_TX_TIMEOUT_MS							100
 #define GPS_COMMAND_RESPONSE_TIMEOUT_MS				1000
 
+#define GPS_DEVICE_RESET_TIME_MS					100
 #define GPS_DEVICE_START_TIME_MS					1000
 
 #define GPS_SET_BAUDRATE_DELAY						400
@@ -53,6 +55,7 @@ typedef enum {
 	GPSDriver_Status_UartDriverError,
 	GPSDriver_Status_UartReceiverError,
 	GPSDriver_Status_MSTimerError,
+	GPSDriver_Status_DOResetError,
 	GPSDriver_Status_StringOperationsError,
 	GPSDriver_Status_TXTimeoutError,
 	GPSDriver_Status_ACKTimeoutError,
@@ -83,25 +86,31 @@ typedef struct {
 typedef uint16_t GPSDriver_Reader_TypeDef;
 
 typedef struct {
-	volatile GPSDriver_State_TypeDef				state;
-	volatile UartDriver_TypeDef* volatile			pUartDriverHandler;
-	volatile UartReceiver_TypeDef* volatile			pUartReceiverHandler;
-	volatile MSTimerDriver_TypeDef* volatile 		pMSTimer;
-	volatile UartReceiver_ReaderIterator_TypeDef	uartReaderIterator;
-	volatile bool									uartReaderIteratorSet;
+	volatile GPSDriver_State_TypeDef						state;
+	volatile UartDriver_TypeDef* volatile					pUartDriverHandler;
+	volatile UartReceiverStartTerm_TypeDef* volatile		pUartReceiverHandler;
+	volatile MSTimerDriver_TypeDef* volatile 				pMSTimer;
+	volatile DODriver_TypeDef* volatile						pDOResetDriver;
+	volatile UartReceiverStartTerm_ReaderIterator_TypeDef	uartReaderIterator;
+	volatile bool											uartReaderIteratorSet;
 
-	volatile bool									gpggaPartialSegmentReceived;
-	volatile bool									gpgsaPartialSegmentReceived;
-	volatile bool									gprmcPartialSegmentReceived;
-	volatile uint32_t								gpggaPartialSegmentTimestamp;
-	volatile uint32_t								gpgsaPartialSegmentTimestamp;
-	volatile uint32_t								gprmcPartialSegmentTimestamp;
-	volatile GPSData_TypeDef						partialGPSData;
+	volatile bool											gpggaPartialSegmentReceived;
+	volatile bool											gpgsaPartialSegmentReceived;
+	volatile bool											gprmcPartialSegmentReceived;
+	volatile uint32_t										gpggaPartialSegmentTimestamp;
+	volatile uint32_t										gpgsaPartialSegmentTimestamp;
+	volatile uint32_t										gprmcPartialSegmentTimestamp;
+	volatile GPSData_TypeDef								partialGPSData;
 } Ublox8MGPSDriver_TypeDef;
 
 typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile Ublox8MGPSDriver_TypeDef* pSelf, UartDriver_TypeDef* pUartDriverHandler, UartReceiver_TypeDef* pUartReceiverHandler, MSTimerDriver_TypeDef* pMSTimer, Config_GPSFrequency_TypeDef frequency);
+GPSDriver_Status_TypeDef GPSDriver_init(volatile Ublox8MGPSDriver_TypeDef* pSelf,
+		UartDriver_TypeDef* pUartDriverHandler,
+		UartReceiverStartTerm_TypeDef* pUartReceiverHandler,
+		MSTimerDriver_TypeDef* pMSTimer,
+		DODriver_TypeDef* pDOResetDriver,
+		Config_GPSFrequency_TypeDef frequency);
 
 GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile Ublox8MGPSDriver_TypeDef* pSelf);
 GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile Ublox8MGPSDriver_TypeDef* pSelf);

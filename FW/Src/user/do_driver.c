@@ -10,7 +10,7 @@
 #include "user/do_driver.h"
 
 
-DODriver_Status_TypeDef DODriver_init(DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* port, DODriver_Pin_TypeDef* pin, bool invertLogic){
+DODriver_Status_TypeDef DODriver_init(volatile DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* port, DODriver_Pin_TypeDef* pin, bool invertLogic){
 
 	if (pSelf==NULL || port == NULL || pin == NULL){
 		return DODriver_Status_NullPointerError;
@@ -28,7 +28,7 @@ DODriver_Status_TypeDef DODriver_init(DODriver_TypeDef* pSelf, DODriver_Port_Typ
 
 }
 
-DODriver_Status_TypeDef DODriver_SetHigh(DODriver_TypeDef* pSelf){
+DODriver_Status_TypeDef DODriver_SetHigh(volatile DODriver_TypeDef* pSelf){
 
 	if (pSelf==NULL){
 		return DODriver_Status_NullPointerError;
@@ -45,7 +45,7 @@ DODriver_Status_TypeDef DODriver_SetHigh(DODriver_TypeDef* pSelf){
 
 }
 
-DODriver_Status_TypeDef DODriver_SetLow(DODriver_TypeDef* pSelf){
+DODriver_Status_TypeDef DODriver_SetLow(volatile DODriver_TypeDef* pSelf){
 
 	if (pSelf==NULL){
 		return DODriver_Status_NullPointerError;
@@ -61,7 +61,7 @@ DODriver_Status_TypeDef DODriver_SetLow(DODriver_TypeDef* pSelf){
 	return DODriver_Status_OK;
 }
 
-DODriver_Status_TypeDef DODriver_Toggle(DODriver_TypeDef* pSelf){
+DODriver_Status_TypeDef DODriver_Toggle(volatile DODriver_TypeDef* pSelf){
 
 	if (pSelf==NULL){
 		return DODriver_Status_NullPointerError;
