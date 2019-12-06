@@ -86,8 +86,9 @@ MSTimerDriver_TypeDef			msTimerDriver;
 LedDriver_TypeDef				ledDebug1Driver;
 LedDriver_TypeDef				ledDebug2Driver;
 
-UartDriver_TypeDef				uart1Driver;
-UartReceiverStartTerm_TypeDef	uart1Receiver;
+UartDriver_TypeDef				uartGpsDriver;
+UartReceiverStartTerm_TypeDef	uartGpsNMEAReceiverTerm;
+UartReceiverStartLength_TypeDef	uartGpsUBXReceiverTerm;
 DODriver_TypeDef				gpsResetDriver;
 
 LedDriver_Pin_TypeDef ledDebug1Pin	= my_LED_DEBUG1_Pin;
@@ -246,35 +247,42 @@ int main(void)
 	  Error_Handler();
   }
 
-  DODriver_SetHigh(&gpsResetDriver);
+  GPSDriver_Status_TypeDef					retGps		= GPSDriver_Status_OK;
+  UartDriver_Status_TypeDef					retUartDrv	= UartDriver_Status_OK;
+  UartReceiverStartTerm_Status_TypeDef		retUartRcv	= UartReceiverStartTerm_Status_OK;
+  UartReceiverStartLength_Status_TypeDef	retUartRcv2	= UartReceiverStartLength_Status_OK;
 
-  GPSDriver_Status_TypeDef retGps		= GPSDriver_Status_OK;
-  UartDriver_Status_TypeDef retUartDrv	= UartDriver_Status_OK;
-  if (pConfig->gpsFrequency != Config_GPSFrequency_OFF){
-	  if ((retUartDrv = UartDriver_init(&uart1Driver, &huart1, USART1, &msTimerDriver, 115200)) != UartDriver_Status_OK){
+  while (pConfig->gpsFrequency != Config_GPSFrequency_OFF){ //< one time loop
+	  if ((retUartDrv = UartDriver_init(&uartGpsDriver, &huart1, USART1, &msTimerDriver, 115200)) != UartDriver_Status_OK){
 		  Warning_Handler("UartDriver initialization problem.");
-		  retGps = GPSDriver_Status_Error;
-	  } else {
-		  UartReceiverStartTerm_Status_TypeDef retUartRcv = UartReceiverStartTerm_Status_OK;
-		  if ((retUartRcv = UartReceiverStartTerm_init(&uart1Receiver, &uart1Driver)) != UartReceiverStartTerm_Status_OK){
-	  		  Warning_Handler("UartReceiver initialization problem.");
-	  		  retGps = GPSDriver_Status_Error;
-	  	  } else {
-	  		  if ((retGps = GPSDriver_init(&gpsDriver, &uart1Driver, &uart1Receiver, &msTimerDriver, &gpsResetDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
-	  			  char warningBuffer[80];
-	  			  memset(warningBuffer, 0, 80);
-	  			  sprintf(warningBuffer, "GPS initialization error: %d", retGps);
-	  			  Warning_Handler(warningBuffer);
-	  			  GPSDriver_Status_TypeDef retGps2 = GPSDriver_Status_OK;
-	  			  if ((retGps2 = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
-	  				  memset(warningBuffer, 0, 80); sprintf(warningBuffer, "GPS set off error: %d", retGps2);
-	  				  Warning_Handler(warningBuffer);
-	  			  }
-	  		  }
-	  	  }
+		  retGps = GPSDriver_Status_UartDriverError;
+		  break;
 	  }
+	  if ((retUartRcv = UartReceiverStartTerm_init(&uartGpsNMEAReceiverTerm, &uartGpsDriver)) != UartReceiverStartTerm_Status_OK){
+		  Warning_Handler("UartReceiver initialization problem.");
+		  retGps = GPSDriver_Status_UartReceiverStartTermError;
+		  break;
+	  }
+	  if ((retUartRcv2 = UartReceiverStartLength_init(&uartGpsUBXReceiverTerm, &uartGpsDriver)) != UartReceiverStartLength_Status_OK){
+		  Warning_Handler("UartReceiver initialization problem.");
+		  retGps = GPSDriver_Status_UartReceiverStartTermError;
+		  break;
+	  }
+	  if ((retUartDrv == UartDriver_Status_OK) && ((retUartDrv = UartDriver_startReceiver(&uartGpsDriver) != UartDriver_Status_OK))){
+		  return GPSDriver_Status_UartDriverError;
+	  }
+	  if ((retGps = GPSDriver_init(&gpsDriver, &uartGpsDriver, &uartGpsNMEAReceiverTerm, &uartGpsUBXReceiverTerm, &msTimerDriver, &gpsResetDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
+		  Warning_Handler("GPS initialization problem.");
+		  break;
+	  }
+	  break;
   }
 
+  if (retGps != GPSDriver_Status_OK){
+	  if ((retGps = GPSDriver_setOFF(&gpsDriver)) != GPSDriver_Status_OK){
+		  Warning_Handler("GPS switching off problem.");
+	  }
+  }
 
   if (CANTransceiverDriver_init(&canTransceiverDriver, pConfig, &hcan1, CAN1) != CANTransceiverDriver_Status_OK){
 	  Error_Handler();

@@ -69,7 +69,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 		volatile UartReceiverStartLength_TypeDef* pSelf,
 		volatile UartReceiverStartLength_ReaderIterator_TypeDef* pRetReaderIterator,
 		uint8_t startPatternLength,
-		uint8_t* startPattern,
+		const uint8_t* startPattern,
 		uint16_t sentenceLength);
 UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_unregisterReader(volatile UartReceiverStartLength_TypeDef* pSelf, UartReceiverStartLength_ReaderIterator_TypeDef readerIterator);
 

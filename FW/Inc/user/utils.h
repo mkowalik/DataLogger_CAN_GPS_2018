@@ -13,4 +13,9 @@
 #define ABS(A)			((A < 0) ? (-A) : A)
 #define ABS_DIFF(A, B)	(MAX(A, B) - MIN(A, B))
 
+#define ARRAY_LENGTH(x)	(sizeof(x) / sizeof((x)[0]))
+
+#define	U16_LSB(x)		(x & 0xFF)
+#define	U16_MSB(x)		((x >> 8) & 0xFF)
+
 #endif /* USER_UTILS_H_ */

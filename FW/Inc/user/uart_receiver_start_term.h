@@ -53,6 +53,7 @@ typedef enum {
 	UartReceiverStartTerm_Status_NotRegisteredReaderError,
 	UartReceiverStartTerm_Status_FIFOError,
 	UartReceiverStartTerm_Status_UartDriverError,
+	UartReceiverStartTerm_Status_UartDriverNotStartedError,
 	UartReceiverStartTerm_Status_InvalidArgumentsError,
 	UartReceiverStartTerm_Status_ReceivedAlreadyStartedError,
 	UartReceiverStartTerm_Status_ReceiverNotReceivingError,

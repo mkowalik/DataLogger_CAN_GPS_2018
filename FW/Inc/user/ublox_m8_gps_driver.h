@@ -18,31 +18,35 @@
 #include "user/gps_data.h"
 #include "user/uart_driver.h"
 #include <user/uart_receiver_start_term.h>
+#include <user/uart_receiver_start_length.h>
 #include "user/fifo_queue.h"
 #include "user/config.h"
 
-#define	GPS_DRIVER_MAX_CALLBACK_NUMBER				3
+#define	GPS_DRIVER_MAX_CALLBACK_NUMBER				3U
 
-#define GPS_UART_BAUDRATE							115200
+#define GPS_UART_BAUDRATE							115200U
 
-#define GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS		12
+#define GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS		12U
 
-#define GPS_TX_TIMEOUT_MS							100
-#define GPS_COMMAND_RESPONSE_TIMEOUT_MS				1000
+#define GPS_TX_TIMEOUT_MS							100U
+#define GPS_COMMAND_RESPONSE_TIMEOUT_MS				1000U
 
-#define GPS_DEVICE_RESET_TIME_MS					100
-#define GPS_DEVICE_START_TIME_MS					1000
+#define GPS_DEVICE_RESET_TIME_MS					100U
+#define GPS_DEVICE_START_TIME_MS					1000U
 
-#define GPS_SET_BAUDRATE_DELAY						400
+#define GPS_SET_BAUDRATE_DELAY						400U
 
-#define GPS_NMEA_MAX_SENTENCES_DELAY				50
+#define GPS_NMEA_MAX_SENTENCES_DELAY				50U
 
-#define GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC	83
+#define GPS_NMEA_MAX_SENTENCE_LENGTH_INCLUDING_CRC	83U
 
-#define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			256
+#define GPS_NMEA_STRING_BUFFER_FIFO_SIZE			256U
 
 typedef enum {
 	GPSDriver_Status_OK = 0,
+	GPSDriver_Status_NAKAnswer = 0,
+	GPSDriver_Status_TXTimeoutError,
+	GPSDriver_Status_ACKTimeoutError,
 	GPSDriver_Status_Empty,
 	GPSDriver_Status_UnInitializedError,
 	GPSDriver_Status_RunningError,
@@ -53,12 +57,12 @@ typedef enum {
 	GPSDriver_Status_BufferOverflowError,
 	GPSDriver_Status_BusyError,
 	GPSDriver_Status_UartDriverError,
-	GPSDriver_Status_UartReceiverError,
+	GPSDriver_Status_UartDriverNotStatrtedError,
+	GPSDriver_Status_UartReceiverStartTermError,
+	GPSDriver_Status_UartReceiverStartLengthError,
 	GPSDriver_Status_MSTimerError,
 	GPSDriver_Status_DOResetError,
 	GPSDriver_Status_StringOperationsError,
-	GPSDriver_Status_TXTimeoutError,
-	GPSDriver_Status_ACKTimeoutError,
 	GPSDriver_Status_NullPointerError,
 	GPSDriver_Status_Error
 } GPSDriver_Status_TypeDef;
@@ -88,11 +92,13 @@ typedef uint16_t GPSDriver_Reader_TypeDef;
 typedef struct {
 	volatile GPSDriver_State_TypeDef						state;
 	volatile UartDriver_TypeDef* volatile					pUartDriverHandler;
-	volatile UartReceiverStartTerm_TypeDef* volatile		pUartReceiverHandler;
+	volatile UartReceiverStartTerm_TypeDef* volatile		pUartNMEAReceiverHandler;
+	volatile UartReceiverStartLength_TypeDef* volatile		pUartUBXReceiverHandler;
 	volatile MSTimerDriver_TypeDef* volatile 				pMSTimer;
 	volatile DODriver_TypeDef* volatile						pDOResetDriver;
-	volatile UartReceiverStartTerm_ReaderIterator_TypeDef	uartReaderIterator;
-	volatile bool											uartReaderIteratorSet;
+
+	volatile UartReceiverStartTerm_ReaderIterator_TypeDef	uartNMEAReaderIterator;
+	volatile bool											uartNMEAReaderIteratorSet;
 
 	volatile bool											gpggaPartialSegmentReceived;
 	volatile bool											gpgsaPartialSegmentReceived;
@@ -105,9 +111,11 @@ typedef struct {
 
 typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
 
-GPSDriver_Status_TypeDef GPSDriver_init(volatile Ublox8MGPSDriver_TypeDef* pSelf,
+GPSDriver_Status_TypeDef GPSDriver_init (
+		volatile Ublox8MGPSDriver_TypeDef* pSelf,
 		UartDriver_TypeDef* pUartDriverHandler,
-		UartReceiverStartTerm_TypeDef* pUartReceiverHandler,
+		UartReceiverStartTerm_TypeDef* pUartReceiverTermHandler,
+		UartReceiverStartLength_TypeDef* pUartReceiverLengthHandler,
 		MSTimerDriver_TypeDef* pMSTimer,
 		DODriver_TypeDef* pDOResetDriver,
 		Config_GPSFrequency_TypeDef frequency);

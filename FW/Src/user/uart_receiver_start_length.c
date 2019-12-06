@@ -53,7 +53,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 		volatile UartReceiverStartLength_TypeDef* pSelf,
 		volatile UartReceiverStartLength_ReaderIterator_TypeDef* pRetReaderIterator,
 		uint8_t startPatternLength,
-		uint8_t* startPattern,
+		const uint8_t* startPattern,
 		uint16_t sentenceLength){
 
 	if (pSelf == NULL || pRetReaderIterator == NULL || startPattern == NULL){
@@ -68,7 +68,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 		return UartReceiverStartLength_Status_InvalidArgumentsError;
 	}
 
-	if (startPatternLength < sentenceLength){
+	if (sentenceLength < startPatternLength){
 		return UartReceiverStartLength_Status_InvalidArgumentsError;
 	}
 
@@ -83,6 +83,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 			pSelf->sentenceLength[i]	= sentenceLength;
 			pSelf->readerRegistered[i]	= true;
 			*pRetReaderIterator			= i;
+			break;
 		}
 	}
 

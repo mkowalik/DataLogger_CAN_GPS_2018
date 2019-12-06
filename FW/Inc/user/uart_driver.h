@@ -110,4 +110,6 @@ UartDriver_Status_TypeDef UartDriver_stopTransmitter(volatile UartDriver_TypeDef
 
 UartDriver_Status_TypeDef UartDriver_waitForTxTimeout(volatile UartDriver_TypeDef* pSelf);
 
+UartDriver_Status_TypeDef UartDriver_getState(volatile UartDriver_TypeDef* pSelf, UartDriver_State_TypeDef* pRetState);
+
 #endif /* UART_DRIVER_H_ */

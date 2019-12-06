@@ -134,6 +134,15 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_start(volatile UartRe
 		return UartReceiverStartTerm_Status_ReceivedAlreadyStartedError;
 	}
 
+	UartDriver_State_TypeDef uartDriverState;
+	if (UartDriver_getState(pSelf->pUartDriver, &uartDriverState) != UartDriver_Status_OK){
+		return UartReceiverStartTerm_Status_UartDriverError;
+	}
+
+	if (uartDriverState != UartDriver_State_Receiving){
+		return UartReceiverStartTerm_Status_UartDriverNotStartedError;
+	}
+
 	pSelf->state	= UartReceiverStartTerm_State_Receiving;
 
 	return UartReceiverStartTerm_Status_OK;
