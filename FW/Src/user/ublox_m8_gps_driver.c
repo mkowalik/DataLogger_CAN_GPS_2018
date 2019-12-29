@@ -162,7 +162,7 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 	HAL_Delay(GPS_DEVICE_START_TIME_MS);
 
 	if (ret == GPSDriver_Status_OK){
-		ret = _GPSDriver_sendUbxCfgRateUTCCommand(pSelf, frequency);
+//		ret = _GPSDriver_sendUbxCfgRateUTCCommand(pSelf, frequency);
 	}
 
 	if (ret == GPSDriver_Status_OK){
@@ -249,10 +249,10 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile Ublox8MGPSDriver_TypeD
 		return GPSDriver_Status_NotRunningError;
 	}
 
-	GPSDriver_Status_TypeDef		ret						= GPSDriver_Status_OK;;
-	_GPSDriver_NMEASentenceString	nmeaRxSentenceString;
+	GPSDriver_Status_TypeDef ret						= GPSDriver_Status_OK;;
+	_GPSDriver_NMEASentenceString nmeaRxSentenceString;
 	memset((void*)&nmeaRxSentenceString, 0, sizeof(_GPSDriver_NMEASentenceString));
-	UartReceiverStartTerm_Status_TypeDef		retUR					= UartReceiverStartTerm_Status_OK;
+	UartReceiverStartTerm_Status_TypeDef retUR			= UartReceiverStartTerm_Status_OK;
 
 	while (1) {
 
@@ -310,7 +310,13 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile Ublox8MGPSDriver_TypeD
 					ABS_DIFF(pSelf->gpgsaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
 					ABS_DIFF(pSelf->gpggaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY){
 
-				*pRetGPSData = pSelf->partialGPSData;
+				pSelf->partialGPSData.msTime		= MIN(pSelf->gpggaPartialSegmentTimestamp, MIN(pSelf->gpgsaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp));
+
+				*pRetGPSData 						= pSelf->partialGPSData;
+
+				pSelf->gpggaPartialSegmentReceived	= false;
+				pSelf->gpgsaPartialSegmentReceived	= false;
+				pSelf->gprmcPartialSegmentReceived	= false;
 
 				return GPSDriver_Status_OK;
 			}

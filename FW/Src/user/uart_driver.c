@@ -541,7 +541,7 @@ static UartDriver_Status_TypeDef _UartDriver_receivedBytesCallback(volatile Uart
 #endif
 
 	uint32_t timestamp;
-//	data.dataByte = pSelf->actuallyReceivingByte;
+
 	if (MSTimerDriver_getMSTime(pSelf->pMsTimerHandler, &timestamp) != MSTimerDriver_Status_OK){
 		return UartDriver_Status_MSTimerError;
 	}

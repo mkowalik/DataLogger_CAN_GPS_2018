@@ -13,7 +13,7 @@
 #define	CAR_DEF_GRAZYNA_TPS			3
 #define	CAR_DEF_LEM_WHEEL_MODULE	4
 
-#define CAR_DEF						CAR_DEF_LEM_WHEEL_MODULE
+#define CAR_DEF						CAR_DEF_GRAZYNA
 
 #include <user/data_saver.h>
 #include <user/ms_timer_driver.h>

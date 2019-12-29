@@ -265,11 +265,13 @@ int main(void)
 	  }
 	  if ((retUartRcv2 = UartReceiverStartLength_init(&uartGpsUBXReceiverTerm, &uartGpsDriver)) != UartReceiverStartLength_Status_OK){
 		  Warning_Handler("UartReceiver initialization problem.");
-		  retGps = GPSDriver_Status_UartReceiverStartTermError;
+		  retGps = GPSDriver_Status_UartReceiverStartLengthError;
 		  break;
 	  }
-	  if ((retUartDrv == UartDriver_Status_OK) && ((retUartDrv = UartDriver_startReceiver(&uartGpsDriver) != UartDriver_Status_OK))){
-		  return GPSDriver_Status_UartDriverError;
+	  if ((retUartDrv = UartDriver_startReceiver(&uartGpsDriver)) != UartDriver_Status_OK){
+		  Warning_Handler("UartDriver startReceiver problem.");
+		  retGps = GPSDriver_Status_UartDriverError;
+		  break;
 	  }
 	  if ((retGps = GPSDriver_init(&gpsDriver, &uartGpsDriver, &uartGpsNMEAReceiverTerm, &uartGpsUBXReceiverTerm, &msTimerDriver, &gpsResetDriver, pConfig->gpsFrequency)) != GPSDriver_Status_OK){
 		  Warning_Handler("GPS initialization problem.");
