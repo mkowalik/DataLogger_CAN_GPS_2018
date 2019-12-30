@@ -27,7 +27,8 @@ SOURCES += \
         main.cpp \
         widget.cpp \
         EUSB2CAN_Class.cpp \
-        canspeedwidget.cpp
+        canspeedwidget.cpp \
+    senderthread.cpp
 
 HEADERS += \
         widget.h \
@@ -35,7 +36,8 @@ HEADERS += \
         ui_widget.h \
         EUSB2CAN_Class.h \
         EUSB2CAN_DLL.h \
-        canspeedwidget.h
+        canspeedwidget.h \
+    senderthread.h
 
 FORMS += \
         widget.ui \

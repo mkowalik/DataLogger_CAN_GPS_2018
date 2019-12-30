@@ -2,79 +2,58 @@
 #include "EUSB2CAN_Class.h"
 #include <iostream>
 
-EUSB2CAN_Class::EUSB2CAN_Class()
+EUSB2CAN_Class::EUSB2CAN_Class() :
+    lib("C:\\Users\\kowal\\Desktop\\AGHRacingRepos\\GitHub_DataLogger_CAN_GPS\\CANBusMock_USB2CAN\\CANBusMock_USB2CAN\\EUSB2CAN.dll"),
+    init_fp{nullptr},
+    uninit_fp{nullptr},
+    createLogFile_fp{nullptr},
+    getVersion_fp{nullptr},
+    setSpeed_fp{nullptr},
+    setParameter_fp{nullptr},
+    getParameter_fp{nullptr},
+    flush_fp{nullptr},
+    read_fp{nullptr},
+    write_fp{nullptr},
+    waitWriteFinish_fp{nullptr},
+    startBootloader_fp{nullptr},
+    updateSoftware_fp{nullptr},
+    was_loaded{false}
 {
-	was_loaded = false;
 
-	clearPointers();
-
-	if(!was_loaded) {
-        dll_handle = LoadLibrary(L"EUSB2CAN");
-        if (dll_handle == NULL) {
+    if(!was_loaded) {
+        if (!lib.load()){
             std::cout << "Couldn't load DLL lib. Error code: " << GetLastError() << std::endl;
             return;
         }
 	}
 
-	init_fp = (Init_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_initialize");
-	uninit_fp = (Uninit_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_uninitialize");
+    init_fp = (Init_fp_type)lib.resolve("EUSB2CAN_initialize");
+    uninit_fp = (Uninit_fp_type)lib.resolve("EUSB2CAN_uninitialize");
 	
-	createLogFile_fp = (CreateLogFile_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_createLogFile");
+    createLogFile_fp = (CreateLogFile_fp_type)lib.resolve("EUSB2CAN_createLogFile");
 	
-	getVersion_fp = (GetVersion_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_getVersion");
+    getVersion_fp = (GetVersion_fp_type)lib.resolve("EUSB2CAN_getVersion");
 	
-	setSpeed_fp = (SetSpeed_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_setSpeed");
-	setParameter_fp = (SetParameter_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_setParameter");
-	getParameter_fp = (GetParameter_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_getParameter");
+    setSpeed_fp = (SetSpeed_fp_type)lib.resolve("EUSB2CAN_setSpeed");
+    setParameter_fp = (SetParameter_fp_type)lib.resolve("EUSB2CAN_setParameter");
+    getParameter_fp = (GetParameter_fp_type)lib.resolve("EUSB2CAN_getParameter");
 	
-	flush_fp = (Flush_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_flush");
+    flush_fp = (Flush_fp_type)lib.resolve("EUSB2CAN_flush");
 	
-	read_fp = (Read_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_read");
-	write_fp = (Write_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_write");
-	waitWriteFinish_fp = (WaitWriteFinish_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_waitWriteFinish");
+    read_fp = (Read_fp_type)lib.resolve("EUSB2CAN_read");
+    write_fp = (Write_fp_type)lib.resolve("EUSB2CAN_write");
+    waitWriteFinish_fp = (WaitWriteFinish_fp_type)lib.resolve("EUSB2CAN_waitWriteFinish");
 
-	startBootloader_fp = (StartBootloader_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_startBootloader");
-	updateSoftware_fp = (UpdateSoftware_fp_type)GetProcAddress(dll_handle, "EUSB2CAN_updateSoftware");
+    startBootloader_fp = (StartBootloader_fp_type)lib.resolve("EUSB2CAN_startBootloader");
+    updateSoftware_fp = (UpdateSoftware_fp_type)lib.resolve("EUSB2CAN_updateSoftware");
 
 	was_loaded = init_fp && uninit_fp && createLogFile_fp && getVersion_fp && setSpeed_fp && setParameter_fp && getParameter_fp && flush_fp && read_fp && write_fp && waitWriteFinish_fp && startBootloader_fp && updateSoftware_fp;
 }
 
 EUSB2CAN_Class::~EUSB2CAN_Class()
 {
-	uninitialize();
-
-	if (dll_handle != NULL) {
-		FreeLibrary(dll_handle);
-		dll_handle = NULL;
-	}
-	
-	clearPointers();
-
-	was_loaded = false;
-}
-
-
-void EUSB2CAN_Class::clearPointers()
-{
-	init_fp = nullptr;
-	uninit_fp = nullptr;
-
-	createLogFile_fp = nullptr;
-
-	getVersion_fp = nullptr;
-	
-	setSpeed_fp = nullptr;			 
-	setParameter_fp = nullptr;
-	getParameter_fp = nullptr;
-	
-	flush_fp = nullptr;
-	
-	read_fp = nullptr;
-	write_fp = nullptr;
-	waitWriteFinish_fp = nullptr;
-
-	startBootloader_fp = nullptr;
-	updateSoftware_fp = nullptr;
+    uninitialize();
+    lib.unload();
 }
 
 EUSB2CAN_Status EUSB2CAN_Class::initialize(EUSB2CAN_CanSpeed speed)
@@ -87,10 +66,10 @@ EUSB2CAN_Status EUSB2CAN_Class::initialize(EUSB2CAN_CanSpeed speed)
 
 EUSB2CAN_Status EUSB2CAN_Class::uninitialize(void)
 {
-	if(!was_loaded)
+    if(!was_loaded)
 		return EUSB2CAN_STAT_DLL_LOAD_ERROR;
 
-	return (EUSB2CAN_Status)uninit_fp();
+    return (EUSB2CAN_Status)uninit_fp();
 }
 
 EUSB2CAN_Status EUSB2CAN_Class::createLogFile(const wchar_t *path)

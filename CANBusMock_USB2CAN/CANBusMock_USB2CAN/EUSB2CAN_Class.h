@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QLibrary>
+
 #include "EUSB2CAN_DLL.h"
 
 // Function pointers
@@ -29,8 +31,8 @@ typedef EUSB2CAN_Status (*UpdateSoftware_fp_type)(const WCHAR *filepath, EUSB2CA
 class EUSB2CAN_Class
 {
     private:
-		//DLL
-		HINSTANCE dll_handle;
+        //DLL
+        QLibrary lib;
 
 		//Function pointers
 		Init_fp_type init_fp;
@@ -54,9 +56,7 @@ class EUSB2CAN_Class
 		StartBootloader_fp_type startBootloader_fp;
 		UpdateSoftware_fp_type updateSoftware_fp;
 
-		bool was_loaded;
-
-		void clearPointers();
+        bool was_loaded;
 
     public:       
 		// Class constructor
