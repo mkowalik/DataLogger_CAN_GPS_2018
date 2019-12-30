@@ -204,18 +204,17 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_pullLastSentence(
 
 		//< ----- start sign must be on the front of the queue thanks to the part above. Checking if whole prefix matches pattern ----- >//
 		uint16_t i;
-		for (i = 0; i<pSelf->startPatternLength[i]; i++){
-			UartReceiverStartLength_FIFOElem_TypeDef fifoElem;
+		for (i = 0; i<pSelf->startPatternLength[readerIt]; i++){
 			if (FIFOMultiread_elementValOnPosition(&pSelf->startLengthFIFOReaders[readerIt], i, &elemBuffer) != FIFOMultiread_Status_OK){
 				return UartReceiverStartLength_Status_FIFOError;
 			}
 
-			if (pSelf->startPattern[readerIt][i] != fifoElem.dataByte){
+			if (pSelf->startPattern[readerIt][i] != elemBuffer.dataByte){
 				break;
 			}
 		}
 
-		if (i == pSelf->startPatternLength[i]){
+		if (i == pSelf->startPatternLength[readerIt]){
 			foundSentence = true;
 			break;
 		} else {

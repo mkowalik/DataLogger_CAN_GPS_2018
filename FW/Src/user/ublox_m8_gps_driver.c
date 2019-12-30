@@ -52,9 +52,6 @@
 #define	GPS_UBX_CFG_RATE_ID						0x08U
 #define GPS_UBX_CFG_RATE_REQUEST_PAYLOAD_LENGTH	6U
 
-//#define GPS_UBX_NAV_CLASS						0x05U
-//#define GPS_UBX_NAV_TIMEUTC_ID				0x21U
-
 static const uint8_t ubxCfgRateACKAnswerPrefix[]	= {
 		GPS_UBX_SYNC_CHAR_1,
 		GPS_UBX_SYNC_CHAR_2,
@@ -162,7 +159,7 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 	HAL_Delay(GPS_DEVICE_START_TIME_MS);
 
 	if (ret == GPSDriver_Status_OK){
-//		ret = _GPSDriver_sendUbxCfgRateUTCCommand(pSelf, frequency);
+		ret = _GPSDriver_sendUbxCfgRateUTCCommand(pSelf, frequency);
 	}
 
 	if (ret == GPSDriver_Status_OK){
@@ -452,7 +449,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUBXCommandAndWaitForResponse(
 		return GPSDriver_Status_UartReceiverStartLengthError;
 	}
 
-	uint32_t	answerTimestamp;
+	uint32_t	answerTimestamp = 0;
 
 	ret = _GPSDriver_sendCommand(pSelf, pCommandBuffer, bufferSize);
 
@@ -469,6 +466,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUBXCommandAndWaitForResponse(
 		}
 		if (retUR == UartReceiverStartLength_Status_OK){
 			ret = GPSDriver_Status_OK;
+			break;
 		}
 
 		retUR = UartReceiverStartLength_pullLastSentence(pSelf->pUartUBXReceiverHandler, nakAnswerReaderIterator, pAnswerBuffer, &answerTimestamp);
@@ -477,6 +475,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUBXCommandAndWaitForResponse(
 		}
 		if (retUR == UartReceiverStartLength_Status_OK){
 			ret = GPSDriver_Status_NAKAnswer;
+			break;
 		}
 
 		uint32_t actualTimestamp;
@@ -489,7 +488,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUBXCommandAndWaitForResponse(
 	}
 
 	if (UartReceiverStartLength_stop(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
-		ret = GPSDriver_Status_UartReceiverStartLengthError;
+		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartLengthError : ret;
 	}
 
 	return ret;

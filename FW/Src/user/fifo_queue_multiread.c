@@ -273,13 +273,9 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_elementValOnPosition(volatile FIFOMul
 
 	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
 
-	if (FIFOMultiread_isEmpty(pSelf)){
-		ret = FIFOMultiread_Status_Empty;
-	} else {
-		volatile void* pFrom = pSelf->pFifoHandler->pTabPtr + (((pSelf->pFifoHandler->headIndex[pSelf->readerId] + positionIndex) % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
-		for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
-			*((uint8_t*)(pRetElement + i)) = *((uint8_t*)(pFrom + i));
-		}
+	volatile void* pFrom = pSelf->pFifoHandler->pTabPtr + (((pSelf->pFifoHandler->headIndex[pSelf->readerId] + positionIndex) % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
+	for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
+		*((uint8_t*)(pRetElement + i)) = *((uint8_t*)(pFrom + i));
 	}
 
 	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
