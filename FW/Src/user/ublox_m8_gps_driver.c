@@ -362,6 +362,9 @@ GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSe
 	return ret;
 }
 
+GPSDriver_Status_TypeDef GPSDriver_getFixType(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSFixType* pRetFixType){
+
+}
 //< ----- Private functions ----- >//
 
 static GPSDriver_Status_TypeDef _GPSDriver_sendCommand(volatile Ublox8MGPSDriver_TypeDef* pSelf, uint8_t* pCommandBuffer, uint16_t length){
