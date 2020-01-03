@@ -16,7 +16,7 @@ void CSVWriterStaticFreq::writeToCSV(const DataFileClass& dataFileClass){
     vector<SingleGPSFrameData*>::const_iterator nextGpsIt = gpsIt;
 
     map<const ConfigFrame*, const SingleCANFrameData*> actualCANFramesValues;
-    SingleGPSFrameData* actualGPSValue;
+    SingleGPSFrameData* actualGPSValue = nullptr;
 
     unsigned int actualMsTime = periodMs;
     unsigned int lastReadMsTime = 0;
