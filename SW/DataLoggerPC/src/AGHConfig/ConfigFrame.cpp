@@ -21,7 +21,7 @@ ConfigFrame::ConfigFrame (unsigned int id, unsigned int dlc, string moduleName) 
     }
 }
 
-ConfigFrame::ConfigFrame (ReadingClass& reader){
+ConfigFrame::ConfigFrame (ReadingClass& reader) : ConfigFrame(0, 0, "") {
     this->readFromBin(reader);
 }
 
@@ -116,6 +116,7 @@ void ConfigFrame::readFromBin(ReadingClass& reader){
 
     unsigned int iteratorDLC = 0;
 
+    this->setDLC(8); //temporary solution //TODO
     while(iteratorDLC < readDLC){
         ConfigSignal* pSignal = new ConfigSignal(this);
         pSignal->readFromBin(reader);

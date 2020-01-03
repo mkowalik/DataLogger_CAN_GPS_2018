@@ -10,6 +10,8 @@ FilesDownloadDialog::FilesDownloadDialog(QWidget *parent) :
     ui(new Ui::FilesDownloadDialog)
 {
     ui->setupUi(this);
+    ui->filesListWidget->clear();
+    ui->progressBar->setValue(0);
 }
 
 void FilesDownloadDialog::updateProgressBar(int progressBarValue){

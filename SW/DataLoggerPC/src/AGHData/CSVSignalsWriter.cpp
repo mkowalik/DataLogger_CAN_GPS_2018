@@ -82,13 +82,13 @@ void CSVSignalsWriter::writeSingleRow(unsigned int msTime, map<const ConfigFrame
         if (actualGPSValue != nullptr){
             switch(actualGPSValue->getFixType()){
             case SingleGPSFrameData::EnGPSFixType::Fix_NoFix:
-                writer.write_string("No fix;", false);
+                writer.write_string("No fix", false);
                 break;
             case SingleGPSFrameData::EnGPSFixType::Fix_2DFix:
-                writer.write_string("2D;", false);
+                writer.write_string("2D", false);
                 break;
             case SingleGPSFrameData::EnGPSFixType::Fix_3DFix:
-                writer.write_string("3D;", false);
+                writer.write_string("3D", false);
                 break;
             }
         }

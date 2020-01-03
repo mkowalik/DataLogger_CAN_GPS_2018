@@ -71,9 +71,9 @@ unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSi
         throw std::invalid_argument("Signal is not member of the frame.");
     }
 
-    unsigned int bitsLeft = pSignal->getLengthBits();
-    unsigned int bitsShiftRaw = pSignal->getStartBit() % 8;
-    unsigned int bitIt         = pSignal->getStartBit();
+    unsigned int bitsLeft       = pSignal->getLengthBits();
+    unsigned int bitsShiftRaw   = pSignal->getStartBit() % 8;
+    unsigned int bitIt          = pSignal->getStartBit();
     unsigned long long ret = 0;
 
     if (pSignal->getValueType().isBigEndianType()){
@@ -84,17 +84,16 @@ unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSi
                 nextByte = rawData[(bitIt/8)+1];
             }
             actualByte <<= bitsShiftRaw;
-            actualByte |= (nextByte >> (8u - bitsShiftRaw));
+            actualByte |= (nextByte >> (8U - bitsShiftRaw));
 
             if (bitsLeft % 8 != 0){
-                actualByte >>= (8u - (bitsLeft % 8));
-                actualByte &= (0xFF >> (8u - (bitsLeft % 8)));
+                actualByte >>= (8U - (bitsLeft % 8));
+                actualByte &= (0xFF >> (8U - (bitsLeft % 8)));
             }
-            unsigned long long shiftedVal = (static_cast<unsigned long long>(actualByte) << (bitsLeft - (((bitsLeft % 8u) == 0) ? 8u : (bitsLeft % 8u))) );
-            ret |= shiftedVal;
-            bitIt += ((bitsLeft % 8u) == 0) ? 8u : (bitsLeft % 8u);
-            bitsShiftRaw = (bitsShiftRaw + bitsLeft) % 8u;
-            bitsLeft -= ((bitsLeft % 8u) == 0) ? 8u : (bitsLeft % 8u);
+            ret |= (static_cast<unsigned long long>(actualByte) << (bitsLeft - (((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U))) );
+            bitIt += ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
+            bitsShiftRaw = (bitsShiftRaw + bitsLeft) % 8U;
+            bitsLeft -= ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
         }
     } else {
         while (bitsLeft > 0) {
@@ -104,15 +103,15 @@ unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSi
                 nextByte = rawData[(bitIt/8)+1];
             }
             actualByte <<= bitsShiftRaw;
-            actualByte |= (nextByte >> (8u - bitsShiftRaw));
+            actualByte |= (nextByte >> (8U - bitsShiftRaw));
 
             if (bitsLeft < 8){
-                actualByte >>= (8u - bitsLeft);
-                actualByte &= (0xFF >> (8u - bitsLeft));
+                actualByte >>= (8U - bitsLeft);
+                actualByte &= (0xFF >> (8U - bitsLeft));
             }
-            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - pSignal->getStartBit())/8) * 8u)); //Tu raczej blad
-            bitIt += min(8u, bitsLeft);
-            bitsLeft -= min(8u, bitsLeft);
+            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - pSignal->getStartBit())/8) * 8U)); //Tu raczej blad
+            bitIt += min(8U, bitsLeft);
+            bitsLeft -= min(8U, bitsLeft);
         }
     }
     return ret;

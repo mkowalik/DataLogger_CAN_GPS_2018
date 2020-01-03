@@ -139,7 +139,7 @@ void DownloadDataSDDialog::on_convertSelectedButton_clicked()
     }
 
     if (filesList.isEmpty()){
-        QMessageBox::warning(this, "Choose files to conver.", "List of files to copy/convert is empty. Choose files to proceed.");
+        QMessageBox::warning(this, "Choose files to convert.", "List of files to copy/convert is empty. Choose files to proceed.");
         return;
     }
 

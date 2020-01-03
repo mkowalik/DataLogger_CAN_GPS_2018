@@ -26,6 +26,11 @@ public:
         freq_5_Hz    = 4,
         freq_10_Hz   = 5
     };
+private:
+    static const int            ACTUAL_VERSION = 0;
+    static const int            ACTUAL_SUB_VERSION = 3;
+    static const EnCANBitrate   DEFAULT_CAN_BITRATE = EnCANBitrate::bitrate_500kbps;
+    static const EnGPSFrequency DEFAULT_GPS_FREQUENCY = EnGPSFrequency::freq_10_Hz;
 
 private:
     int                              version;
@@ -33,11 +38,6 @@ private:
     EnCANBitrate                     canBitrate;
     EnGPSFrequency                   gpsFrequency;
     map <unsigned int, ConfigFrame*> idToFrameMap;
-
-    static const int            ACTUAL_VERSION = 0;
-    static const int            ACTUAL_SUB_VERSION = 3;
-    static const EnCANBitrate   DEFAULT_CAN_BITRATE = EnCANBitrate::bitrate_500kbps;
-    static const EnGPSFrequency DEFAULT_GPS_FREQUENCY = EnGPSFrequency::freq_10_Hz;
 public:
 
     class iterator : public std::iterator<std::forward_iterator_tag, ConfigFrame> {
