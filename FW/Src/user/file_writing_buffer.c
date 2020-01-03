@@ -88,10 +88,10 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer
 	}
 
 	FileWritingBuffer_Status_TypeDef status;
-	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value     ) & 0xFF)) != FileWritingBuffer_Status_OK){
+	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value     ) & 0xFFU)) != FileWritingBuffer_Status_OK){
 		return status;
 	}
-	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value >> 8) & 0xFF)) != FileWritingBuffer_Status_OK){
+	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value >> 8) & 0xFFU)) != FileWritingBuffer_Status_OK){
 		return status;
 	}
 
@@ -105,21 +105,33 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer
 	}
 
 	FileWritingBuffer_Status_TypeDef status;
-	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value      ) & 0xFF)) != FileWritingBuffer_Status_OK){
+	if ((status = FileWritingBuffer_writeUInt16(pSelf, (value      ) & 0xFFFFU)) != FileWritingBuffer_Status_OK){
 		return status;
 	}
-	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value >> 8 ) & 0xFF)) != FileWritingBuffer_Status_OK){
-		return status;
-	}
-	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value >> 16) & 0xFF)) != FileWritingBuffer_Status_OK){
-		return status;
-	}
-	if ((status = FileWritingBuffer_writeUInt8(pSelf, (value >> 24) & 0xFF)) != FileWritingBuffer_Status_OK){
+	if ((status = FileWritingBuffer_writeUInt16(pSelf, (value >> 16) & 0xFFFFU)) != FileWritingBuffer_Status_OK){
 		return status;
 	}
 
 	return FileWritingBuffer_Status_OK;
 }
+
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt64(FileWritingBuffer_TypeDef* pSelf, uint64_t value){
+
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
+		return FileWritingBuffer_Status_UnInitializedError;
+	}
+
+	FileWritingBuffer_Status_TypeDef status;
+	if ((status = FileWritingBuffer_writeUInt32(pSelf, (value      ) & 0xFFFFFFFFU)) != FileWritingBuffer_Status_OK){
+		return status;
+	}
+	if ((status = FileWritingBuffer_writeUInt32(pSelf, (value >> 32) & 0xFFFFFFFFU)) != FileWritingBuffer_Status_OK){
+		return status;
+	}
+
+	return FileWritingBuffer_Status_OK;
+}
+
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value){
 

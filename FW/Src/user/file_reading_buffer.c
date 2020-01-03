@@ -88,7 +88,59 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt16(FileReadingBuffer_
 		return status;
 	}
 
-	*pReturnValue |= (tempValue << 8);
+	*pReturnValue |= (((uint16_t)tempValue) << 8);
+
+	return FileReadingBuffer_Status_OK;
+}
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt32(FileReadingBuffer_TypeDef* pSelf, uint32_t* pReturnValue){
+
+	if (pSelf->state != FileReadingBuffer_State_Initialized){
+		return FileReadingBuffer_Status_UnInitializedError;
+	}
+
+	uint16_t	tempValue = 0;
+	FileReadingBuffer_Status_TypeDef status;
+
+	*pReturnValue = 0;
+
+	if ((status = FileReadingBuffer_readUInt16(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= tempValue;
+
+	if ((status = FileReadingBuffer_readUInt16(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= (((uint32_t)tempValue) << 16);
+
+	return FileReadingBuffer_Status_OK;
+}
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt64(FileReadingBuffer_TypeDef* pSelf, uint64_t* pReturnValue){
+
+	if (pSelf->state != FileReadingBuffer_State_Initialized){
+		return FileReadingBuffer_Status_UnInitializedError;
+	}
+
+	uint32_t	tempValue = 0;
+	FileReadingBuffer_Status_TypeDef status;
+
+	*pReturnValue = 0;
+
+	if ((status = FileReadingBuffer_readUInt32(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= tempValue;
+
+	if ((status = FileReadingBuffer_readUInt32(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= (((uint64_t)tempValue) << 32);
 
 	return FileReadingBuffer_Status_OK;
 }

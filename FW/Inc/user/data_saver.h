@@ -19,14 +19,10 @@
 
 #define MEMORY_MSG_QUEUE_SIZE	128
 
-#define	LOG_FILE_VERSION	0
-#define	LOG_FILE_SUBVERSION	3
-
-#define	LOG_FILE_PREFIX				"grazyna"
 #define	LOG_FILE_EXTENSION			"aghlog"
 #define	LOG_FILENAME_MAX_LENGTH		50
 
-#define	GPS_DATA_ID			0x800
+#define	GPS_DATA_ID					0x800
 
 
 typedef enum {
@@ -40,7 +36,7 @@ typedef struct {
 	FileSystemWrapper_File_TypeDef	sDataFile;
 	FileWritingBuffer_TypeDef		sWritingBuffer;
 
-	Config_TypeDef*					pConfig;
+	ConfigDataManager_TypeDef*		pConfigManager;
 
 	DataSaver_State_TypeDef			state;
 } DataSaver_TypeDef;
@@ -53,13 +49,15 @@ typedef enum {
 	DataSaver_Status_UnInitializedError,
 	DataSaver_Status_AlreadyOpenedFileError,
 	DataSaver_Status_WrongNameError,
+	DataSaver_Status_ConfigError,
+	DataSaver_Status_NullPointerError,
 	DataSaver_Status_Error
 } DataSaver_Status_TypeDef;
 
-DataSaver_Status_TypeDef DataSaver_init			(DataSaver_TypeDef* pSelf, Config_TypeDef* pConfig, FileSystemWrapper_TypeDef* pFileSystemHandler);
-DataSaver_Status_TypeDef DataSaver_startLogging	(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
-DataSaver_Status_TypeDef DataSaver_stopLogging	(DataSaver_TypeDef* pSelf);
-DataSaver_Status_TypeDef DataSaver_writeCANData	(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
-DataSaver_Status_TypeDef DataSaver_writeGPSData	(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_init				(DataSaver_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, FileSystemWrapper_TypeDef* pFileSystemHandler);
+DataSaver_Status_TypeDef DataSaver_startAGHLogFile	(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
+DataSaver_Status_TypeDef DataSaver_endAGHLogFile	(DataSaver_TypeDef* pSelf);
+DataSaver_Status_TypeDef DataSaver_writeCANData		(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_writeGPSData		(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData);
 
 #endif /* DATA_SAVER_H_ */

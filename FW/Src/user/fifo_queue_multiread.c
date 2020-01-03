@@ -112,9 +112,9 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDe
 		return FIFOMultiread_Status_Full;
 	}
 
-	volatile void* pTo = pSelf->pTabPtr + ((pSelf->tailIndex % pSelf->queueLength) * pSelf->elementSize);
+	volatile void* pTo = ((uint8_t*)pSelf->pTabPtr) + ((pSelf->tailIndex % pSelf->queueLength) * pSelf->elementSize);
 	for (uint16_t i=0; i<pSelf->elementSize; i++){
-		*((uint8_t*)(pTo + i)) = *((uint8_t*)(pElement + i));
+		*(((uint8_t*)pTo) + i) = *(((uint8_t*)pElement) + i);
 	}
 	pSelf->tailIndex++;
 
@@ -207,9 +207,9 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_dequeue(volatile FIFOMultireadReader_
 			ret = FIFOMultiread_Status_Empty;
 		} else {
 
-			volatile void* pFrom = pSelf->pFifoHandler->pTabPtr + ((pSelf->pFifoHandler->headIndex[pSelf->readerId] % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
+			volatile void* pFrom = ((uint8_t*)pSelf->pFifoHandler->pTabPtr) + ((pSelf->pFifoHandler->headIndex[pSelf->readerId] % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
 			for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
-				*((uint8_t*)(pRetElement + i)) = *((uint8_t*)(pFrom + i));
+				*(((uint8_t*)pRetElement) + i) = *(((uint8_t*)pFrom) + i);
 			}
 
 			pSelf->pFifoHandler->headIndex[pSelf->readerId]++;
@@ -241,9 +241,9 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_lastElement(volatile FIFOMultireadRea
 	if (FIFOMultiread_isEmpty(pSelf)){
 		ret = FIFOMultiread_Status_Empty;
 	} else {
-		volatile void* pFrom = pSelf->pFifoHandler->pTabPtr + ((pSelf->pFifoHandler->headIndex[pSelf->readerId] % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
+		volatile void* pFrom = ((uint8_t*)pSelf->pFifoHandler->pTabPtr) + ((pSelf->pFifoHandler->headIndex[pSelf->readerId] % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
 		for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
-			*((uint8_t*)(pRetElement + i)) = *((uint8_t*)(pFrom + i));
+			*(((uint8_t*)pRetElement) + i) = *(((uint8_t*)pFrom) + i);
 		}
 	}
 
@@ -273,9 +273,9 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_elementValOnPosition(volatile FIFOMul
 
 	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
 
-	volatile void* pFrom = pSelf->pFifoHandler->pTabPtr + (((pSelf->pFifoHandler->headIndex[pSelf->readerId] + positionIndex) % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
+	volatile void* pFrom = ((uint8_t*)pSelf->pFifoHandler->pTabPtr) + (((pSelf->pFifoHandler->headIndex[pSelf->readerId] + positionIndex) % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
 	for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
-		*((uint8_t*)(pRetElement + i)) = *((uint8_t*)(pFrom + i));
+		*(((uint8_t*)pRetElement) + i) = *(((uint8_t*)pFrom) + i);
 	}
 
 	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic

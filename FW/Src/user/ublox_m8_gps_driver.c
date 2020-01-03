@@ -89,7 +89,6 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUBXCommandAndWaitForResponse(
 		UartReceiverStartLength_ReaderIterator_TypeDef nakAnswerReaderIterator,
 		uint8_t* pAnswerBuffer);
 
-static GPSDriver_Status_TypeDef _GPSDriver_sendUbxNavTimeUTCCommand(volatile Ublox8MGPSDriver_TypeDef* pSelf);
 static GPSDriver_Status_TypeDef _GPSDriver_sendUbxCfgRateUTCCommand(volatile Ublox8MGPSDriver_TypeDef* pSelf, Config_GPSFrequency_TypeDef frequency);
 
 static GPSDriver_Status_TypeDef _GPSDriver_parseTime(uint8_t* pSentence, uint16_t length, volatile DateTime_TypeDef* pRetDateTime);

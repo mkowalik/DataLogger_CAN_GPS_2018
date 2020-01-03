@@ -9,6 +9,7 @@
 #define CAN_DATA_H_
 
 #include "stdint.h"
+#include "config.h"
 
 typedef struct {
 	uint16_t	ID;
@@ -16,5 +17,15 @@ typedef struct {
 	uint32_t	msTime;
 	uint8_t		Data[8];
 } CANData_TypeDef;
+
+typedef enum {
+	CANData_Status_OK = 0,
+	CANData_Status_SignalNotInGivenFrameError,
+	CANData_Status_NullPointerError,
+	CANData_Status_DataTooShortError,
+	CANData_Status_Error
+} CANData_Status_TypeDef;
+
+CANData_Status_TypeDef CANData_GetValueOfSignal(CANData_TypeDef* pData, ConfigSignal_TypeDef* pSignal, uint64_t* pRetSignalVal);
 
 #endif /* CAN_DATA_H_ */

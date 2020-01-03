@@ -226,6 +226,8 @@ RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint3
 				pDateTime->month += (seconds % 28);
 				seconds /= 28;
 			}
+		default:
+			return RTCDriver_Status_Error;
 	}
 
 	pDateTime->year += (seconds % 12);

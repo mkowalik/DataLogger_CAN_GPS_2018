@@ -47,7 +47,7 @@ FIFO_Status_TypeDef FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatil
 	pSelf->tailIndex = (pSelf->tailIndex + 1) % (pSelf->queueLength); // Notice incrementing tail value
 	pSelf->elementsNumber++;
 
-	memcpy(pSelf->pTabPtr + (pSelf->tailIndex * pSelf->elementSize), pElement, pSelf->elementSize);
+	memcpy((void*)(((uint8_t*)pSelf->pTabPtr) + (pSelf->tailIndex * pSelf->elementSize)), (void*)pElement, pSelf->elementSize);
 
 	return FIFO_Status_OK;
 
@@ -67,7 +67,7 @@ FIFO_Status_TypeDef FIFOQueue_dequeue(volatile FIFOQueue_TypeDef* pSelf, volatil
 		return FIFO_Status_Empty;
 	}
 
-	memcpy(pRetElement, pSelf->pTabPtr + (pSelf->headIndex * pSelf->elementSize), pSelf->elementSize);
+	memcpy((void*)pRetElement, ((uint8_t*)pSelf->pTabPtr) + (pSelf->headIndex * pSelf->elementSize), pSelf->elementSize);
 
 	pSelf->headIndex = (pSelf->headIndex + 1) % (pSelf->queueLength); // Notice incrementing head value
 	pSelf->elementsNumber--;
@@ -89,7 +89,7 @@ FIFO_Status_TypeDef FIFOQueue_lastElement(volatile FIFOQueue_TypeDef* pSelf, vol
 		return FIFO_Status_Empty;
 	}
 
-	memcpy(pRetElement, pSelf->pTabPtr + (pSelf->headIndex * pSelf->elementSize), pSelf->elementSize);
+	memcpy((void*)pRetElement, (void*)(((uint8_t*)pSelf->pTabPtr) + (pSelf->headIndex * pSelf->elementSize)), pSelf->elementSize);
 
 	pSelf->headIndex = (pSelf->headIndex + 1) % (pSelf->queueLength); // Notice incrementing head value
 	pSelf->elementsNumber--;

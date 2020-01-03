@@ -35,7 +35,6 @@ typedef struct {
 
 CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler);
 CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf);
-CANReceiver_Status_TypeDef CANReceiver_stop(CANReceiver_TypeDef* pSelf);
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg);
 
 #endif /* CAN_RECEIVER_DRIVER_H_ */

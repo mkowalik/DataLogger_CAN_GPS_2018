@@ -239,7 +239,7 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
+  if (DataSaver_init(&dataSaver, &configDataManager, &fileSystem) != DataSaver_Status_OK){
 	  Error_Handler();
   }
 

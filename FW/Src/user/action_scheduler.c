@@ -256,7 +256,7 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_logInitState(ActionSchedu
 		}
 	}
 
-	if (DataSaver_startLogging(pSelf->pDataSaver, dateTime) != DataSaver_Status_OK){
+	if (DataSaver_startAGHLogFile(pSelf->pDataSaver, dateTime) != DataSaver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
 
@@ -336,7 +336,7 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_logCloseState(ActionSched
 		}
 	}
 
-	if (DataSaver_stopLogging(pSelf->pDataSaver) != DataSaver_Status_OK){
+	if (DataSaver_endAGHLogFile(pSelf->pDataSaver) != DataSaver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
 	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){

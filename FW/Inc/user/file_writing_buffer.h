@@ -48,6 +48,7 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_flushingThread(FileWritingBuf
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt8(FileWritingBuffer_TypeDef* pSelf, uint8_t value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer_TypeDef* pSelf, uint16_t value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer_TypeDef* pSelf, uint32_t value);
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt64(FileWritingBuffer_TypeDef* pSelf, uint64_t value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, char* string, uint16_t length);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWritingBuffer_TypeDef* pSelf, FixedPoint value);

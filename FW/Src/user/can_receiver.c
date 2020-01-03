@@ -63,12 +63,6 @@ CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 	return CANReceiver_Status_OK;
 }
 
-CANReceiver_Status_TypeDef CANReceiver_stop(CANReceiver_TypeDef* pSelf){
-
-	//TODO to nigdzie nie jest wywolywane, a powinno byc
-}
-
-
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg){
 
 	FIFO_Status_TypeDef fifoStatus = FIFO_Status_OK;
@@ -80,7 +74,6 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 			return CANReceiver_Status_OK;
 		case FIFO_Status_Empty:
 			return CANReceiver_Status_Empty;
-		case FIFO_Status_Error:
 		default:
 			return CANReceiver_Status_Error;
 	}

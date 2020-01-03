@@ -33,14 +33,10 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_
 		return MSTimerDriver_Status_Error;
 	}
 
-	switch (pSelf->state){
-	case MSTimerDriver_State_Suspended:
+	if (pSelf->state == MSTimerDriver_State_Suspended){
 		pSelf->uiStartTickValue = pSelf->uiStartTickValue - (HAL_GetTick() - pSelf->uiStopTickValue);
-		break;
-	case MSTimerDriver_State_Idle:
-	default:
+	} else if (pSelf->state == MSTimerDriver_State_Idle){
 		pSelf->uiStartTickValue = HAL_GetTick();
-		break;
 	}
 
 	pSelf->state = MSTimerDriver_State_Running;
