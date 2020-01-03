@@ -89,6 +89,40 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document4]
+DocumentPath=..\dependencies\Libraries\Component library\agh_racing_2018.PcbLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=XENULXDK
+
+[Document5]
+DocumentPath=..\dependencies\Libraries\Component library\agh_racing_2018.SchLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=SFYEIDOT
+
+[Document6]
 DocumentPath=..\dependencies\Libraries\PadVia library\Pv Library.PvLib
 AnnotationEnabled=1
 AnnotateStartValue=1
