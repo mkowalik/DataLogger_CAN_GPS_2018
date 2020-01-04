@@ -4,6 +4,9 @@
 #include "AGHUtils/WritingClass.h"
 #include "AGHConfig/ConfigFrame.h"
 #include "ValueType.h"
+#include "AGHConfig/ConfigSignalNamedValue.h"
+
+#include <map>
 
 using namespace std;
 
@@ -13,17 +16,19 @@ class ConfigSignal : public WritableToBin, public ReadableFromBin {
 public:
     static constexpr unsigned int SIGNAL_MAX_LENGTH_BITS = 64;
 private:
-    ConfigFrame*    parentFrame;
+    ConfigFrame*                        parentFrame;
 
-	ValueType		valueType;
-    unsigned int    startBit;
-    unsigned int    lengthBits;
-    int             multiplier;
-    unsigned int    divider;
-	int				offset;
-    string			signalName;
-	string			unitName;
-    string			comment;
+    ValueType                           valueType;
+    unsigned int                        startBit;
+    unsigned int                        lengthBits;
+    int                                 multiplier;
+    unsigned int                        divider;
+    int                                 offset;
+    string                              signalName;
+    string                              unitName;
+    string                              comment;
+    map<int, ConfigSignalNamedValue>    channelNamedValues;
+
 public:
     ConfigSignal(ConfigFrame* parentFrame);
 
@@ -48,6 +53,10 @@ public:
     void    setSignallName(string);
     void    setUnitName(string);
     void    setComment(string);
+
+    bool                    hasNameForValue(int _channelValue);
+    ConfigSignalNamedValue& getNamedValue(int channelValue);
+    void                    addNamedValue(int _channelValue, ConfigSignalNamedValue _namedValue);
 
     void    writeToBin(WritingClass& writer) override;
     void    readFromBin(ReadingClass& reader) override;

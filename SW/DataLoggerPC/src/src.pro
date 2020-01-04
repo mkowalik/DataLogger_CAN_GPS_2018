@@ -47,7 +47,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     newchannel_dialog.cpp \
-    newframe_dialog.cpp
+    newframe_dialog.cpp \
+    AGHConfig/ConfigSignalNamedValue.cpp
 
 
 HEADERS += \
@@ -74,7 +75,8 @@ HEADERS += \
     downloadingprogress_dialog.h \
     mainwindow.h \
     newchannel_dialog.h \
-    newframe_dialog.h
+    newframe_dialog.h \
+    AGHConfig/ConfigSignalNamedValue.h
 
 FORMS += \
     downloaddatasd_dialog.ui \

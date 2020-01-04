@@ -408,7 +408,7 @@ void ConfigureLoggerSDDialog::prepareChannelWidget(const ConfigSignal& channel, 
 
     pWidget->setText(0, QString::fromStdString(channel.getSignalName()));
     pWidget->setText(1, QString::number(channel.getLengthBits()));
-    pWidget->setText(2, QString("0x") + QString::number(channel.getValueType().getHexValue(), 16));
+    pWidget->setText(2, QString("0x") + QString::number(channel.getValueType().getByteValue(), 16));
     pWidget->setText(3, QString::number(channel.getMultiplier()));
     pWidget->setText(4, QString::number(channel.getDivider()));
     pWidget->setText(5, QString::number(channel.getOffset()));

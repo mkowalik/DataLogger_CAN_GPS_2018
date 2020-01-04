@@ -130,6 +130,21 @@ void ConfigSignal::setComment(string aComment){
     this->comment = aComment;
 }
 
+bool ConfigSignal::hasNameForValue(int _channelValue){
+    return (channelNamedValues.find(_channelValue) != channelNamedValues.end());
+}
+
+ConfigSignalNamedValue& ConfigSignal::getNamedValue(int _channelValue){
+    if (channelNamedValues.find(_channelValue) == channelNamedValues.end()){
+        throw std::out_of_range("Name for given value does not exist");
+    }
+    return channelNamedValues.at(_channelValue);
+}
+
+void ConfigSignal::addNamedValue(int _channelValue, ConfigSignalNamedValue _namedValue){
+    channelNamedValues.insert(make_pair(_channelValue, _namedValue));
+}
+
 void ConfigSignal::writeToBin(WritingClass& writer){
 
     getValueType().writeToBin(writer);
