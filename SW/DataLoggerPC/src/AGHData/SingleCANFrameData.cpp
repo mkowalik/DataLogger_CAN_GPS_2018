@@ -4,7 +4,16 @@
 
 using namespace std;
 
-SingleCANFrameData::SingleCANFrameData(unsigned int msTime, const ConfigFrame* frameConfig) : msTime(msTime), rawData{0}, pConfigFrame(frameConfig) {
+SingleCANFrameData::SingleCANFrameData(unsigned int msTime, const ConfigFrame* frameConfig, ReadingClass &reader) : msTime{msTime}, rawPayloadData{}, pConfigFrame(frameConfig) {
+    readFromBin(reader);
+}
+
+SingleCANFrameData::SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, vector<unsigned char> rawPayloadData) : msTime{msTime}, rawPayloadData{}, pConfigFrame{pConfigFrame} {
+    setRawPayloadData(rawPayloadData);
+}
+
+SingleCANFrameData::SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, unsigned char* data, unsigned int dlc) : msTime{msTime}, rawPayloadData{}, pConfigFrame(pConfigFrame) {
+    setRawPayloadData(data, dlc);
 }
 
 const ConfigFrame* SingleCANFrameData::getFrameConfig() const {
@@ -16,72 +25,69 @@ unsigned int SingleCANFrameData::getMsTime() const {
 }
 
 unsigned int SingleCANFrameData::getFrameID() const {
-    return pConfigFrame->getID();
+    return pConfigFrame->getFrameID();
 }
 
 unsigned int SingleCANFrameData::getFrameDLC() const {
-    return pConfigFrame->getDLC();
+    return static_cast<unsigned int>(rawPayloadData.size());
 }
 
 unsigned char SingleCANFrameData::getRawDataValue(unsigned int byteIndex) const {
     if (byteIndex >= getFrameDLC()){
         throw invalid_argument("byteIndex exeeds frame DLC.");
     }
-    return rawData[byteIndex];
+    return rawPayloadData[byteIndex];
 }
 
 void SingleCANFrameData::readFromBin(ReadingClass &reader){
 
-    for (unsigned int i=0; i < pConfigFrame->getDLC(); i++){
-        rawData[i] = static_cast<unsigned char>(reader.reading_uint8());
+    unsigned int dlc = reader.reading_uint8();
+    if (dlc > ConfigFrame::MAX_DLC_VALUE){
+        throw std::invalid_argument("DLC of data exeeds max DLC of frame.");
     }
-
+    rawPayloadData.clear();
+    for (unsigned int i=0; i < dlc; i++){
+        rawPayloadData.emplace_back(static_cast<unsigned char>(reader.reading_uint8()));
+    }
 }
 
-
-void SingleCANFrameData::setRawData(unsigned char* data){
-
-    for (unsigned int i=0; i<this->getFrameDLC(); i++){
-        this->rawData[i] = data[i];
+void SingleCANFrameData::setRawPayloadData(vector<unsigned char> data){
+    if (data.size() > ConfigFrame::MAX_DLC_VALUE){
+        throw std::invalid_argument("DLC of data exeeds max DLC of frame.");
     }
-
+    rawPayloadData.swap(data);
 }
 
-/*bool SingleCANFrameData::equalIDAndPayload(const SingleCANFrameData& b) const {
-
-    if (this->getFrameID() != b.getFrameID()){
-        return false;
+void SingleCANFrameData::setRawPayloadData(unsigned char* data, unsigned int dlc){
+    if (dlc > ConfigFrame::MAX_DLC_VALUE){
+        throw std::invalid_argument("DLC of data exeeds max DLC of frame.");
     }
-
-    if (this->getFrameDLC() != b.getFrameDLC()){
-        return false;
+    rawPayloadData.clear();
+    for (unsigned int i=0; i<dlc; i++){
+        rawPayloadData.emplace_back(data[i]);
     }
-
-    for (unsigned int i = 0; i < this->getFrameDLC(); i++){
-        if (this->getRawDataValue(i) != b.getRawDataValue(i)){
-            return false;
-        }
-    }
-    return true;
-}*/
+}
 
 unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSignal) const {
 
-    if (!(pSignal->getParentFrame() == this->pConfigFrame)){
+    if (pSignal->getParentFrame() != this->pConfigFrame){
         throw std::invalid_argument("Signal is not member of the frame.");
+    }
+    if (pSignal->getStartBit() + pSignal->getLengthBits() > (getFrameDLC() * 8)){
+        throw std::invalid_argument("Signal with given position and length exeeds DLC of the frame.");
     }
 
     unsigned int bitsLeft       = pSignal->getLengthBits();
     unsigned int bitsShiftRaw   = pSignal->getStartBit() % 8;
     unsigned int bitIt          = pSignal->getStartBit();
-    unsigned long long ret = 0;
+    unsigned long long ret      = 0;
 
     if (pSignal->getValueType().isBigEndianType()){
         while (bitsLeft > 0) {
-            unsigned char actualByte = rawData[(bitIt/8)];
+            unsigned char actualByte = rawPayloadData[(bitIt/8)];
             unsigned char nextByte = 0;
-            if ((bitIt/8)+1 < pSignal->getParentFrame()->getDLC()) {
-                nextByte = rawData[(bitIt/8)+1];
+            if ((bitIt/8)+1 < getFrameDLC()) {
+                nextByte = rawPayloadData[(bitIt/8)+1];
             }
             actualByte <<= bitsShiftRaw;
             actualByte |= (nextByte >> (8U - bitsShiftRaw));
@@ -97,10 +103,10 @@ unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSi
         }
     } else {
         while (bitsLeft > 0) {
-            unsigned char actualByte = rawData[bitIt/8];
+            unsigned char actualByte = rawPayloadData[bitIt/8];
             unsigned char nextByte = 0;
-            if ((bitIt/8)+1 < pSignal->getParentFrame()->getDLC()) {
-                nextByte = rawData[(bitIt/8)+1];
+            if ((bitIt/8)+1 < getFrameDLC()) {
+                nextByte = rawPayloadData[(bitIt/8)+1];
             }
             actualByte <<= bitsShiftRaw;
             actualByte |= (nextByte >> (8U - bitsShiftRaw));
@@ -109,7 +115,7 @@ unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSi
                 actualByte >>= (8U - bitsLeft);
                 actualByte &= (0xFF >> (8U - bitsLeft));
             }
-            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - pSignal->getStartBit())/8) * 8U)); //Tu raczej blad
+            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - pSignal->getStartBit())/8) * 8U));
             bitIt += min(8U, bitsLeft);
             bitsLeft -= min(8U, bitsLeft);
         }

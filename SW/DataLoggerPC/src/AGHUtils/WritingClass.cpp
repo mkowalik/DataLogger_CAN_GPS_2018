@@ -28,6 +28,11 @@ void WritingClass::write_uint32(unsigned int aValue, RawDataParser::EndianessMod
     dataParser.write_unsigned_int(aValue, reinterpret_cast<unsigned char*>(buffer), 4, endianessMode);
     fileStream.write(buffer, 4);
 }
+void WritingClass::write_uint64(unsigned long long aValue, RawDataParser::EndianessMode endianessMode){
+    clear_buffer(8);
+    dataParser.write_unsigned_long_long(aValue, reinterpret_cast<unsigned char*>(buffer), 8, endianessMode);
+    fileStream.write(buffer, 4);
+}
 
 void WritingClass::write_int16(int aValue, RawDataParser::EndianessMode endianessMode){
     clear_buffer(4);

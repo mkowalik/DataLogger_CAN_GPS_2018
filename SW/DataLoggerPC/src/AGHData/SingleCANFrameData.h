@@ -13,12 +13,14 @@ class SingleCANFrameData : public ReadableFromBin {
 private:
 
     unsigned int            msTime;
-    unsigned char           rawData[ConfigFrame::MAX_FRAME_BYTES_LENGTH];
+    vector<unsigned char>   rawPayloadData;
 
     const ConfigFrame*      pConfigFrame;
 
 public:
-    SingleCANFrameData(unsigned int msTime, const ConfigFrame* frame);
+    SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, ReadingClass &reader);
+    SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, vector<unsigned char> rawPayloadData);
+    SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, unsigned char* data, unsigned int dlc);
 
     const ConfigFrame*  getFrameConfig() const;
 
@@ -29,9 +31,8 @@ public:
 
     virtual void        readFromBin(ReadingClass& reader) override;
 
-    void                setRawData(unsigned char* data);
-
-//    bool                equalIDAndPayload(const SingleCANFrameData& b) const;
+    void                setRawPayloadData(vector<unsigned char> data);
+    void                setRawPayloadData(unsigned char* data, unsigned int dlc);
 
     unsigned long long  getSignalValueRaw(const ConfigSignal* pChannel) const;
     double              getSignalValueTransformed(const ConfigSignal* pChannel) const;

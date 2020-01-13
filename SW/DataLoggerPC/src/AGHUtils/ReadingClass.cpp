@@ -20,6 +20,14 @@ ReadingClass::ReadingClass(string nameOfFile, RawDataParser& dataParser) : dataP
     fileSize = (end-begin);
 }
 
+unsigned long long ReadingClass::reading_uint64(RawDataParser::EndianessMode endianessMode){
+    if (bytes_left() < 8){
+        throw out_of_range("Less than 4 bytes left while reading uint32.");
+    }
+    data.read(reinterpret_cast<char*>(buffer), 8);
+    return dataParser.interpret_unsigned_long_long(buffer, 8, endianessMode);
+}
+
 unsigned int ReadingClass::reading_uint32(RawDataParser::EndianessMode endianessMode){
     if (bytes_left() < 4){
         throw out_of_range("Less than 4 bytes left while reading uint32.");

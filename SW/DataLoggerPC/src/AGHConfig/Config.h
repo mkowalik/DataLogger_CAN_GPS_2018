@@ -1,22 +1,25 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#include "AGHUtils/ReadingClass.h"
-#include "AGHUtils/WritingClass.h"
-#include "ConfigFrame.h"
-#include "ConfigSignal.h"
+
 #include <vector>
 #include <map>
 
-using namespace std;
+#include "AGHUtils/ReadingClass.h"
+#include "AGHUtils/WritingClass.h"
+
+#include "AGHConfig/ConfigFrame.h"
+#include "AGHConfig/ConfigSignal.h"
+#include "AGHConfig/ConfigTrigger.h"
 
 class Config : public WritableToBin, public ReadableFromBin {
+    friend class ConfigFrame;
 public:
     enum class EnCANBitrate {
-        bitrate_50kbps = 50,
+        bitrate_50kbps  = 50,
         bitrate_125kbps = 125,
         bitrate_250kbps = 250,
         bitrate_500kbps = 500,
-        bitrate_1Mbps = 1000,
+        bitrate_1Mbps   = 1000,
     };
     enum class EnGPSFrequency {
         freq_GPS_OFF = 0,
@@ -26,81 +29,108 @@ public:
         freq_5_Hz    = 4,
         freq_10_Hz   = 5
     };
+    static constexpr unsigned int   ACTUAL_VERSION          = 0;
+    static constexpr unsigned int   ACTUAL_SUB_VERSION      = 4;
+
+    using FramesIterator        = vector<ConfigFrame*>::iterator;
+    using ConstFramesIterator   = vector<ConfigFrame*>::const_iterator;
+
+    using TriggersIterator      = vector<ConfigTrigger*>::iterator;
+    using ConstTriggersIterator = vector<ConfigTrigger*>::const_iterator;
 private:
-    static const int            ACTUAL_VERSION = 0;
-    static const int            ACTUAL_SUB_VERSION = 3;
-    static const EnCANBitrate   DEFAULT_CAN_BITRATE = EnCANBitrate::bitrate_500kbps;
-    static const EnGPSFrequency DEFAULT_GPS_FREQUENCY = EnGPSFrequency::freq_10_Hz;
+    static constexpr EnCANBitrate   DEFAULT_CAN_BITRATE     = EnCANBitrate::bitrate_500kbps;
+    static constexpr EnGPSFrequency DEFAULT_GPS_FREQUENCY   = EnGPSFrequency::freq_10_Hz;
+    static constexpr unsigned int   DEFAULT_RTC_CONFIGURATION_FRAME_ID = 0x7FF;
 
-private:
-    int                              version;
-    int                              subVersion;
-    EnCANBitrate                     canBitrate;
-    EnGPSFrequency                   gpsFrequency;
-    map <unsigned int, ConfigFrame*> idToFrameMap;
-public:
+    static constexpr int            START_CONFIG_TRIGGERS_MAX_NUMBER    = 5;
+    static constexpr int            STOP_CONFIG_TRIGGERS_MAX_NUMBER     = 5;
 
-    class iterator : public std::iterator<std::forward_iterator_tag, ConfigFrame> {
-        friend class Config;
-    private:
-       map <unsigned int, ConfigFrame*>::iterator innerIterator;
-       Config* pConfig;
-    public:
-       iterator(map <unsigned int, ConfigFrame*>::iterator it, Config* pConfig);
-       bool operator==(const Config::iterator& second) const;
-       bool operator!=(const Config::iterator& second) const;
-       ConfigFrame* operator*();
-       ConfigFrame* operator->();
-       iterator& operator++();
-       iterator operator++(int);
-    };
-
-    class const_iterator : public std::iterator<std::forward_iterator_tag, const ConfigFrame> {
-        friend class Config;
-    private:
-       map <unsigned int, ConfigFrame*>::const_iterator innerIterator;
-       const Config* pConfig;
-    public:
-       const_iterator(map <unsigned int, ConfigFrame*>::const_iterator it, const Config* pConfig);
-       bool operator==(const Config::const_iterator& second) const;
-       bool operator!=(const Config::const_iterator& second) const;
-       const ConfigFrame* operator*();
-       const ConfigFrame* operator->();
-       const_iterator& operator++();
-       const_iterator operator++(int);
-    };
-
-    static int getActualVersion();
-    static int getActualSubVersion();
+    static constexpr unsigned int   CONFIG_NAME_LENGTH = 20;
 
     Config();
 
-    void            setVersion(int sVersion);
-    void            setSubVersion(int sSubVersion);
-    void            setCANBitrate(EnCANBitrate bitrate);
-    void            setGPSFrequency(EnGPSFrequency frequency);
+    void                                        addFrame(ConfigFrame *pFrame);
+    std::vector<ConfigFrame*>::const_iterator   lowerBoundFrameConstIterator(unsigned int frameID) const;
+    std::vector<ConfigFrame*>::iterator         lowerBoundFrameIterator(unsigned int frameID);
+    bool                                        framesEmpty() const;
+    void                                        sortFramesCallback();
 
-    int             getVersion() const;
-    int             getSubVersion() const;
-    EnCANBitrate    getCANBitrate() const;
-    EnGPSFrequency  getGPSFrequency() const;
-    int             getNumOfFrames() const;
+    unsigned int                version;
+    unsigned int                subVersion;
+    std::string                 logFileName;
+    EnCANBitrate                canBitrate;
+    EnGPSFrequency              gpsFrequency;
+    unsigned int                rtcConfigurationFrameID;
 
-    ConfigFrame*    getFrameById(unsigned int id);
+    std::vector <ConfigFrame*>  framesVector;
 
-    iterator        begin();
-    iterator        end();
-    const_iterator  cbegin() const;
-    const_iterator  cend() const;
+    std::vector<ConfigTrigger*> startConfigTriggers;
+    std::vector<ConfigTrigger*> stopConfigTriggers;
 
-    bool            hasFrameWithId(unsigned int id) const;
+public:
 
-    void            addFrame(ConfigFrame* aFrame);
-    void            removeFrameById(unsigned int id);
-    void            reset();
+    Config(std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID);
+    Config(unsigned int version, unsigned int subVersion, std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID);
+    Config(ReadingClass& reader);
 
-    void            writeToBin(WritingClass& writer) override;
-    void            readFromBin(ReadingClass& reader) override;
+    //<----- Access to preambule data ----->/
+    void                    setVersion(unsigned int sVersion);
+    void                    setSubVersion(unsigned int sSubVersion);
+    void                    setLogFileName(const std::string logFileName);
+    void                    setCANBitrate(EnCANBitrate bitrate);
+    void                    setGPSFrequency(EnGPSFrequency frequency);
+    void                    setRTCConfigurationFrameID(unsigned int frameID);
+
+    unsigned int            getVersion() const;
+    unsigned int            getSubVersion() const;
+    std::string             getLogFileName() const;
+    EnCANBitrate            getCANBitrate() const;
+    EnGPSFrequency          getGPSFrequency() const;
+    unsigned int            getRTCConfigurationFrameID() const;
+
+    //<----- Access to frames definitions ----->/
+
+    int                     getNumOfFrames() const;
+
+    bool                    hasFrameWithId(unsigned int frameID) const;
+    ConfigFrame*            getFrameWithId(unsigned int frameID) const;
+    ConfigFrame*            addFrame(unsigned int frameID, string frameName);
+    void                    removeFrame(const FramesIterator frameIterator);
+    void                    removeFrame(unsigned int frameID);
+
+    bool                    hasSignal(unsigned int frameID, unsigned int signalID) const;
+    ConfigSignal*           getSignal(unsigned int frameID, unsigned int signalID) const;
+
+    FramesIterator          beginFrames();
+    FramesIterator          endFrames();
+    ConstFramesIterator     cbeginFrames() const;
+    ConstFramesIterator     cendFrames() const;
+
+    //<----- Access to triggers definitions ----->/
+    unsigned int            getNumberOfStartTriggers();
+    unsigned int            getNumberOfStopTriggers();
+
+    void                    addStartTrigger(ConfigTrigger* pTrigger);
+    void                    removeStartTrigger(TriggersIterator* pTrigger);
+
+    void                    addStopTrigger(ConfigTrigger* pTrigger);
+    void                    removeStopTrigger(TriggersIterator* pTrigger);
+
+    TriggersIterator        beginStartTriggers();
+    TriggersIterator        endStartTriggers();
+    ConstTriggersIterator   cbeginStartTriggers() const;
+    ConstTriggersIterator   cendStartTriggers() const;
+
+    TriggersIterator        beginStopTriggers();
+    TriggersIterator        endStopTriggers();
+    ConstTriggersIterator   cbeginStopTriggers() const;
+    ConstTriggersIterator   cendStopTriggers() const;
+
+    //<----- General purpose methods definitions ----->/
+    void                    reset();
+
+    virtual void            writeToBin(WritingClass& writer) override;
+    virtual void            readFromBin(ReadingClass& reader) override;
 
     virtual ~Config() override;
 };

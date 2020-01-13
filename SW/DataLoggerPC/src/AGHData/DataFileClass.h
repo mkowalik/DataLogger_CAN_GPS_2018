@@ -37,7 +37,7 @@ public:
     const Config&                       getConfig() const;
     const tm                            getStartTime() const;
 
-    void                                readFromBin(ReadingClass& reader) override;
+    virtual void                        readFromBin(ReadingClass& reader) override;
 
     const vector<SingleCANFrameData*>&  getCANData() const {return this->pCanDataVector;}
     const vector<SingleGPSFrameData*>&  getGPSData() const {return this->pGpsDataVector;}

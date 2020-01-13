@@ -5,8 +5,8 @@ using namespace std;
 CSVSignalsWriter::CSVSignalsWriter (char decimalSeparator, const Config* pConfig, WritingClass& writer)
     : decimalSeparator(decimalSeparator), pConfig(pConfig), writer(writer){
 
-    for (Config::const_iterator frameIt = pConfig->cbegin(); frameIt != pConfig->cend(); frameIt++){
-        for (ConfigFrame::const_iterator signalIt = frameIt->cbegin(); signalIt != frameIt->cend(); signalIt++){
+    for (auto frameIt = pConfig->cbeginFrames(); frameIt != pConfig->cendFrames(); frameIt++){
+        for (auto signalIt = (*frameIt)->cbeginSignals(); signalIt != (*frameIt)->cendSignals(); signalIt++){
             columsOrderVector.push_back(*signalIt);
         }
     }

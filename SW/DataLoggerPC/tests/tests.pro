@@ -11,6 +11,7 @@ SOURCES +=  tst_singlecanframedata.cpp \
     ../src/AGHConfig/ConfigFrame.cpp \
     ../src/AGHConfig/ConfigSignal.cpp \
     ../src/AGHConfig/ValueType.cpp \
+    ../src/AGHConfig/ConfigTrigger.cpp \
     ../src/AGHData/CSVSignalsWriter.cpp \
     ../src/AGHData/CSVWriterEventMode.cpp \
     ../src/AGHData/CSVWriterFrameByFrame.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
     ../src/AGHConfig/ConfigFrame.h \
     ../src/AGHConfig/ConfigSignal.h \
     ../src/AGHConfig/ValueType.h \
+    ../src/AGHConfig/ConfigTrigger.h \
     ../src/AGHData/CSVSignalsWriter.h \
     ../src/AGHData/CSVWriter.h \
     ../src/AGHData/CSVWriterEventMode.h \

@@ -9,7 +9,7 @@ void CSVWriterFrameByFrame::writeHeaderRow() {
     writer.write_string("time [ms];", false);
     writer.write_string("ID;", false);
     writer.write_string("DLC;", false);
-    for (int i=0; i<ConfigFrame::MAX_FRAME_BYTES_LENGTH; i++){
+    for (int i=0; i<ConfigFrame::MAX_DLC_VALUE; i++){
         writer.write_string("data[", false);
         writer.write_int_to_string(i, false);
         writer.write_string("];", false);
@@ -78,7 +78,7 @@ void CSVWriterFrameByFrame::writeCANData(const SingleCANFrameData* pCanFrame){
             writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
         }
     }
-    for (unsigned int i = (pCanFrame!=nullptr) ? pCanFrame->getFrameDLC() : 0; i < ConfigFrame::MAX_FRAME_BYTES_LENGTH; i++){
+    for (unsigned int i = (pCanFrame!=nullptr) ? pCanFrame->getFrameDLC() : 0; i < ConfigFrame::MAX_DLC_VALUE; i++){
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     }
 }

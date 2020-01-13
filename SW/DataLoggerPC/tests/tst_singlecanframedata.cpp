@@ -11,6 +11,7 @@ class Test_SingleCANFrameData : public QObject
 {
     Q_OBJECT
 private:
+    Config* pConfig;
     ConfigFrame* pConfigFrame;
     ConfigSignal* pSignal;
     SingleCANFrameData* pTestSingleCANFrameData;
@@ -62,315 +63,277 @@ void Test_SingleCANFrameData::cleanupTestCase(){
 
 void Test_SingleCANFrameData::test_case_littleEndian_1()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
-
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(8);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 8, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x51u);
 
-    delete pConfigFrame;
+    delete pConfig;
     delete pTestSingleCANFrameData;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_2()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 4, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(4);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x5u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_3()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 16, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(16);
+
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x6A51u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_4()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 12, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(12);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x651u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_5()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(5, 10, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(5);
-    pSignal->setLengthBits(10);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b1110100010u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_6()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(0, 32, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(0);
-    pSignal->setLengthBits(32);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x3AA31615u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_7()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(2, 2, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(2);
-    pSignal->setLengthBits(2);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b01u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_littleEndian_8()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(7, 2, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setStartBit(7);
-    pSignal->setLengthBits(2);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b10u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 
 void Test_SingleCANFrameData::test_case_bigEndian_1()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 8, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(8);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x51u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_2()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 16, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(16);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x516Au);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_3(){
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 16, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(16);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x516Au);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_4()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(4, 12, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(4);
-    pSignal->setLengthBits(12);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x516u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_5()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(5, 10, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(5);
-    pSignal->setLengthBits(10);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b1010001011u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_6()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(0, 32, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(0);
-    pSignal->setLengthBits(32);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x1516A33Au);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_7()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(2, 2, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(2);
-    pSignal->setLengthBits(2);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b01u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 void Test_SingleCANFrameData::test_case_bigEndian_8()
 {
-    pConfigFrame = new ConfigFrame(0x100, 4, "testFrame");
+    pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
+    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
-    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame);
-    pTestSingleCANFrameData->setRawData(rawData);
+    pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
+    pSignal = pConfigFrame->addSignal(7, 2, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    pSignal = new ConfigSignal(pConfigFrame);
-    pSignal->setValueType(ValueType(false, true, false, false, false, true));
-    pSignal->setStartBit(7);
-    pSignal->setLengthBits(2);
     unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b10u);
 
     delete pTestSingleCANFrameData;
-    delete pConfigFrame;
+    delete pConfig;
 }
 
 QTEST_MAIN(Test_SingleCANFrameData)

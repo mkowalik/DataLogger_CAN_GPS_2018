@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>NewFrameDialog</class>
- <widget class="QDialog" name="NewFrameDialog">
+ <class>FrameDialog</class>
+ <widget class="QDialog" name="FrameDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>226</width>
-    <height>97</height>
+    <height>100</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -76,9 +76,9 @@
       </spacer>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="moduleName_label">
+      <widget class="QLabel" name="frameName_label">
        <property name="text">
-        <string>Module name:</string>
+        <string>Frame name:</string>
        </property>
        <property name="buddy">
         <cstring>moduleName_lineEdit</cstring>
@@ -114,7 +114,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>NewFrameDialog</receiver>
+   <receiver>FrameDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -124,6 +124,22 @@
     <hint type="destinationlabel">
      <x>286</x>
      <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>FrameDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>112</x>
+     <y>79</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>112</x>
+     <y>49</y>
     </hint>
    </hints>
   </connection>

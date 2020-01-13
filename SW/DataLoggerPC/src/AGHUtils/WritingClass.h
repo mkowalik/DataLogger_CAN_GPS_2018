@@ -20,6 +20,7 @@ public:
     void            write_uint8(unsigned int aValue);
     void            write_uint16(unsigned int aValue, RawDataParser::EndianessMode endianessMode);
     void            write_uint32(unsigned int aValue, RawDataParser::EndianessMode endianessMode);
+    void            write_uint64(unsigned long long aValue, RawDataParser::EndianessMode endianessMode);
     void            write_int16(int aValue, RawDataParser::EndianessMode endianessMode);
     void            write_string(string aStr, bool writeTerminatingZero, int aLength = -1);
     void            write_char(char c);

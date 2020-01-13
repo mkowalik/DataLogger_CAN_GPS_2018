@@ -1,222 +1,219 @@
 #include "ConfigFrame.h"
+
+#include "AGHConfig/Config.h"
+
 #include <cstdint>
 #include <cmath>
-#include "ConfigSignal.h"
+#include <algorithm>
 
-using namespace std;
+static const unsigned int FRAME_NAME_LENGTH = 20;
 
-static const unsigned int MAX_ID_BITS = 11;
-static const unsigned int MAX_ID_VALUE = (1<<MAX_ID_BITS)-1;
-static const unsigned int MAX_DLC_VALUE = 8u;
+//<--------------------------->//
+//<----- Private methods ----->//
+//<--------------------------->//
 
-static const unsigned int MODULE_NAME_LENGTH = 20;
-
-
-ConfigFrame::ConfigFrame (unsigned int id, unsigned int dlc, string moduleName) : id(id), dlc(dlc), moduleName(moduleName) {
-    if (this->id > MAX_ID_VALUE){
+ConfigFrame::ConfigFrame (Config* _pConfig, unsigned int _frameId, string _frameName) : pParentConfig(_pConfig), frameID(_frameId), frameName(_frameName) {
+    if (this->frameID > MAX_ID_VALUE){
         throw std::invalid_argument("Value of id greather than max value.");
     }
-    if (this->dlc > MAX_DLC_VALUE){
-        throw std::invalid_argument("DLC exeeds maximum possible value.");
-    }
+    _setFrameID(_frameId);
+    setFrameName(_frameName);
 }
 
-ConfigFrame::ConfigFrame (ReadingClass& reader) : ConfigFrame(0, 0, "") {
-    this->readFromBin(reader);
+ConfigFrame::ConfigFrame (Config* _pConfig, ReadingClass& _reader) : pParentConfig(_pConfig), frameID(0), frameName("") {
+    this->readFromBin(_reader);
 }
 
-unsigned int ConfigFrame::getID() const {
-    return this->id;
-}
+void ConfigFrame::addSignal(ConfigSignal* pSignal){
 
-unsigned int ConfigFrame::getDLC() const {
-    return this->dlc;
-}
-
-string ConfigFrame::getModuleName() const {
-    return this->moduleName;
-}
-
-void ConfigFrame::setID(unsigned int id){
-    if (id > MAX_ID_VALUE){
-        throw std::invalid_argument("Value of id greather than max value");
-    }
-    this->id = id;
-}
-
-void ConfigFrame::setDLC(unsigned int dlc){
-    if (dlc > MAX_DLC_VALUE){
-        throw std::invalid_argument("DLC exeeds maximum possible value.");
-    }
-    for (ConfigSignal* pSignal: this->signalsVector){
-        if ((pSignal->getStartBit() + pSignal->getLengthBits() + 7) / 8 > dlc){ //< calculating
-            throw std::invalid_argument("One of signals assigned to the frame extends beyond new DLC of the frame.");
-        }
-    }
-    this->dlc = dlc;
-}
-
-void ConfigFrame::setModuleName(string moduleName){
-    this->moduleName = moduleName;
-    this->moduleName.resize(MODULE_NAME_LENGTH);
-}
-
-ConfigSignal& ConfigFrame::getSignalByPosition(unsigned int position) {
-    return *(this->signalsVector[position]);  //TODO sprawdzic czy poprawny argument
-}
-
-void ConfigFrame::addSignal(ConfigSignal* pSignal){ //TODO jakos odebrac dostep, zeby nie dalo sie tego wywolac. Jedynie w konstriktorze sygnalu
-
-    if ((pSignal->getStartBit() + pSignal->getLengthBits() + 7) / 8 > this->getDLC()){
+    if (pSignal->getStartBit() + pSignal->getLengthBits() > MAX_DLC_VALUE * 8){
         throw std::invalid_argument("Signal exeeds maximum length of the frame.");
     }
-
-    signalsVector.push_back(pSignal);
+    if (hasSignalWithID(pSignal->getSignalID())){
+        throw std::invalid_argument("Signal with given id already exists in the frame.");
+    }
+    signalsVector.insert(lowerBoundSignalConstIterator(pSignal->getSignalID()), pSignal);
 }
 
-void ConfigFrame::removeAndDeleteSignalByPosition(unsigned int position){
-    if (position < signalsVector.size()){
-        ConfigSignal* pSignal = signalsVector.at(position);
-        delete pSignal;
-        signalsVector.erase(signalsVector.begin() + position);
+std::vector<ConfigSignal*>::const_iterator ConfigFrame::lowerBoundSignalConstIterator(unsigned int signalID) const
+{
+    return std::lower_bound(signalsVector.cbegin(), signalsVector.cend(), signalID, [](const ConfigSignal* pSignal, unsigned int signalID){
+        return (pSignal->getSignalID() < signalID);
+    });
+}
+
+std::vector<ConfigSignal*>::iterator ConfigFrame::lowerBoundSignalIterator(unsigned int signalID)
+{
+    return std::lower_bound(signalsVector.begin(), signalsVector.end(), signalID, [](const ConfigSignal* pSignal, unsigned int signalID){
+        return (pSignal->getSignalID() < signalID);
+    });
+}
+
+bool ConfigFrame::signalsEmpty() const {
+    return signalsVector.empty();
+}
+
+void ConfigFrame::sortSignalsCallback()
+{
+    std::sort(signalsVector.begin(), signalsVector.end(), [](ConfigSignal* pSig1, ConfigSignal* pSig2){return (pSig1->getSignalID() < pSig2->getSignalID());});
+}
+
+//<-------------------------->//
+//<----- Public methods ----->//
+//<-------------------------->//
+
+Config *ConfigFrame::getParentConfig() const
+{
+    return pParentConfig;
+}
+
+unsigned int ConfigFrame::getFrameID() const {
+    return this->frameID;
+}
+
+string ConfigFrame::getFrameName() const {
+    return this->frameName;
+}
+
+void ConfigFrame::_setFrameID(unsigned int _frameID){
+    if (_frameID > MAX_ID_VALUE){
+        throw std::invalid_argument("Value of id greather than max value.");
+    }
+    if (pParentConfig->hasFrameWithId(_frameID)){
+        throw std::invalid_argument("Frame with given id already exists in the parent configuration.");
+    }
+    frameID = _frameID;
+    pParentConfig->sortFramesCallback();
+}
+
+void ConfigFrame::setFrameName(string frameName){
+    this->frameName = frameName;
+    this->frameName.resize(FRAME_NAME_LENGTH);
+}
+
+void ConfigFrame::setFrameID(unsigned int _frameID){
+    if (frameID != _frameID){
+        _setFrameID(_frameID);
     }
 }
 
-ConfigFrame::iterator ConfigFrame::begin() {
-    return iterator(signalsVector.begin(), *this);
+
+ConfigSignal *ConfigFrame::addSignal(unsigned int signalID, unsigned int startBit, unsigned int lengthBits, ValueType valueType, int multiplier, unsigned int divider, int offset, string signalName, string unitName, string comment)
+{
+    ConfigSignal* pSignal = new ConfigSignal(this,
+                                             signalID,
+                                             startBit,
+                                             lengthBits,
+                                             valueType,
+                                             multiplier,
+                                             divider,
+                                             offset,
+                                             signalName,
+                                             unitName,
+                                             comment);
+    try {
+        addSignal(pSignal);
+    } catch (const std::exception& e){
+        delete pSignal;
+        throw e;
+    }
+    return pSignal;
 }
 
-ConfigFrame::iterator ConfigFrame::end() {
-    return iterator(signalsVector.end(), *this);
+ConfigSignal *ConfigFrame::addSignal(unsigned int startBit, unsigned int lengthBits, ValueType valueType, int multiplier, unsigned int divider, int offset, string signalName, string unitName, string comment)
+{
+    ConfigSignal* pSignal = new ConfigSignal(this,
+                                             signalsEmpty() ? 0 : signalsVector.back()->getSignalID() + 1,
+                                             startBit,
+                                             lengthBits,
+                                             valueType,
+                                             multiplier,
+                                             divider,
+                                             offset,
+                                             signalName,
+                                             unitName,
+                                             comment);
+    try {
+        addSignal(pSignal);
+    } catch (const std::exception& e){
+        delete pSignal;
+        throw e;
+    }
+    return pSignal;
 }
 
-ConfigFrame::const_iterator ConfigFrame::cbegin() const {
-    return const_iterator(signalsVector.begin(), *this);
+void ConfigFrame::removeSignal(const ConfigFrame::SignalsIterator signalIt)
+{
+    delete (*signalIt);
+    signalsVector.erase(signalIt);
 }
 
-ConfigFrame::const_iterator ConfigFrame::cend() const {
-    return const_iterator(signalsVector.end(), *this);
+void ConfigFrame::removeSignal(unsigned int signalID)
+{
+    auto signalIt = lowerBoundSignalConstIterator(signalID);
+    if ((signalIt == signalsVector.cend()) || ((*signalIt)->getSignalID() != signalID)){
+        throw std::out_of_range("Signal with given id does not exist");
+    }
+    delete (*signalIt);
+    signalsVector.erase(signalIt);
+}
+
+ConfigFrame::SignalsIterator ConfigFrame::beginSignals() {
+    return signalsVector.begin();
+}
+
+ConfigFrame::SignalsIterator ConfigFrame::endSignals() {
+    return signalsVector.end();
+}
+
+ConfigFrame::ConstSignalsIterator ConfigFrame::cbeginSignals() const {
+    return signalsVector.cbegin();
+}
+
+ConfigFrame::ConstSignalsIterator ConfigFrame::cendSignals() const {
+    return signalsVector.cend();
+}
+
+bool ConfigFrame::hasSignalWithID(unsigned int signalID) const
+{
+    auto signalIt = lowerBoundSignalConstIterator(signalID);
+    return ((signalIt != signalsVector.cend()) && ((*(signalIt))->getSignalID() == signalID));
+}
+
+ConfigSignal *ConfigFrame::getSignalWithID(unsigned int signalID) const
+{
+    auto signalIt = lowerBoundSignalConstIterator(signalID);
+    if ((signalIt == signalsVector.cend()) || ((*(signalIt))->getSignalID() == signalID)){
+        throw std::invalid_argument("Signal with given ID does not exist in this frame.");
+    }
+    return (*signalIt);
 }
 
 void ConfigFrame::writeToBin(WritingClass& writer){
 
-    writer.write_uint16(static_cast<unsigned int>(id), RawDataParser::UseDefaultEndian);
-    writer.write_uint8(static_cast<unsigned int>(getDLC()));
-    writer.write_string(moduleName, true, MODULE_NAME_LENGTH);
-    for (vector <ConfigSignal*>::iterator it=signalsVector.begin(); it!=signalsVector.end(); it++){
-        (*it)->writeToBin(writer);
+    writer.write_uint16(static_cast<unsigned int>(getFrameID()), RawDataParser::UseDefaultEndian);
+    writer.write_string(getFrameName(), true, FRAME_NAME_LENGTH);
+    for (auto pSignal : signalsVector){
+        pSignal->writeToBin(writer);
     }
 }
 
 void ConfigFrame::readFromBin(ReadingClass& reader){
 
-    setID(reader.reading_uint16(RawDataParser::UseDefaultEndian));
-    unsigned int readDLC = min(MAX_DLC_VALUE, reader.reading_uint8());
-    setModuleName(reader.reading_string(MODULE_NAME_LENGTH, true));
+    _setFrameID(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    setFrameName(reader.reading_string(FRAME_NAME_LENGTH, true));
 
-    unsigned int iteratorDLC = 0;
+    unsigned int signalNumber = reader.reading_uint16(RawDataParser::UseDefaultEndian);
 
-    this->setDLC(8); //temporary solution //TODO
-    while(iteratorDLC < readDLC){
-        ConfigSignal* pSignal = new ConfigSignal(this);
-        pSignal->readFromBin(reader);
-        pSignal->setStartBit(iteratorDLC / 8);
-
-        iteratorDLC += (pSignal->getLengthBits() / 8);
+    for (unsigned int i=0; i<signalNumber; i++){
+        ConfigSignal* pSignal = new ConfigSignal(this, reader);
+        addSignal(pSignal);
     }
-
-    this->setDLC(readDLC);
-}
-
-ConfigFrame::iterator::iterator(vector <ConfigSignal*>::iterator it, ConfigFrame& frameRef) :
-innerIterator(it), frameReference(frameRef)
-{
-}
-
-bool ConfigFrame::iterator::operator==(const ConfigFrame::iterator &second){
-    return (innerIterator == second.innerIterator);
-}
-
-bool ConfigFrame::iterator::operator!=(const ConfigFrame::iterator &second){
-    return (innerIterator != second.innerIterator);
-}
-
-ConfigSignal* ConfigFrame::iterator::operator*(){
-    return *innerIterator;
-}
-
-ConfigSignal* ConfigFrame::iterator::operator->(){ //TODO do sprawdzenia
-    return (*innerIterator);
-}
-
-ConfigFrame::iterator& ConfigFrame::iterator::operator++(){
-    ++innerIterator;
-    return (*this);
-}
-
-ConfigFrame::iterator ConfigFrame::iterator::operator++(int){
-    ConfigFrame::iterator ret(*this);
-    ++innerIterator;
-    return ret;
-}
-
-
-ConfigFrame::iterator& ConfigFrame::iterator::operator--(){
-    --innerIterator;
-    return (*this);
-}
-
-ConfigFrame::iterator ConfigFrame::iterator::operator--(int){
-    ConfigFrame::iterator ret(*this);
-    --innerIterator;
-    return ret;
-}
-
-ConfigFrame::const_iterator::const_iterator(vector <ConfigSignal*>::const_iterator it, const ConfigFrame& frameRef) :
-innerIterator(it), frameReference(frameRef)
-{
-}
-
-bool ConfigFrame::const_iterator::operator==(const ConfigFrame::const_iterator &second){
-    return (innerIterator == second.innerIterator);
-}
-
-bool ConfigFrame::const_iterator::operator!=(const ConfigFrame::const_iterator &second){
-    return (innerIterator != second.innerIterator);
-}
-
-const ConfigSignal* ConfigFrame::const_iterator::operator*() const {
-    return *innerIterator;
-}
-
-const ConfigSignal* ConfigFrame::const_iterator::operator->() const { //TODO do sprawdzenia
-    return (*innerIterator);
-}
-
-ConfigFrame::const_iterator& ConfigFrame::const_iterator::operator++(){
-    ++innerIterator;
-    return (*this);
-}
-
-ConfigFrame::const_iterator ConfigFrame::const_iterator::operator++(int){
-    ConfigFrame::const_iterator ret(*this);
-    ++innerIterator;
-    return ret;
-}
-
-ConfigFrame::const_iterator& ConfigFrame::const_iterator::operator--(){
-    --innerIterator;
-    return (*this);
-}
-
-ConfigFrame::const_iterator ConfigFrame::const_iterator::operator--(int){
-    ConfigFrame::const_iterator ret(*this);
-    --innerIterator;
-    return ret;
 }
 
 ConfigFrame::~ConfigFrame(){
-    for (auto& pSignal : this->signalsVector){
+    for (auto pSignal : signalsVector){
         delete pSignal;
     }
+    signalsVector.clear();
 }

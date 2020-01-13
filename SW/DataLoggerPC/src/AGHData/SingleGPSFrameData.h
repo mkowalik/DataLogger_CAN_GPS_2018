@@ -46,7 +46,7 @@ public:
     FixedPoint	 getHorizontalPrecision() const; //< GPGSA
     FixedPoint	 getVerticalPrecision() const; //< GPGSA
 
-    void         readFromBin(ReadingClass& reader) override;
+    virtual void readFromBin(ReadingClass& reader) override;
 };
 
 #endif // SINGLE_GPS_FRAME_DATA_H

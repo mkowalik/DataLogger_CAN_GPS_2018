@@ -22,7 +22,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++17 -o0 -g
+CONFIG += c++17 -o0 -g -Wall
 
 SOURCES += \
     AGHConfig/Config.cpp \
@@ -46,9 +46,11 @@ SOURCES += \
     downloadingprogress_dialog.cpp \
     main.cpp \
     mainwindow.cpp \
-    newchannel_dialog.cpp \
-    newframe_dialog.cpp \
-    AGHConfig/ConfigSignalNamedValue.cpp
+    AGHConfig/ConfigSignalNamedValue.cpp \
+    AGHConfig/ConfigTrigger.cpp \
+    trigger_dialog.cpp \
+    frame_dialog.cpp \
+    signal_dialog.cpp
 
 
 HEADERS += \
@@ -74,17 +76,20 @@ HEADERS += \
     downloaddatasd_dialog.h \
     downloadingprogress_dialog.h \
     mainwindow.h \
-    newchannel_dialog.h \
-    newframe_dialog.h \
-    AGHConfig/ConfigSignalNamedValue.h
+    AGHConfig/ConfigSignalNamedValue.h \
+    AGHConfig/ConfigTrigger.h \
+    trigger_dialog.h \
+    frame_dialog.h \
+    signal_dialog.h
 
 FORMS += \
     downloaddatasd_dialog.ui \
     mainwindow.ui \
-    newchannel_dialog.ui \
-    newframe_dialog.ui \
     downloadingprogress_dialog.ui \
-    configure_logger_sd_dialog.ui
+    configure_logger_sd_dialog.ui \
+    trigger_dialog.ui \
+    frame_dialog.ui \
+    signal_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

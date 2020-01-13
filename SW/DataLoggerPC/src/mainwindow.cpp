@@ -13,9 +13,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     QString version("ver: ");
-    version += QString::number(Config::getActualVersion());
+    version += QString::number(Config::ACTUAL_VERSION);
     version += ".";
-    version += QString::number(Config::getActualSubVersion());
+    version += QString::number(Config::ACTUAL_SUB_VERSION);
 
     QLabel *stat = new QLabel(authors + " [" + version + "]");
     stat->setAlignment(Qt::AlignRight);

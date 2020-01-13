@@ -55,8 +55,7 @@ void DataFileClass::readFromBin(ReadingClass& reader) {
 
     this->freeMemory();
 
-    this->pConfig = new Config();
-    this->pConfig->readFromBin(reader);
+    this->pConfig = new Config(reader);
 
     startTime.tm_year = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
     startTime.tm_mon  = static_cast<int>(reader.reading_uint8());
@@ -73,9 +72,8 @@ void DataFileClass::readFromBin(ReadingClass& reader) {
             pDataRow->readFromBin(reader);
             this->pGpsDataVector.push_back(pDataRow);
         } else {
-            ConfigFrame* pConfigFrame = pConfig->getFrameById(frameID);
-            SingleCANFrameData* pDataRow = new SingleCANFrameData(msTime, pConfigFrame);
-            pDataRow->readFromBin(reader);
+            ConfigFrame* pConfigFrame = pConfig->getFrameWithId(frameID);
+            SingleCANFrameData* pDataRow = new SingleCANFrameData(msTime, pConfigFrame, reader);
             pCanDataVector.push_back(pDataRow);
         }
     }

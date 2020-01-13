@@ -1,4 +1,7 @@
 #include "ConfigSignal.h"
+
+#include "AGHConfig/ConfigFrame.h"
+
 #include <iostream>
 #include <cstdint>
 
@@ -6,11 +9,12 @@ static const unsigned int SIGNAL_NAME_LENGHT = 20;
 static const unsigned int UNIT_LENGTH = 20;
 static const unsigned int COMMENT_LENGTH = 20;
 
-ConfigSignal::ConfigSignal(ConfigFrame* parentFrame) :
-    parentFrame(parentFrame),
-    valueType(0),
+ConfigSignal::ConfigSignal(ConfigFrame* pParentFrame, ReadingClass& reader) :
+    pParentFrame(pParentFrame),
+    signalID(0),
     startBit(0),
     lengthBits(0),
+    valueType(0),
     multiplier(1),
     divider(1),
     offset(0),
@@ -18,19 +22,77 @@ ConfigSignal::ConfigSignal(ConfigFrame* parentFrame) :
     unitName(""),
     comment("")
 {
-    parentFrame->addSignal(this);
+    readFromBin(reader);
 }
 
-const ConfigFrame* ConfigSignal::getParentFrame() const {
-    return this->parentFrame;
+ConfigSignal::ConfigSignal(ConfigFrame*   _parentFrame,
+                           unsigned int   _signalID,
+                           unsigned int   _startBit,
+                           unsigned int   _lengthBits,
+                           ValueType      _valueType,
+                           int            _multiplier,
+                           unsigned int   _divider,
+                           int            _offset,
+                           string         _signalName,
+                           string         _unitName,
+                           string         _comment
+              )
+    :
+      pParentFrame(_parentFrame),
+      signalID(_signalID),
+      startBit(0),
+      lengthBits(0),
+      valueType(0),
+      multiplier(1),
+      divider(1),
+      offset(0),
+      signalName(""),
+      unitName(""),
+      comment("")
+{
+    if (_signalID > SIGNAL_ID_MAX_VALUE){
+        std::invalid_argument("SignalID value may not exceed UINT16_MAX");
+    }
+    if (pParentFrame->hasSignalWithID(_signalID)){
+        throw std::invalid_argument("Signal with given id already exists in the parent frame.");
+    }
+    setStartBit(_startBit);
+    setLengthBits(_lengthBits);
+    setValueType(_valueType);
+    setMultiplier(_multiplier);
+    setDivider(_divider);
+    setOffset(_offset);
+    setSignallName(_signalName);
+    setUnitName(_unitName);
+    setComment(_comment);
 }
 
-unsigned int ConfigSignal::getLengthBits() const {
-    return this->lengthBits;
+void ConfigSignal::_setSignalId(unsigned int _signalID)
+{
+    if (_signalID > SIGNAL_ID_MAX_VALUE){
+        std::invalid_argument("SignalID value may not exceed UINT16_MAX");
+    }
+    if (pParentFrame->hasSignalWithID(_signalID)){
+        throw std::invalid_argument("Signal with given id already exists in the parent frame.");
+    }
+    this->signalID = _signalID;
+    pParentFrame->sortSignalsCallback();
+}
+
+ConfigFrame* ConfigSignal::getParentFrame() const {
+    return this->pParentFrame;
+}
+
+unsigned int ConfigSignal::getSignalID() const {
+    return signalID;
 }
 
 unsigned int ConfigSignal::getStartBit() const {
     return this->startBit;
+}
+
+unsigned int ConfigSignal::getLengthBits() const {
+    return this->lengthBits;
 }
 
 ValueType ConfigSignal::getValueType() const {
@@ -61,22 +123,35 @@ string ConfigSignal::getComment() const {
     return this->comment;
 }
 
-void ConfigSignal::setValueType(ValueType aValueType){
-    this->valueType = aValueType;
+void ConfigSignal::setSignalID(unsigned int _signalID)
+{
+    if (this->signalID != _signalID){
+        _setSignalId(_signalID);
+    }
+}
+
+void ConfigSignal::setStartBit(unsigned int startBit){
+    if (startBit > SIGNAL_MAX_LENGTH_BITS){
+        throw std::invalid_argument("Given start bit index exceed maximum length of the signal.");
+    }
+    if (this->getStartBit() + lengthBits > (ConfigFrame::MAX_DLC_VALUE * 8)){
+        throw std::invalid_argument("Signal with given position and length exeeds max DLC of frame.");
+    }
+    this->startBit = startBit;
 }
 
 void ConfigSignal::setLengthBits(unsigned int lengthBits){
-    if ((this->getStartBit() + lengthBits + 7)/8 > this->parentFrame->getDLC()){
-        throw std::invalid_argument("Signal with given length extends beyond DLC of the frame assigned to.");
-    }
     if (lengthBits > ConfigSignal::SIGNAL_MAX_LENGTH_BITS){
         throw std::invalid_argument("Given length exceed maximum length of the signal.");
+    }
+    if (this->getStartBit() + lengthBits > (ConfigFrame::MAX_DLC_VALUE * 8)){
+        throw std::invalid_argument("Signal with given position and length exeeds max DLC of frame.");
     }
     this->lengthBits = lengthBits;
 }
 
-void ConfigSignal::setStartBit(unsigned int startBit){
-    this->startBit = startBit;
+void ConfigSignal::setValueType(ValueType aValueType){
+    this->valueType = aValueType;
 }
 
 void ConfigSignal::setMultiplier(int aMultiplier){
@@ -147,6 +222,10 @@ void ConfigSignal::addNamedValue(int _channelValue, ConfigSignalNamedValue _name
 
 void ConfigSignal::writeToBin(WritingClass& writer){
 
+    writer.write_uint16(getSignalID(), RawDataParser::UseDefaultEndian);
+    writer.write_uint8(getStartBit());
+    writer.write_uint8(getLengthBits());
+
     getValueType().writeToBin(writer);
 
     writer.write_int16(getMultiplier(), RawDataParser::UseDefaultEndian);
@@ -156,10 +235,16 @@ void ConfigSignal::writeToBin(WritingClass& writer){
     writer.write_string(getSignalName(), true, SIGNAL_NAME_LENGHT);
     writer.write_string(getUnitName(), true, UNIT_LENGTH);
     writer.write_string(getComment(), true, COMMENT_LENGTH);
+
+    //TODO write named values
 }
 
 
 void ConfigSignal::readFromBin(ReadingClass& reader){
+
+    _setSignalId(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    setStartBit(reader.reading_uint8());
+    setLengthBits(reader.reading_uint8());
 
     valueType.readFromBin(reader);
 
@@ -171,7 +256,7 @@ void ConfigSignal::readFromBin(ReadingClass& reader){
     setUnitName(reader.reading_string(UNIT_LENGTH, true));
     setComment(reader.reading_string(COMMENT_LENGTH, true));
 
-    this->setLengthBits(this->valueType.is16BitLength() ? 16 : 8); //TODO
+    //TODO read named values
 }
 
 ConfigSignal::~ConfigSignal(){

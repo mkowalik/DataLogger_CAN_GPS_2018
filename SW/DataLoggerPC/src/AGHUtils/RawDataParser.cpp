@@ -57,12 +57,54 @@ unsigned int RawDataParser::interpret_unsigned_int(unsigned char* raw_data, unsi
     return retNumber;
 }
 
+unsigned long long RawDataParser::interpret_unsigned_long_long(unsigned char* raw_data, unsigned int bytesNumber, EndianessMode endianessMode) const {
+
+    bytesNumber = min(bytesNumber, static_cast<unsigned int>(sizeof(unsigned long long)));
+
+    if (endianessMode == UseDefaultEndian){
+        endianessMode = this->rawDataMode;
+    }
+    unsigned long long retNumber = 0;
+
+    if (rawDataMode == LittleEndian) {
+        for(unsigned int i=0; i<bytesNumber; i++) {
+            retNumber |= (static_cast<unsigned long long>(raw_data[i])) << (i*8U);
+        }
+    } else if (endianessMode == BigEndian){
+        for (unsigned int i=0; i<bytesNumber; i++) {
+            retNumber |= ((static_cast<unsigned long long>(raw_data[i])) << (bytesNumber-i-1)*8U);
+        }
+    } else {
+        throw std::invalid_argument("Not supported format");
+    }
+
+    return retNumber;
+}
+
 void RawDataParser::write_signed_int(int value, unsigned char* retBuffer, unsigned int bytes, EndianessMode endianessMode){
     write_unsigned_int(*(reinterpret_cast<unsigned int*>(&value)), retBuffer, bytes, endianessMode);
 }
 
 void RawDataParser::write_unsigned_int(unsigned int value, unsigned char* retBuffer, unsigned int bytes, EndianessMode endianessMode){
     bytes = min(bytes, 4u);
+    if (endianessMode == UseDefaultEndian){
+        endianessMode = this->rawDataMode;
+    }
+    if (endianessMode == LittleEndian){
+        for(unsigned int i=0; i<bytes; i++) {
+            retBuffer[i] = static_cast<unsigned char>((value >> (i*8)) & 0xFF); //TODO do sprawdzenia!!!
+        }
+    } else if (endianessMode == BigEndian){
+        for(unsigned int i=0; i<bytes; i++) {
+            retBuffer[i] = static_cast<unsigned char>((value >> ((bytes-i-1)*8)) & 0xFF); //TODO do sprawdzenia!!!
+        }
+    } else {
+        throw std::invalid_argument("Not supported format");
+    }
+}
+
+void RawDataParser::write_unsigned_long_long(unsigned long long value, unsigned char* retBuffer, unsigned int bytes, EndianessMode endianessMode){
+    bytes = min(bytes, 8u);
     if (endianessMode == UseDefaultEndian){
         endianessMode = this->rawDataMode;
     }

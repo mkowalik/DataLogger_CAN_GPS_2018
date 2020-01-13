@@ -1,53 +1,90 @@
 #include "Config.h"
+
 #include <iostream>
 #include <algorithm>
 #include <functional>
+#include <algorithm>
 
-using namespace std;
+//<--------------------------->//
+//<----- Private methods ----->//
+//<--------------------------->//
 
-int Config::getActualVersion(){
-    return Config::ACTUAL_VERSION;
-}
-int Config::getActualSubVersion(){
-    return Config::ACTUAL_SUB_VERSION;
-}
-
-Config::Config() : version(ACTUAL_VERSION), subVersion(ACTUAL_SUB_VERSION), canBitrate(DEFAULT_CAN_BITRATE), gpsFrequency(DEFAULT_GPS_FREQUENCY)
+Config::Config() : version(ACTUAL_VERSION), subVersion(ACTUAL_SUB_VERSION), logFileName(), canBitrate(DEFAULT_CAN_BITRATE), gpsFrequency(DEFAULT_GPS_FREQUENCY), rtcConfigurationFrameID(DEFAULT_RTC_CONFIGURATION_FRAME_ID)
 {
 }
 
-int Config::getVersion() const {
-	return version;
+void Config::addFrame(ConfigFrame* pFrame){
+    if (hasFrameWithId(pFrame->getFrameID())){
+        throw std::invalid_argument("Frame with given id already exists the config.");
+    }
+    framesVector.emplace(lowerBoundFrameConstIterator(pFrame->getFrameID()), pFrame);
 }
 
-int Config::getSubVersion() const {
-	return subVersion;
+std::vector<ConfigFrame*>::const_iterator Config::lowerBoundFrameConstIterator(unsigned int frameID) const {
+    return std::lower_bound(framesVector.cbegin(), framesVector.cend(), frameID, [](const ConfigFrame* pFrame, unsigned int frameID){
+        return (pFrame->getFrameID() < frameID);
+    });
 }
 
-Config::EnCANBitrate Config::getCANBitrate() const {
-    return canBitrate;
+std::vector<ConfigFrame*>::iterator Config::lowerBoundFrameIterator(unsigned int frameID) {
+    return std::lower_bound(framesVector.begin(), framesVector.end(), frameID, [](const ConfigFrame* pFrame, unsigned int frameID){
+        return (pFrame->getFrameID() < frameID);
+    });
 }
 
-Config::EnGPSFrequency Config::getGPSFrequency() const{
-    return gpsFrequency;
+bool Config::framesEmpty() const {
+    return framesVector.empty();
 }
 
-int Config::getNumOfFrames() const {
-    return static_cast<int>(idToFrameMap.size());
+void Config::sortFramesCallback()
+{
+    std::sort(framesVector.begin(), framesVector.end(), [](ConfigFrame* pFr1, ConfigFrame* pFr2){return (pFr1->getFrameID() < pFr2->getFrameID());});
 }
 
-void Config::setVersion(int sVersion){
-    if (sVersion < 0 || sVersion > UINT16_MAX){
+//<-------------------------->//
+//<----- Public methods ----->//
+//<-------------------------->//
+
+Config::Config(std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID) : Config() {
+    setLogFileName(logFileName);
+    setCANBitrate(canBitrate);
+    setGPSFrequency(gpsFrequency);
+    setRTCConfigurationFrameID(rtcConfigurationFrameID);
+}
+
+Config::Config(unsigned int version, unsigned int subVersion, std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID) : Config() {
+    setVersion(version);
+    setSubVersion(subVersion);
+    setLogFileName(logFileName);
+    setCANBitrate(canBitrate);
+    setGPSFrequency(gpsFrequency);
+    setRTCConfigurationFrameID(rtcConfigurationFrameID);
+}
+
+Config::Config(ReadingClass& reader) : Config() {
+    readFromBin(reader);
+}
+
+//<----- Access to preambule data ----->/
+
+void Config::setVersion(unsigned int sVersion){
+    if (sVersion > UINT16_MAX){
         throw std::invalid_argument("Version should be between 0 and UINT16_MAX");
     }
     version = sVersion;
 }
 
-void Config::setSubVersion(int sSubVersion){
-    if (sSubVersion < 0 || sSubVersion > UINT16_MAX){
+void Config::setSubVersion(unsigned int sSubVersion){
+    if (sSubVersion > UINT16_MAX){
         throw std::invalid_argument("SubVersion should be between 0 and UINT16_MAX");
     }
     subVersion = sSubVersion;
+}
+
+void Config::setLogFileName(const string logFileName)
+{
+    this->logFileName = logFileName;
+    this->logFileName.resize(CONFIG_NAME_LENGTH);
 }
 
 void Config::setCANBitrate(EnCANBitrate bitrate){
@@ -75,62 +112,228 @@ void Config::setGPSFrequency(EnGPSFrequency frequency){
     }
 }
 
-ConfigFrame* Config::getFrameById(unsigned int id) {
-    if (idToFrameMap.find(id) == idToFrameMap.end()){
+void Config::setRTCConfigurationFrameID(unsigned int frameID)
+{
+    if (frameID > ConfigFrame::MAX_ID_VALUE){
+        throw std::invalid_argument("Value of id greather than max value");
+    }
+    this->rtcConfigurationFrameID = frameID;
+}
+
+unsigned int Config::getVersion() const {
+	return version;
+}
+
+unsigned int Config::getSubVersion() const {
+    return subVersion;
+}
+
+string Config::getLogFileName() const
+{
+    return logFileName;
+}
+
+Config::EnCANBitrate Config::getCANBitrate() const {
+    return canBitrate;
+}
+
+Config::EnGPSFrequency Config::getGPSFrequency() const{
+    return gpsFrequency;
+}
+
+unsigned int Config::getRTCConfigurationFrameID() const {
+    return rtcConfigurationFrameID;
+}
+
+int Config::getNumOfFrames() const {
+    return static_cast<int>(framesVector.size());
+}
+
+//<----- Access to frames definitions ----->/
+
+ConfigFrame* Config::addFrame(unsigned int frameID, string frameName)
+{
+    ConfigFrame* pFrame = new ConfigFrame(this, frameID, frameName);
+    try {
+        addFrame(pFrame);
+    } catch (const std::exception& e){
+        delete pFrame;
+        throw e;
+    }
+    return pFrame;
+}
+
+void Config::removeFrame(const FramesIterator frameIterator){
+    delete (*frameIterator);
+    framesVector.erase(frameIterator);
+}
+
+void Config::removeFrame(unsigned int frameID){
+
+    auto frameIt = lowerBoundFrameConstIterator(frameID);
+    if ((frameIt == framesVector.cend()) || ((*frameIt)->getFrameID() != frameID)){
         throw std::out_of_range("Frame with given id does not exist");
     }
-    return idToFrameMap.at(id);
+    delete (*frameIt);
+    framesVector.erase(frameIt);
 }
 
-bool Config::hasFrameWithId(unsigned int id) const {
-    return (idToFrameMap.find(id) != idToFrameMap.end());
+bool Config::hasFrameWithId(unsigned int frameID) const {
+    auto frameIt = lowerBoundFrameConstIterator(frameID);
+    return ((frameIt != framesVector.cend()) && ((*frameIt)->getFrameID() == frameID));
 }
 
-void Config::addFrame(ConfigFrame* pFrame){
-    idToFrameMap.insert({pFrame->getID(), pFrame});
-}
-
-void Config::removeFrameById(unsigned int id){
-    if (idToFrameMap.find(id) == idToFrameMap.end()){
-        throw std::out_of_range("Frame with given id does not exist");
+ConfigFrame* Config::getFrameWithId(unsigned int frameID) const {
+    auto frameIt = lowerBoundFrameConstIterator(frameID);
+    if ((frameIt == framesVector.cend()) || ((*frameIt)->getFrameID() != frameID)){
+        throw std::out_of_range("Frame with given id does not exist.");
     }
-    delete idToFrameMap.at(id);
-    idToFrameMap.erase(id);
+    return (*frameIt);
+}
+
+bool Config::hasSignal(unsigned int frameID, unsigned int signalID) const {
+    const ConfigFrame* pFrame = getFrameWithId(frameID);
+    return pFrame->hasSignalWithID(signalID);
+}
+
+ConfigSignal * Config::getSignal(unsigned int frameID, unsigned int signalID) const {
+    const ConfigFrame* pFrame = getFrameWithId(frameID);
+    return pFrame->getSignalWithID(signalID);
+}
+
+Config::FramesIterator Config::beginFrames() {
+    return framesVector.begin();
+}
+
+Config::FramesIterator Config::endFrames() {
+    return framesVector.end();
+}
+
+Config::ConstFramesIterator Config::cbeginFrames() const {
+    return framesVector.cbegin();
+}
+
+Config::ConstFramesIterator Config::cendFrames() const {
+    return framesVector.cend();
+}
+
+//<----- Access to triggers definitions ----->/
+
+unsigned int Config::getNumberOfStartTriggers()
+{
+    return static_cast<unsigned int>(startConfigTriggers.size());
+}
+
+unsigned int Config::getNumberOfStopTriggers()
+{
+    return static_cast<unsigned int>(stopConfigTriggers.size());
+}
+
+void Config::addStartTrigger(ConfigTrigger* pNewTrigger){
+    for (const ConfigTrigger* pTrigger: startConfigTriggers){
+        if ((*pTrigger)==(*pNewTrigger)){
+            throw std::invalid_argument("Given trigger is already defined.");
+        }
+    }
+    startConfigTriggers.emplace_back(pNewTrigger);
+}
+
+void Config::removeStartTrigger(Config::TriggersIterator *pTrigger)
+{
+
+}
+
+void Config::addStopTrigger(ConfigTrigger* pNewTrigger){
+    for (auto pTrigger: stopConfigTriggers){
+        if (*pTrigger == *pNewTrigger){
+            throw std::invalid_argument("Given trigger is already defined.");
+        }
+    }
+    stopConfigTriggers.emplace_back(pNewTrigger);
+}
+
+void Config::removeStopTrigger(Config::TriggersIterator *pTrigger)
+{
+
+}
+
+Config::TriggersIterator Config::beginStartTriggers()
+{
+    return startConfigTriggers.begin();
+}
+
+Config::TriggersIterator Config::endStartTriggers()
+{
+    return startConfigTriggers.end();
+}
+
+Config::ConstTriggersIterator Config::cbeginStartTriggers() const
+{
+    return startConfigTriggers.cbegin();
+}
+
+Config::ConstTriggersIterator Config::cendStartTriggers() const
+{
+    return startConfigTriggers.cend();
+}
+
+Config::TriggersIterator Config::beginStopTriggers()
+{
+    return stopConfigTriggers.begin();
+}
+
+Config::TriggersIterator Config::endStopTriggers()
+{
+    return stopConfigTriggers.end();
+}
+
+Config::ConstTriggersIterator Config::cbeginStopTriggers() const
+{
+    return stopConfigTriggers.cbegin();
+}
+
+Config::ConstTriggersIterator Config::cendStopTriggers() const
+{
+    return startConfigTriggers.cend();
 }
 
 void Config::reset(){
-    for (auto& frame : idToFrameMap){
-        delete frame.second;
+    for (auto pFrame : framesVector){
+        delete pFrame;
     }
-    idToFrameMap.clear();
-}
-
-Config::iterator Config::begin() {
-    return iterator(idToFrameMap.begin(), this);
-}
-
-Config::iterator Config::end() {
-    return iterator(idToFrameMap.end(), this);
-}
-
-Config::const_iterator Config::cbegin() const {
-    return const_iterator(idToFrameMap.cbegin(), this);
-}
-
-Config::const_iterator Config::cend() const {
-    return const_iterator(idToFrameMap.cend(), this);
+    framesVector.clear();
+    for (auto pTrigger : startConfigTriggers){
+        delete pTrigger;
+    }
+    startConfigTriggers.clear();
+    for (auto pTrigger : stopConfigTriggers){
+        delete pTrigger;
+    }
+    stopConfigTriggers.clear();
 }
 
 void Config::writeToBin(WritingClass& writer){
 
     writer.write_uint16(static_cast<unsigned int>(getVersion()), RawDataParser::UseDefaultEndian);
     writer.write_uint16(static_cast<unsigned int>(getSubVersion()), RawDataParser::UseDefaultEndian);
+    writer.write_string(logFileName, true, CONFIG_NAME_LENGTH);
     writer.write_uint16(static_cast<unsigned int>(getCANBitrate()), RawDataParser::UseDefaultEndian);
     writer.write_uint8(static_cast<unsigned int>(getGPSFrequency()));
     writer.write_uint16(static_cast<unsigned int>(getNumOfFrames()), RawDataParser::UseDefaultEndian);
 
-    for (auto it=idToFrameMap.begin(); it!=idToFrameMap.end(); it++){
-        it->second->writeToBin(writer);
+    for (auto& pFrame : framesVector){
+        pFrame->writeToBin(writer);
+    }
+
+    writer.write_uint8(getNumberOfStartTriggers());
+    writer.write_uint8(getNumberOfStopTriggers());
+
+    for (auto& startTrigger : startConfigTriggers){
+        startTrigger->writeToBin(writer);
+    }
+
+    for (auto& stopTrigger : stopConfigTriggers){
+        stopTrigger->writeToBin(writer);
     }
 }
 
@@ -138,8 +341,8 @@ void Config::readFromBin(ReadingClass& reader){
 
     this->reset();
 
-    setVersion(static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
-    setSubVersion(static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
+    setVersion(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    setSubVersion(reader.reading_uint16(RawDataParser::UseDefaultEndian));
 
     if (this->getVersion() != ACTUAL_VERSION || this->getSubVersion() != ACTUAL_SUB_VERSION){
         string exceptionString = "Version of read config file: ";
@@ -154,80 +357,38 @@ void Config::readFromBin(ReadingClass& reader){
         throw std::out_of_range(exceptionString);
     }
 
+    setLogFileName(reader.reading_string(CONFIG_NAME_LENGTH, true));
+
     setCANBitrate(static_cast<EnCANBitrate>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
     setGPSFrequency(static_cast<EnGPSFrequency>(reader.reading_uint8()));
-    int framesNumber = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    setRTCConfigurationFrameID(reader.reading_uint16(RawDataParser::UseDefaultEndian));
 
-    for(int i=0; i<framesNumber; i++){
-        ConfigFrame* pFrame = new ConfigFrame(reader);
+    unsigned int framesNumber = reader.reading_uint16(RawDataParser::UseDefaultEndian);
+    for(unsigned int i=0; i<framesNumber; i++){
+        ConfigFrame* pFrame = new ConfigFrame(this, reader);
         addFrame(pFrame);
     }
-}
 
-Config::iterator::iterator(map <unsigned int, ConfigFrame*>::iterator it, Config* pConfig) :
-    innerIterator(it),
-    pConfig(pConfig)
-{
-}
+    unsigned int startLogTriggersNumber = reader.reading_uint8();
+    unsigned int stopLogTriggersNumber = reader.reading_uint8();
 
-bool Config::iterator::operator==(const Config::iterator &second) const {
-    return innerIterator == second.innerIterator;
-}
+    if (startLogTriggersNumber > START_CONFIG_TRIGGERS_MAX_NUMBER){
+        throw std::out_of_range("START_LOG_TRIGGERS_NUMBER in config file is out of range.");
+    }
 
-bool Config::iterator::operator!=(const Config::iterator &second) const {
-    return innerIterator != second.innerIterator;
-}
+    if (stopLogTriggersNumber > STOP_CONFIG_TRIGGERS_MAX_NUMBER){
+        throw std::out_of_range("STOP_LOG_TRIGGERS_NUMBER in config file is out of range.");
+    }
 
-ConfigFrame* Config::iterator::operator*(){
-    return innerIterator->second;
-}
+    for (unsigned int i=0; i<startLogTriggersNumber; i++){
+        ConfigTrigger* pTrigger = new ConfigTrigger(reader, this);
+        addStartTrigger(pTrigger);
+    }
 
-ConfigFrame* Config::iterator::operator->(){
-    return innerIterator->second;
-}
-
-Config::iterator& Config::iterator::operator++(){
-    ++innerIterator;
-    return *this;
-}
-
-Config::iterator Config::iterator::operator++(int){
-    iterator ret(*this);
-    ++innerIterator;
-    return ret;
-}
-
-Config::const_iterator::const_iterator(map <unsigned int, ConfigFrame*>::const_iterator it, const Config* pConfig) :
-    innerIterator(it),
-    pConfig(pConfig)
-{
-}
-
-bool Config::const_iterator::operator==(const Config::const_iterator &second) const {
-    return innerIterator == second.innerIterator;
-}
-
-bool Config::const_iterator::operator!=(const Config::const_iterator &second) const {
-    return innerIterator != second.innerIterator;
-}
-
-const ConfigFrame* Config::const_iterator::operator*(){
-    return innerIterator->second;
-}
-
-const ConfigFrame* Config::const_iterator::operator->(){
-    return innerIterator->second;
-}
-
-Config::const_iterator& Config::const_iterator::operator++(){
-    ++innerIterator;
-    return *this;
-}
-
-Config::const_iterator Config::const_iterator::operator++(int){
-    const_iterator ret(*this);
-    ++innerIterator;
-    return ret;
+    for (unsigned int i=0; i<stopLogTriggersNumber; i++){
+        ConfigTrigger* pTrigger = new ConfigTrigger(reader, this);
+        addStopTrigger(pTrigger);
+    }
 }
 
 Config::~Config(){
