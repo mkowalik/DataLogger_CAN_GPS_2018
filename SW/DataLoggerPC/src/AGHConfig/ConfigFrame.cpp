@@ -6,7 +6,7 @@
 #include <cmath>
 #include <algorithm>
 
-static const unsigned int FRAME_NAME_LENGTH = 20;
+static constexpr unsigned int FRAME_NAME_LENGTH = 20;
 
 //<--------------------------->//
 //<----- Private methods ----->//
@@ -49,10 +49,6 @@ std::vector<ConfigSignal*>::iterator ConfigFrame::lowerBoundSignalIterator(unsig
     });
 }
 
-bool ConfigFrame::signalsEmpty() const {
-    return signalsVector.empty();
-}
-
 void ConfigFrame::sortSignalsCallback()
 {
     std::sort(signalsVector.begin(), signalsVector.end(), [](ConfigSignal* pSig1, ConfigSignal* pSig2){return (pSig1->getSignalID() < pSig2->getSignalID());});
@@ -86,9 +82,14 @@ void ConfigFrame::_setFrameID(unsigned int _frameID){
     pParentConfig->sortFramesCallback();
 }
 
-void ConfigFrame::setFrameName(string frameName){
-    this->frameName = frameName;
-    this->frameName.resize(FRAME_NAME_LENGTH);
+void ConfigFrame::setFrameName(string _frameName){
+    if (_frameName.length() > FRAME_NAME_LENGTH){
+        _frameName.resize(FRAME_NAME_LENGTH);
+    }
+    if (_frameName.find_first_of(static_cast<char>(0)) != string::npos){
+        _frameName.resize(_frameName.find_first_of(static_cast<char>(0)));
+    }
+    this->frameName = _frameName;
 }
 
 void ConfigFrame::setFrameID(unsigned int _frameID){
@@ -154,8 +155,15 @@ void ConfigFrame::removeSignal(unsigned int signalID)
     if ((signalIt == signalsVector.cend()) || ((*signalIt)->getSignalID() != signalID)){
         throw std::out_of_range("Signal with given id does not exist");
     }
+
+    pParentConfig->removeTriggersWithSignal(*signalIt);
+
     delete (*signalIt);
     signalsVector.erase(signalIt);
+}
+
+bool ConfigFrame::signalsEmpty() const {
+    return signalsVector.empty();
 }
 
 ConfigFrame::SignalsIterator ConfigFrame::beginSignals() {

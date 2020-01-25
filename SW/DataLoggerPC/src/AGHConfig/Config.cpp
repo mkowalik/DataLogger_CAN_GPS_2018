@@ -20,6 +20,32 @@ void Config::addFrame(ConfigFrame* pFrame){
     framesVector.emplace(lowerBoundFrameConstIterator(pFrame->getFrameID()), pFrame);
 }
 
+void Config::addStartTrigger(ConfigTrigger *_pTrigger)
+{
+    if (getStartTriggersNumber() >= START_CONFIG_TRIGGERS_MAX_NUMBER){
+        throw std::logic_error("Max number of start config triggers reached.");
+    }
+    for (const ConfigTrigger* pTrigger: startConfigTriggers){
+        if ((*pTrigger)==(*_pTrigger)){
+            throw std::invalid_argument("Given trigger is already defined.");
+        }
+    }
+    startConfigTriggers.emplace_back(_pTrigger);
+}
+
+void Config::addStopTrigger(ConfigTrigger *_pTrigger)
+{
+    if (getStopTriggersNumber() >= STOP_CONFIG_TRIGGERS_MAX_NUMBER){
+        throw std::logic_error("Max number of stop config triggers reached.");
+    }
+    for (auto pTrigger: stopConfigTriggers){
+        if (*pTrigger == *_pTrigger){
+            throw std::invalid_argument("Given trigger is already defined.");
+        }
+    }
+    stopConfigTriggers.emplace_back(_pTrigger);
+}
+
 std::vector<ConfigFrame*>::const_iterator Config::lowerBoundFrameConstIterator(unsigned int frameID) const {
     return std::lower_bound(framesVector.cbegin(), framesVector.cend(), frameID, [](const ConfigFrame* pFrame, unsigned int frameID){
         return (pFrame->getFrameID() < frameID);
@@ -30,10 +56,6 @@ std::vector<ConfigFrame*>::iterator Config::lowerBoundFrameIterator(unsigned int
     return std::lower_bound(framesVector.begin(), framesVector.end(), frameID, [](const ConfigFrame* pFrame, unsigned int frameID){
         return (pFrame->getFrameID() < frameID);
     });
-}
-
-bool Config::framesEmpty() const {
-    return framesVector.empty();
 }
 
 void Config::sortFramesCallback()
@@ -145,11 +167,15 @@ unsigned int Config::getRTCConfigurationFrameID() const {
     return rtcConfigurationFrameID;
 }
 
+//<----- Access to frames definitions ----->/
+
 int Config::getNumOfFrames() const {
     return static_cast<int>(framesVector.size());
 }
 
-//<----- Access to frames definitions ----->/
+bool Config::framesEmpty() const {
+    return framesVector.empty();
+}
 
 ConfigFrame* Config::addFrame(unsigned int frameID, string frameName)
 {
@@ -229,32 +255,60 @@ unsigned int Config::getNumberOfStopTriggers()
     return static_cast<unsigned int>(stopConfigTriggers.size());
 }
 
-void Config::addStartTrigger(ConfigTrigger* pNewTrigger){
-    for (const ConfigTrigger* pTrigger: startConfigTriggers){
-        if ((*pTrigger)==(*pNewTrigger)){
-            throw std::invalid_argument("Given trigger is already defined.");
+ConfigTrigger* Config::addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
+    ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, pFrame, pSignal, compareConstValue, compareOperator);
+    addStartTrigger(pNewTrigger);
+    return pNewTrigger;
+}
+
+void Config::removeStartTrigger(Config::TriggersIterator trigIt)
+{
+    delete (*trigIt);
+    startConfigTriggers.erase(trigIt);
+}
+
+void Config::removeStartTrigger(ConfigTrigger *pTriggerToRemove)
+{
+    for (TriggersIterator it = startConfigTriggers.begin(); it != startConfigTriggers.end() ; it++){
+        if ((*it) == pTriggerToRemove){
+            removeStartTrigger(it);
+            return;
         }
     }
-    startConfigTriggers.emplace_back(pNewTrigger);
+    throw std::logic_error("Given start triger wanted to be removed not found error.");
 }
 
-void Config::removeStartTrigger(Config::TriggersIterator *pTrigger)
+unsigned int Config::getStartTriggersNumber()
 {
-
+    return static_cast<unsigned int>(startConfigTriggers.size());
 }
 
-void Config::addStopTrigger(ConfigTrigger* pNewTrigger){
-    for (auto pTrigger: stopConfigTriggers){
-        if (*pTrigger == *pNewTrigger){
-            throw std::invalid_argument("Given trigger is already defined.");
+ConfigTrigger* Config::addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
+    ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, pFrame, pSignal, compareConstValue, compareOperator);
+    addStopTrigger(pNewTrigger);
+    return pNewTrigger;
+}
+
+void Config::removeStopTrigger(Config::TriggersIterator trigIt)
+{
+    delete (*trigIt);
+    stopConfigTriggers.erase(trigIt);
+}
+
+void Config::removeStopTrigger(ConfigTrigger *pTriggerToRemove)
+{
+    for (TriggersIterator it = stopConfigTriggers.begin(); it != stopConfigTriggers.end() ; it++){
+        if ((*it) == pTriggerToRemove){
+            removeStopTrigger(it);
+            return;
         }
     }
-    stopConfigTriggers.emplace_back(pNewTrigger);
+    throw std::logic_error("Given stop triger wanted to be removed not found error.");
 }
 
-void Config::removeStopTrigger(Config::TriggersIterator *pTrigger)
+unsigned int Config::getStopTriggersNumber()
 {
-
+    return static_cast<unsigned int>(stopConfigTriggers.size());
 }
 
 Config::TriggersIterator Config::beginStartTriggers()
@@ -294,7 +348,39 @@ Config::ConstTriggersIterator Config::cbeginStopTriggers() const
 
 Config::ConstTriggersIterator Config::cendStopTriggers() const
 {
-    return startConfigTriggers.cend();
+    return stopConfigTriggers.cend();
+}
+
+void Config::removeTriggersWithSignal(const ConfigSignal *pSignal)
+{
+    for (auto it = startConfigTriggers.begin(); it != startConfigTriggers.end(); it++){
+        if ((*it)->getSignal() == pSignal){
+            startConfigTriggers.erase(it);
+            delete *it;
+        }
+    }
+    for (auto it = stopConfigTriggers.begin(); it != stopConfigTriggers.end(); it++){
+        if ((*it)->getSignal() == pSignal){
+            stopConfigTriggers.erase(it);
+            delete *it;
+        }
+    }
+}
+
+void Config::removeTriggersWithFrame(const ConfigFrame *pFrame)
+{
+    for (auto it = startConfigTriggers.begin(); it != startConfigTriggers.end(); it++){
+        if ((*it)->getFrame() == pFrame){
+            startConfigTriggers.erase(it);
+            delete *it;
+        }
+    }
+    for (auto it = stopConfigTriggers.begin(); it != stopConfigTriggers.end(); it++){
+        if ((*it)->getFrame() == pFrame){
+            stopConfigTriggers.erase(it);
+            delete *it;
+        }
+    }
 }
 
 void Config::reset(){
@@ -381,12 +467,12 @@ void Config::readFromBin(ReadingClass& reader){
     }
 
     for (unsigned int i=0; i<startLogTriggersNumber; i++){
-        ConfigTrigger* pTrigger = new ConfigTrigger(reader, this);
+        ConfigTrigger* pTrigger = new ConfigTrigger(this, reader);
         addStartTrigger(pTrigger);
     }
 
     for (unsigned int i=0; i<stopLogTriggersNumber; i++){
-        ConfigTrigger* pTrigger = new ConfigTrigger(reader, this);
+        ConfigTrigger* pTrigger = new ConfigTrigger(this, reader);
         addStopTrigger(pTrigger);
     }
 }

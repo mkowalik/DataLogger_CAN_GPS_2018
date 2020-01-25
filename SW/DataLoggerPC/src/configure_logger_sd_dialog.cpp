@@ -80,11 +80,17 @@ void ConfigureLoggerSDDialog::reloadGPSFrequencyWidget(){
 }
 
 void ConfigureLoggerSDDialog::reloadStartTriggersWidget(){
-
+    ui->startTrigger_listWidget->clear();
+    for (auto it = pConfig->cbeginStartTriggers(); it != pConfig->cendStartTriggers(); ++it){
+        ui->startTrigger_listWidget->addItem(prepareTriggerListWidget(*it));
+    }
 }
 
 void ConfigureLoggerSDDialog::reloadStopTriggersWidget(){
-
+    ui->stopTrigger_listWidget->clear();
+    for (auto it = pConfig->cbeginStopTriggers(); it != pConfig->cendStopTriggers(); ++it){
+        ui->stopTrigger_listWidget->addItem(prepareTriggerListWidget(*it));
+    }
 }
 
 void ConfigureLoggerSDDialog::reloadConfigView(){
@@ -95,12 +101,20 @@ void ConfigureLoggerSDDialog::reloadConfigView(){
     reloadStopTriggersWidget();
 }
 
+void ConfigureLoggerSDDialog::reloadEnableDisableSaveButton()
+{
+    if ((pConfig->getNumberOfStartTriggers() == 0) || (pConfig->framesEmpty())){
+        ui->saveConfigButton->setEnabled(false);
+    } else {
+        ui->saveConfigButton->setEnabled(true);
+    }
+}
+
 void ConfigureLoggerSDDialog::editFrameRow(QTreeWidgetItem *pClickedFrameRow, ConfigFrame* pFrame){
 
     FrameDialog frameDialog(*(this->pConfig), pFrame, this);
-    bool success = false;
 
-    while (!success) {
+    while (true) {
         try {
             if (frameDialog.exec() == QDialog::Accepted){
                 pFrame->setFrameID(frameDialog.getFrameID());
@@ -111,7 +125,7 @@ void ConfigureLoggerSDDialog::editFrameRow(QTreeWidgetItem *pClickedFrameRow, Co
                 insertFrameRowWidget(pClickedFrameRow, pFrame);
                 ui->framesTreeWidget->clearSelection();
             }
-            success = true;
+            return;
         } catch (const std::logic_error& e) {
             QMessageBox::warning(this, "Error", e.what());
         }
@@ -121,9 +135,8 @@ void ConfigureLoggerSDDialog::editFrameRow(QTreeWidgetItem *pClickedFrameRow, Co
 void ConfigureLoggerSDDialog::editSignalRow(QTreeWidgetItem *pClickedSignalRow, ConfigSignal* pSignal){
 
     SignalDialog signalDialog(*(pSignal->getParentFrame()), pSignal, this);
-    bool success = false;
 
-    while (!success) {
+    while (true) {
         try {
             if (signalDialog.exec() == QDialog::Accepted){
 
@@ -144,8 +157,11 @@ void ConfigureLoggerSDDialog::editSignalRow(QTreeWidgetItem *pClickedSignalRow, 
                 pParentFrameRow->removeChild(pClickedSignalRow);
                 insertSignalRowWidget(pClickedSignalRow, pParentFrameRow, pSignal);
                 ui->framesTreeWidget->clearSelection();
+
+                reloadStartTriggersWidget();
+                reloadStopTriggersWidget();
             }
-            success = true;
+            return;
         } catch (const std::logic_error& e) {
             QMessageBox::warning(this, "Error", e.what());
         }
@@ -160,7 +176,7 @@ void ConfigureLoggerSDDialog::deleteFrameRow(QTreeWidgetItem *pClickedFrameRow, 
         for (auto pSignalRow : pClickedFrameRow->takeChildren()){
             signalMap.erase(pSignalRow);
         }
-        ui->framesTreeWidget->takeTopLevelItem(ui->framesTreeWidget->indexOfTopLevelItem(pClickedFrameRow)); //< Removes the top-level item at the given index in the tree
+        delete ui->framesTreeWidget->takeTopLevelItem(ui->framesTreeWidget->indexOfTopLevelItem(pClickedFrameRow)); //< Removes the top-level item at the given index in the tree
         ui->framesTreeWidget->clearSelection();
     }
 }
@@ -171,16 +187,15 @@ void ConfigureLoggerSDDialog::deleteSignalRow(QTreeWidgetItem *pClickedSignalRow
         ConfigFrame * pParentFrame = pSignal->getParentFrame();
         pParentFrame->removeSignal(pSignal->getSignalID());
         pClickedSignalRow->parent()->removeChild(pClickedSignalRow);
+        delete pClickedSignalRow;
         ui->framesTreeWidget->clearSelection();
     }
 }
 
-void ConfigureLoggerSDDialog::addNewFrameRow()
-{
+void ConfigureLoggerSDDialog::addNewFrameRow() {
     FrameDialog newFrameDialog(*(this->pConfig), nullptr, this);
-    bool success = false;
 
-    while (!success) {
+    while (true) {
         try {
             if (newFrameDialog.exec() == QDialog::Accepted){
 
@@ -190,7 +205,7 @@ void ConfigureLoggerSDDialog::addNewFrameRow()
                 insertFrameRowWidget(pFrameRow, pFrame);
                 ui->framesTreeWidget->clearSelection();
             }
-            success = true;
+            return;
         } catch (const std::logic_error& e) {
             QMessageBox::warning(this, "Error", e.what());
         }
@@ -201,9 +216,7 @@ void ConfigureLoggerSDDialog::addNewSignalRow(QTreeWidgetItem * pSelectedFrameRo
 
     SignalDialog signalDialog(*pFrame, nullptr, this);
 
-    bool success = false;
-
-    while (!success) {
+    while (true) {
         try {
             if (signalDialog.exec() == QDialog::Accepted){
                 ConfigSignal* pSignal = nullptr;
@@ -236,10 +249,79 @@ void ConfigureLoggerSDDialog::addNewSignalRow(QTreeWidgetItem * pSelectedFrameRo
                 insertSignalRowWidget(pSignalRow, pSelectedFrameRow, pSignal);
                 ui->framesTreeWidget->clearSelection();
             }
-            success = true;
+            return;
         } catch (const std::logic_error& e) {
             QMessageBox::warning(this, "Error", e.what());
         }
+    }
+}
+
+void ConfigureLoggerSDDialog::addNewTriggerRow(TriggerType triggerType) {
+
+    TriggerDialog newTriggerDialog(*pConfig, nullptr, this);
+    ConfigTrigger* pTrigger;
+
+    while (true) {
+        try {
+            if (newTriggerDialog.exec() == QDialog::Accepted){
+                switch (triggerType) {
+                case TriggerType::StartTrigger:
+                    pTrigger            = pConfig->addStartTrigger(newTriggerDialog.getTriggerName().toStdString(), newTriggerDialog.getSelectedFrame(), newTriggerDialog.getSelectedSignal(), newTriggerDialog.getConstCompareValue(), newTriggerDialog.getCompareOperator());
+                    ui->startTrigger_listWidget->addItem(prepareTriggerListWidget(pTrigger));
+                    break;
+                case TriggerType::StopTrigger:
+                    pTrigger            = pConfig->addStopTrigger(newTriggerDialog.getTriggerName().toStdString(), newTriggerDialog.getSelectedFrame(), newTriggerDialog.getSelectedSignal(), newTriggerDialog.getConstCompareValue(), newTriggerDialog.getCompareOperator());
+                    ui->stopTrigger_listWidget->addItem(prepareTriggerListWidget(pTrigger));
+                    break;
+                }
+            }
+            return;
+        } catch (const std::logic_error& e) {
+            QMessageBox::warning(this, "Error", e.what());
+        }
+    }
+}
+
+void ConfigureLoggerSDDialog::editTriggerRow(QListWidgetItem *pClickedItem, TriggerType)
+{
+    ConfigTrigger* pTrigger = pClickedItem->data(Qt::UserRole).value<ConfigTrigger*>();
+
+    TriggerDialog newTriggerDialog(*pConfig, pTrigger, this);
+
+    while (true) {
+        try {
+            if (newTriggerDialog.exec() == QDialog::Accepted){
+                pTrigger->setTriggerName(newTriggerDialog.getTriggerName().toStdString());
+                pTrigger->setCompareConstValue(newTriggerDialog.getConstCompareValue());
+                pTrigger->setFrameSignalOperator(newTriggerDialog.getSelectedFrame(), newTriggerDialog.getSelectedSignal(), newTriggerDialog.getCompareOperator());
+                pClickedItem->setText(newTriggerDialog.getTriggerName() + " (" + newTriggerDialog.getFormulaRenderValue() + ")");
+            }
+            return;
+        } catch (const std::logic_error& e) {
+            QMessageBox::warning(this, "Error", e.what());
+        }
+    }
+
+}
+
+void ConfigureLoggerSDDialog::deleteTriggerRow(QListWidgetItem *pClickedItem, TriggerType triggerType)
+{
+    if (QMessageBox::question(this, "Delete trigger", "Do you relly want to delete this trigger?") == QMessageBox::StandardButton::Yes){
+        ConfigTrigger * pTriggerToRemove = pClickedItem->data(Qt::UserRole).value<ConfigTrigger*>();
+        switch (triggerType){
+        case TriggerType::StartTrigger:
+            pConfig->removeStartTrigger(pTriggerToRemove);
+            delete ui->startTrigger_listWidget->takeItem(ui->startTrigger_listWidget->row(pClickedItem));
+            ui->startLogTriggers_label->clearFocus();
+            break;
+        case TriggerType::StopTrigger:
+        default:
+            pConfig->removeStopTrigger(pTriggerToRemove);
+            delete ui->stopTrigger_listWidget->takeItem(ui->stopTrigger_listWidget->row(pClickedItem));
+            ui->startLogTriggers_label->clearFocus();
+            break;
+        }
+        ui->framesTreeWidget->clearSelection();
     }
 }
 
@@ -250,13 +332,12 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareFrameRowWidget(QTreeWidgetItem 
         frameMap.insert({pPreviousFrameRow, pFrame});
     }
 
-    constexpr static int baseForFrameID = 16;
-
-    QString text = QString::fromStdString("0x");
-    text.append(QString::number(pFrame->getFrameID(), baseForFrameID));
-    text.append(" (");
+    QString text;
     text.append(QString::fromStdString(pFrame->getFrameName()));
-    text.append(")");
+    text.append(" [");
+    text.append("0x");
+    text.append(QString::number(pFrame->getFrameID(), 16));
+    text.append("]");
 
     pPreviousFrameRow->setText(0, text);
 
@@ -487,52 +568,27 @@ void ConfigureLoggerSDDialog::on_rtcConfigFrameID_spinBox_valueChanged(int val)
 void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(const QPoint &pos)
 {
     try {
+        if (pConfig->framesEmpty()){
+            return;
+        }
         QMenu menu(this); // add menu items
-        menu.addAction(ui->actionEdit);
-        menu.addAction(ui->actionDelete);
+        menu.addAction(ui->actionEditFrameOrSignal);
+        menu.addAction(ui->actionDeleteFrameOrSignal);
+        menu.addAction(ui->actionAddSignalToClickedFrame);
 
-        ui->actionDelete->setData(QVariant(pos)); // if you will need the position data save it to the action
-        ui->actionEdit->setData(QVariant(pos)); // if you will need the position data save it to the action
+        QTreeWidgetItem *pClickedItem = ui->framesTreeWidget->itemAt(pos);
+
+        if (pClickedItem == nullptr){
+            return;
+        }
+
+        QVariant v;
+        v.setValue(pClickedItem);
+
+        ui->actionDeleteFrameOrSignal->setData(v); // if you will need the position data save it to the action
+        ui->actionEditFrameOrSignal->setData(v); // if you will need the position data save it to the action
 
         menu.exec(ui->framesTreeWidget->mapToGlobal(pos));
-    } catch (const std::logic_error& e){
-        QMessageBox::warning(this, "Error", e.what());
-    } catch (const std::exception& e){
-        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
-    }
-}
-
-void ConfigureLoggerSDDialog::on_actionEdit_triggered()
-{
-    try {
-        QTreeWidgetItem *pClickedItem = ui->framesTreeWidget->itemAt(ui->actionEdit->data().toPoint());
-
-        if (pClickedItem->parent()){
-            ConfigSignal * pSignal = signalMap.at(pClickedItem);
-            editSignalRow(pClickedItem, pSignal);
-        } else {
-            ConfigFrame* pFrame = this->frameMap.at(pClickedItem);
-            editFrameRow(pClickedItem, pFrame);
-        }
-    } catch (const std::logic_error& e){
-        QMessageBox::warning(this, "Error", e.what());
-    } catch (const std::exception& e){
-        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
-    }
-}
-
-void ConfigureLoggerSDDialog::on_actionDelete_triggered()
-{
-    try {
-        QTreeWidgetItem *pClickedItem = ui->framesTreeWidget->itemAt(ui->actionDelete->data().toPoint());
-
-        if (pClickedItem->parent()){
-            ConfigSignal * pSignal = signalMap.at(pClickedItem);
-            deleteSignalRow(pClickedItem, pSignal);
-        } else {
-            ConfigFrame* pFrame = this->frameMap.at(pClickedItem);
-            deleteFrameRow(pClickedItem, pFrame);
-        }
     } catch (const std::logic_error& e){
         QMessageBox::warning(this, "Error", e.what());
     } catch (const std::exception& e){
@@ -595,7 +651,18 @@ void ConfigureLoggerSDDialog::on_addSignalButton_clicked() {
 
 void ConfigureLoggerSDDialog::on_addStartTrigger_button_clicked() {
     try {
+        addNewTriggerRow(TriggerType::StartTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
 
+void ConfigureLoggerSDDialog::on_addStopTrigger_button_clicked()
+{
+    try {
+        addNewTriggerRow(TriggerType::StopTrigger);
     } catch (const std::logic_error& e){
         QMessageBox::warning(this, "Error", e.what());
     } catch (const std::exception& e){
@@ -635,4 +702,187 @@ void ConfigureLoggerSDDialog::on_saveConfigButton_clicked()
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
+}
+
+void ConfigureLoggerSDDialog::on_startTrigger_listWidget_customContextMenuRequested(const QPoint &pos)
+{
+    try {
+        QMenu menu(this); // add menu items
+        menu.addAction(ui->actionEditStartLogTrigger);
+        menu.addAction(ui->actionDeleteStartLogTrigger);
+
+        QListWidgetItem *pClickedItem = ui->startTrigger_listWidget->itemAt(pos);
+
+        if (pClickedItem == nullptr){
+            return;
+        }
+
+        QVariant v;
+        v.setValue(pClickedItem);
+
+        ui->actionDeleteStartLogTrigger->setData(v); //< save pointer to row for later use
+        ui->actionEditStartLogTrigger->setData(v); //< save pointer to row for later use
+
+        menu.exec(ui->startTrigger_listWidget->mapToGlobal(pos));
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_actionEditFrameOrSignal_triggered()
+{
+    try {
+        QTreeWidgetItem *pClickedItem = ui->actionEditFrameOrSignal->data().value<QTreeWidgetItem*>();
+
+        if (pClickedItem->parent()){
+            ConfigSignal * pSignal = signalMap.at(pClickedItem);
+            editSignalRow(pClickedItem, pSignal);
+        } else {
+            ConfigFrame* pFrame = this->frameMap.at(pClickedItem);
+            editFrameRow(pClickedItem, pFrame);
+        }
+        reloadStartTriggersWidget();
+        reloadStopTriggersWidget();
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_actionDeleteFrameOrSignal_triggered()
+{
+    try {
+        QTreeWidgetItem *pClickedItem = ui->actionEditFrameOrSignal->data().value<QTreeWidgetItem*>();
+
+        if (pClickedItem->parent()){
+            ConfigSignal * pSignal = signalMap.at(pClickedItem);
+            deleteSignalRow(pClickedItem, pSignal);
+        } else {
+            ConfigFrame* pFrame = this->frameMap.at(pClickedItem);
+            deleteFrameRow(pClickedItem, pFrame);
+        }
+        reloadStartTriggersWidget();
+        reloadStopTriggersWidget();
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_actionDeleteStartLogTrigger_triggered()
+{
+    try {
+        QListWidgetItem *pClickedItem = ui->actionEditStartLogTrigger->data().value<QListWidgetItem*>();
+        deleteTriggerRow(pClickedItem, TriggerType::StartTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_actionEditStartLogTrigger_triggered()
+{
+    try {
+        QListWidgetItem *pClickedItem = ui->actionEditStartLogTrigger->data().value<QListWidgetItem*>();
+        editTriggerRow(pClickedItem, TriggerType::StartTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_startTrigger_listWidget_itemDoubleClicked(QListWidgetItem *pClickedItem)
+{
+    try {
+        editTriggerRow(pClickedItem, TriggerType::StartTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_stopTrigger_listWidget_customContextMenuRequested(const QPoint &pos)
+{
+    try {
+        QMenu menu(this); // add menu items
+        menu.addAction(ui->actionEditStopLogTrigger);
+        menu.addAction(ui->actionDeleteStopLogTrigger);
+
+        QListWidgetItem *pClickedItem = ui->stopTrigger_listWidget->itemAt(pos);
+
+        if (pClickedItem == nullptr){
+            return;
+        }
+
+        QVariant v;
+        v.setValue(pClickedItem);
+
+        ui->actionDeleteStopLogTrigger->setData(v); //< save pointer to row for later use
+        ui->actionEditStopLogTrigger->setData(v); //< save pointer to row for later use
+
+        menu.exec(ui->stopTrigger_listWidget->mapToGlobal(pos));
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+void ConfigureLoggerSDDialog::on_actionDeleteStopLogTrigger_triggered()
+{
+    try {
+        QListWidgetItem *pClickedItem = ui->actionEditStopLogTrigger->data().value<QListWidgetItem*>();
+        deleteTriggerRow(pClickedItem, TriggerType::StopTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+
+}
+
+void ConfigureLoggerSDDialog::on_actionEditStopLogTrigger_triggered()
+{
+    try {
+        QListWidgetItem *pClickedItem = ui->actionEditStopLogTrigger->data().value<QListWidgetItem*>();
+        editTriggerRow(pClickedItem, TriggerType::StopTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+
+}
+
+void ConfigureLoggerSDDialog::on_stopTrigger_listWidget_itemDoubleClicked(QListWidgetItem *pClickedItem)
+{
+    try {
+        editTriggerRow(pClickedItem, TriggerType::StopTrigger);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+}
+
+QListWidgetItem *ConfigureLoggerSDDialog::prepareTriggerListWidget(ConfigTrigger *pTrigger)
+
+{
+    QVariant v;
+    QListWidgetItem* pTriggerWidgetItem = new QListWidgetItem(
+                    QString::fromStdString(pTrigger->getTriggerName()) +
+                    " (" +
+                    TriggerDialog::prepareFormulaRender(pTrigger->getFrame(), pTrigger->getSignal(), pTrigger->getCompareOperator(), pTrigger->getCompareConstValue()) +
+                    ")"
+                );
+    v.setValue<ConfigTrigger*>(pTrigger);
+    pTriggerWidgetItem->setData(Qt::UserRole, v);
+    return pTriggerWidgetItem;
 }

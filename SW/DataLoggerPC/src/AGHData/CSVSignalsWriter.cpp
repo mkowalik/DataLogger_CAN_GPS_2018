@@ -21,9 +21,9 @@ void CSVSignalsWriter::writeSingleRow(unsigned int msTime, map<const ConfigFrame
         if (actualCANFramesToWrite.find(pSignal->getParentFrame()) != actualCANFramesToWrite.end()){
             const SingleCANFrameData* pActualFrame = actualCANFramesToWrite.at(pSignal->getParentFrame());
             if (pSignal->getDivider() != 1){
-                writer.write_double_to_string(pActualFrame->getSignalValueTransformed(pSignal), CSVSignalsWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+                writer.write_double_to_string(pSignal->getSymbolicValueFromFramePayload(pActualFrame->getRawData()), CSVSignalsWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
             } else {
-                writer.write_int_to_string(pActualFrame->getSignalValueTransformedLL(pSignal), false);
+                writer.write_int_to_string(pSignal->getSymbolicIntValueFromFramePayload(pActualFrame->getRawData()), false);
             }
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);

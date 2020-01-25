@@ -32,11 +32,11 @@ public:
     static constexpr unsigned int   ACTUAL_VERSION          = 0;
     static constexpr unsigned int   ACTUAL_SUB_VERSION      = 4;
 
-    using FramesIterator        = vector<ConfigFrame*>::iterator;
-    using ConstFramesIterator   = vector<ConfigFrame*>::const_iterator;
+    using FramesIterator        = std::vector<ConfigFrame*>::iterator;
+    using ConstFramesIterator   = std::vector<ConfigFrame*>::const_iterator;
 
-    using TriggersIterator      = vector<ConfigTrigger*>::iterator;
-    using ConstTriggersIterator = vector<ConfigTrigger*>::const_iterator;
+    using TriggersIterator      = std::vector<ConfigTrigger*>::iterator;
+    using ConstTriggersIterator = std::vector<ConfigTrigger*>::const_iterator;
 private:
     static constexpr EnCANBitrate   DEFAULT_CAN_BITRATE     = EnCANBitrate::bitrate_500kbps;
     static constexpr EnGPSFrequency DEFAULT_GPS_FREQUENCY   = EnGPSFrequency::freq_10_Hz;
@@ -50,9 +50,10 @@ private:
     Config();
 
     void                                        addFrame(ConfigFrame *pFrame);
+    void                                        addStartTrigger(ConfigTrigger* pTrigger);
+    void                                        addStopTrigger(ConfigTrigger* pTrigger);
     std::vector<ConfigFrame*>::const_iterator   lowerBoundFrameConstIterator(unsigned int frameID) const;
     std::vector<ConfigFrame*>::iterator         lowerBoundFrameIterator(unsigned int frameID);
-    bool                                        framesEmpty() const;
     void                                        sortFramesCallback();
 
     unsigned int                version;
@@ -91,6 +92,7 @@ public:
     //<----- Access to frames definitions ----->/
 
     int                     getNumOfFrames() const;
+    bool                    framesEmpty() const;
 
     bool                    hasFrameWithId(unsigned int frameID) const;
     ConfigFrame*            getFrameWithId(unsigned int frameID) const;
@@ -110,11 +112,15 @@ public:
     unsigned int            getNumberOfStartTriggers();
     unsigned int            getNumberOfStopTriggers();
 
-    void                    addStartTrigger(ConfigTrigger* pTrigger);
-    void                    removeStartTrigger(TriggersIterator* pTrigger);
+    ConfigTrigger*          addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator);
+    void                    removeStartTrigger(TriggersIterator trigIt);
+    void                    removeStartTrigger(ConfigTrigger* pTrigger);
+    unsigned int            getStartTriggersNumber();
 
-    void                    addStopTrigger(ConfigTrigger* pTrigger);
-    void                    removeStopTrigger(TriggersIterator* pTrigger);
+    ConfigTrigger*          addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator);
+    void                    removeStopTrigger(TriggersIterator trigIt);
+    void                    removeStopTrigger(ConfigTrigger* pTrigger);
+    unsigned int            getStopTriggersNumber();
 
     TriggersIterator        beginStartTriggers();
     TriggersIterator        endStartTriggers();
@@ -127,6 +133,10 @@ public:
     ConstTriggersIterator   cendStopTriggers() const;
 
     //<----- General purpose methods definitions ----->/
+
+    void                    removeTriggersWithSignal(const ConfigSignal* pSignal);
+    void                    removeTriggersWithFrame(const ConfigFrame* pFrame);
+
     void                    reset();
 
     virtual void            writeToBin(WritingClass& writer) override;

@@ -32,7 +32,11 @@ unsigned int SingleCANFrameData::getFrameDLC() const {
     return static_cast<unsigned int>(rawPayloadData.size());
 }
 
-unsigned char SingleCANFrameData::getRawDataValue(unsigned int byteIndex) const {
+vector<unsigned char> SingleCANFrameData::getRawData() const {
+    return rawPayloadData;
+}
+
+unsigned char SingleCANFrameData::getRawDataByte(unsigned int byteIndex) const {
     if (byteIndex >= getFrameDLC()){
         throw invalid_argument("byteIndex exeeds frame DLC.");
     }
@@ -70,71 +74,4 @@ void SingleCANFrameData::setRawPayloadData(unsigned char* data, unsigned int dlc
 
 unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSignal) const {
 
-    if (pSignal->getParentFrame() != this->pConfigFrame){
-        throw std::invalid_argument("Signal is not member of the frame.");
-    }
-    if (pSignal->getStartBit() + pSignal->getLengthBits() > (getFrameDLC() * 8)){
-        throw std::invalid_argument("Signal with given position and length exeeds DLC of the frame.");
-    }
-
-    unsigned int bitsLeft       = pSignal->getLengthBits();
-    unsigned int bitsShiftRaw   = pSignal->getStartBit() % 8;
-    unsigned int bitIt          = pSignal->getStartBit();
-    unsigned long long ret      = 0;
-
-    if (pSignal->getValueType().isBigEndianType()){
-        while (bitsLeft > 0) {
-            unsigned char actualByte = rawPayloadData[(bitIt/8)];
-            unsigned char nextByte = 0;
-            if ((bitIt/8)+1 < getFrameDLC()) {
-                nextByte = rawPayloadData[(bitIt/8)+1];
-            }
-            actualByte <<= bitsShiftRaw;
-            actualByte |= (nextByte >> (8U - bitsShiftRaw));
-
-            if (bitsLeft % 8 != 0){
-                actualByte >>= (8U - (bitsLeft % 8));
-                actualByte &= (0xFF >> (8U - (bitsLeft % 8)));
-            }
-            ret |= (static_cast<unsigned long long>(actualByte) << (bitsLeft - (((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U))) );
-            bitIt += ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
-            bitsShiftRaw = (bitsShiftRaw + bitsLeft) % 8U;
-            bitsLeft -= ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
-        }
-    } else {
-        while (bitsLeft > 0) {
-            unsigned char actualByte = rawPayloadData[bitIt/8];
-            unsigned char nextByte = 0;
-            if ((bitIt/8)+1 < getFrameDLC()) {
-                nextByte = rawPayloadData[(bitIt/8)+1];
-            }
-            actualByte <<= bitsShiftRaw;
-            actualByte |= (nextByte >> (8U - bitsShiftRaw));
-
-            if (bitsLeft < 8){
-                actualByte >>= (8U - bitsLeft);
-                actualByte &= (0xFF >> (8U - bitsLeft));
-            }
-            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - pSignal->getStartBit())/8) * 8U));
-            bitIt += min(8U, bitsLeft);
-            bitsLeft -= min(8U, bitsLeft);
-        }
-    }
-    return ret;
-}
-
-double SingleCANFrameData::getSignalValueTransformed(const ConfigSignal* pSignal) const {
-   double ret = static_cast<double>(this->getSignalValueRaw(pSignal));
-   ret += static_cast<double>(pSignal->getOffset());
-   ret *= static_cast<double>(pSignal->getMultiplier());
-   ret /= static_cast<double>(pSignal->getDivider());
-   return ret;
-}
-
-long long SingleCANFrameData::getSignalValueTransformedLL(const ConfigSignal* pSignal) const {
-   long long ret = static_cast<long long>(this->getSignalValueRaw(pSignal));
-   ret += static_cast<double>(pSignal->getOffset());
-   ret *= static_cast<double>(pSignal->getMultiplier());
-   ret /= static_cast<double>(pSignal->getDivider());
-   return ret;
 }

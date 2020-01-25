@@ -151,7 +151,7 @@
          <item>
           <widget class="QComboBox" name="canBitrateComboBox">
            <property name="currentText">
-            <string>500kbps</string>
+            <string>50kbps</string>
            </property>
            <item>
             <property name="text">
@@ -194,7 +194,7 @@
          <item>
           <widget class="QComboBox" name="gpsFreqComboBox">
            <property name="currentText">
-            <string>10 Hz</string>
+            <string>GPS OFF</string>
            </property>
            <item>
             <property name="text">
@@ -463,6 +463,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
         </widget>
        </item>
        <item>
@@ -528,6 +531,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
         </widget>
        </item>
        <item>
@@ -590,7 +596,7 @@
     </layout>
    </item>
   </layout>
-  <action name="actionEdit">
+  <action name="actionEditFrameOrSignal">
    <property name="text">
     <string>Edit</string>
    </property>
@@ -598,12 +604,67 @@
     <string>Ctrl+E</string>
    </property>
   </action>
-  <action name="actionDelete">
+  <action name="actionDeleteFrameOrSignal">
    <property name="text">
     <string>Delete</string>
    </property>
    <property name="shortcut">
     <string>Del</string>
+   </property>
+  </action>
+  <action name="actionDeleteStartLogTrigger">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionEditStartLogTrigger">
+   <property name="text">
+    <string>Edit</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionDeleteStopLogTrigger">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionEditStopLogTrigger">
+   <property name="text">
+    <string>Edit</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionAddSignalToClickedFrame">
+   <property name="text">
+    <string>Add Signal</string>
+   </property>
+   <property name="toolTip">
+    <string>Add Signal to chosen frame</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>

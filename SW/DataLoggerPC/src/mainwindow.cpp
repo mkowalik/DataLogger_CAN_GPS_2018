@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <iostream>
+#include <QMessageBox>
 
 static const QString authors("AGH Racing: M. Kowalik, A. Morzywołek");
 
@@ -30,12 +31,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_downloadSDButton_clicked()
 {
-    downloadDialog = new DownloadDataSDDialog(rawDataParser, this);
-    downloadDialog->exec();
+    try {
+        downloadDialog = new DownloadDataSDDialog(rawDataParser, this);
+        downloadDialog->exec();
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
 }
 
 void MainWindow::on_configureSDButton_clicked()
 {
-    configureDialog = new ConfigureLoggerSDDialog(rawDataParser, this);
-    configureDialog->exec();
+    try {
+
+        configureDialog = new ConfigureLoggerSDDialog(rawDataParser, this);
+        configureDialog->exec();
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
 }

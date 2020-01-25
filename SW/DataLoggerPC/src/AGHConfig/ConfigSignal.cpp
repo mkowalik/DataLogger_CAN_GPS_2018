@@ -5,9 +5,9 @@
 #include <iostream>
 #include <cstdint>
 
-static const unsigned int SIGNAL_NAME_LENGHT = 20;
-static const unsigned int UNIT_LENGTH = 20;
-static const unsigned int COMMENT_LENGTH = 20;
+static constexpr unsigned int SIGNAL_NAME_LENGHT = 20;
+static constexpr unsigned int UNIT_LENGTH = 20;
+static constexpr unsigned int COMMENT_LENGTH = 20;
 
 ConfigSignal::ConfigSignal(ConfigFrame* pParentFrame, ReadingClass& reader) :
     pParentFrame(pParentFrame),
@@ -218,6 +218,93 @@ ConfigSignalNamedValue& ConfigSignal::getNamedValue(int _channelValue){
 
 void ConfigSignal::addNamedValue(int _channelValue, ConfigSignalNamedValue _namedValue){
     channelNamedValues.insert(make_pair(_channelValue, _namedValue));
+}
+
+double ConfigSignal::convertRawValueToSymbolic(unsigned long long value) const {
+    double ret = static_cast<double>(value);
+    ret += static_cast<double>(getOffset());
+    ret *= static_cast<double>(getMultiplier());
+    ret /= static_cast<double>(getDivider());
+    return ret;
+}
+
+long long ConfigSignal::convertRawValueToSymbolicInt(unsigned long long value) const {
+    long long ret = static_cast<long long>(value);
+    ret += static_cast<double>(getOffset());
+    ret *= static_cast<double>(getMultiplier());
+    ret /= static_cast<double>(getDivider());
+    return ret;
+}
+
+unsigned long long ConfigSignal::convertSymbolicValueToRaw(double value) const
+{
+    value *= static_cast<double>(getDivider());
+    value /= static_cast<double>(getMultiplier());
+    value -= static_cast<double>(getOffset());
+    if (value < 0.0){
+        throw std::logic_error("Can't convert given symbolic value to raw value.");
+    }
+    return static_cast<unsigned long long>(value);
+}
+
+unsigned long long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const {
+
+    if (getStartBit() + getLengthBits() > (framePayload.size() * 8)){
+        throw std::invalid_argument("Signal with given position and length exeeds DLC of the frame.");
+    }
+
+    unsigned int bitsLeft       = getLengthBits();
+    unsigned int bitsShiftRaw   = getStartBit() % 8;
+    unsigned int bitIt          = getStartBit();
+    unsigned long long ret      = 0;
+
+    if (getValueType().isBigEndianType()){
+        while (bitsLeft > 0) {
+            unsigned char actualByte = framePayload.at(bitIt/8);
+            unsigned char nextByte = 0;
+            if ((bitIt/8)+1 < framePayload.size()) {
+                nextByte = framePayload.at((bitIt/8)+1);
+            }
+            actualByte <<= bitsShiftRaw;
+            actualByte |= (nextByte >> (8U - bitsShiftRaw));
+
+            if (bitsLeft % 8 != 0){
+                actualByte >>= (8U - (bitsLeft % 8));
+                actualByte &= (0xFF >> (8U - (bitsLeft % 8)));
+            }
+            ret |= (static_cast<unsigned long long>(actualByte) << (bitsLeft - (((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U))) );
+            bitIt += ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
+            bitsShiftRaw = (bitsShiftRaw + bitsLeft) % 8U;
+            bitsLeft -= ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
+        }
+    } else {
+        while (bitsLeft > 0) {
+            unsigned char actualByte = framePayload.at(bitIt/8);
+            unsigned char nextByte = 0;
+            if ((bitIt/8)+1 < framePayload.size()) {
+                nextByte = framePayload.at((bitIt/8)+1);
+            }
+            actualByte <<= bitsShiftRaw;
+            actualByte |= (nextByte >> (8U - bitsShiftRaw));
+
+            if (bitsLeft < 8){
+                actualByte >>= (8U - bitsLeft);
+                actualByte &= (0xFF >> (8U - bitsLeft));
+            }
+            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - getStartBit())/8) * 8U));
+            bitIt += min(8U, bitsLeft);
+            bitsLeft -= min(8U, bitsLeft);
+        }
+    }
+    return ret;
+}
+
+double ConfigSignal::getSymbolicValueFromFramePayload(std::vector<unsigned char> framePayload) const {
+    return convertRawValueToSymbolic(getRawValueFromFramePayload(framePayload));
+}
+
+long long ConfigSignal::getSymbolicIntValueFromFramePayload(std::vector<unsigned char> framePayload) const {
+    return convertRawValueToSymbolicInt(getRawValueFromFramePayload(framePayload));
 }
 
 void ConfigSignal::writeToBin(WritingClass& writer){

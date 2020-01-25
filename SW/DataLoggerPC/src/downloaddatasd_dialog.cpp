@@ -73,29 +73,15 @@ void DownloadDataSDDialog::on_openDataDirButton_clicked()
 
     QString dirPath = dialog.directory().absolutePath();*/
 
-    QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Raw Data Directory");
-
-    ui->dataDirLineEdit->setText(dirPath);
-
-    sourcePathChanged(dirPath);
-}
-
-void DownloadDataSDDialog::sourcePathChanged(QString dirPath){
-
-    QDir dataDir(dirPath);
-    dataDir.setNameFilters(QStringList() << "*.aghlog");
-
-    QStringList files = dataDir.entryList();
-
-    if (files.isEmpty()){
-        QMessageBox::information(this, "Empty folder", "Directory does not contain any .aghlog files.");
-        return;
+    try {
+        QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Raw Data Directory");
+        ui->dataDirLineEdit->setText(dirPath);
+        sourcePathChanged(dirPath);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
-
-    ui->dataFilesListWidget->clear();
-    ui->dataFilesListWidget->addItems(files);
-
-    this->sourceDir = dirPath;
 }
 
 void DownloadDataSDDialog::on_openDestDirButton_clicked()
@@ -114,64 +100,112 @@ void DownloadDataSDDialog::on_openDestDirButton_clicked()
 
     int position = dirPath.lastIndexOf(QRegExp("/.+..+"), -1);
     dirPath.remove(position, dirPath.length());*/
+
+    try {
+        ui->destinationDirComboBox->addItem(dirPath);
+        ui->destinationDirComboBox->setCurrentText(dirPath);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
     QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Destination Directory");
-
-    ui->destinationDirComboBox->addItem(dirPath);
-    ui->destinationDirComboBox->setCurrentText(dirPath);
-
 }
 
 void DownloadDataSDDialog::on_selectAllButton_clicked()
 {
-    ui->dataFilesListWidget->selectAll();
+    try {
+        ui->dataFilesListWidget->selectAll();
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
 }
 
 void DownloadDataSDDialog::on_deselectAll_clicked()
 {
-    ui->dataFilesListWidget->clearSelection();
+    try {
+        ui->dataFilesListWidget->clearSelection();
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
 }
 
 void DownloadDataSDDialog::on_convertSelectedButton_clicked()
 {
-    QList<QFileInfo> filesList;
-    for (QListWidgetItem* pItem: ui->dataFilesListWidget->selectedItems()){
-        filesList.append(QFileInfo(this->sourceDir + "/" + pItem->text()));
-    }
+    try {
+        QList<QFileInfo> filesList;
+        for (QListWidgetItem* pItem: ui->dataFilesListWidget->selectedItems()){
+            filesList.append(QFileInfo(this->sourceDir + "/" + pItem->text()));
+        }
 
-    if (filesList.isEmpty()){
-        QMessageBox::warning(this, "Choose files to convert.", "List of files to copy/convert is empty. Choose files to proceed.");
-        return;
-    }
+        if (filesList.isEmpty()){
+            QMessageBox::warning(this, "Choose files to convert.", "List of files to copy/convert is empty. Choose files to proceed.");
+            return;
+        }
 
-    QDir dataDir(ui->destinationDirComboBox->currentText());
-    if (ui->destinationDirComboBox->currentText().isEmpty() || !dataDir.exists()){
-        QMessageBox::warning(this, "Given directory not exists.", "Givent destination directory doeas not exists. Choose proper directory path to save files.");
-        return;
-    }
+        QDir dataDir(ui->destinationDirComboBox->currentText());
+        if (ui->destinationDirComboBox->currentText().isEmpty() || !dataDir.exists()){
+            QMessageBox::warning(this, "Given directory not exists.", "Givent destination directory doeas not exists. Choose proper directory path to save files.");
+            return;
+        }
 
-    convertFileThread->setFileTimingMode(outputDataLayoutOptionsTimingMode[ui->outputDataLayoutComboBox->currentIndex()]);
-    convertFileThread->addFilesToConvert(filesList);
-    convertFileThread->setDecimaleSeparator(ui->decimalSeparatorComboBox->currentText()[0].toLatin1());
-    convertFileThread->setWriteOnlyChangedValues(ui->writeChangedCheckBox->checkState() == Qt::Checked);
+        convertFileThread->setFileTimingMode(outputDataLayoutOptionsTimingMode[ui->outputDataLayoutComboBox->currentIndex()]);
+        convertFileThread->addFilesToConvert(filesList);
+        convertFileThread->setDecimaleSeparator(ui->decimalSeparatorComboBox->currentText()[0].toLatin1());
+        convertFileThread->setWriteOnlyChangedValues(ui->writeChangedCheckBox->checkState() == Qt::Checked);
 
-    convertFileThread->setDestinationDirectory(ui->destinationDirComboBox->currentText());
-    convertFileThread->start();
-    if (!filesDownloadDialog->exec()){
+        convertFileThread->setDestinationDirectory(ui->destinationDirComboBox->currentText());
+        convertFileThread->start();
+        if (!filesDownloadDialog->exec()){
+            convertFileThread->cancelExecution();
+            convertFileThread->wait(threadWaitTimeout);
+        }
+
         convertFileThread->cancelExecution();
-        convertFileThread->wait(threadWaitTimeout);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
 
-    convertFileThread->cancelExecution();
 }
 
 void DownloadDataSDDialog::on_outputDataLayoutComboBox_currentTextChanged(const QString &arg1)
 {
-    if (QString::compare(arg1, outputDataLayoutOptionsString[frameByFrameIndex], Qt::CaseSensitive) == 0){
-        ui->writeChangedCheckBox->setCheckState(Qt::CheckState::Unchecked);
-        ui->writeChangedLabel->setEnabled(false);
-        ui->writeChangedCheckBox->setEnabled(false);
-    } else {
-        ui->writeChangedLabel->setEnabled(true);
-        ui->writeChangedCheckBox->setEnabled(true);
+    try {
+        if (QString::compare(arg1, outputDataLayoutOptionsString[frameByFrameIndex], Qt::CaseSensitive) == 0){
+            ui->writeChangedCheckBox->setCheckState(Qt::CheckState::Unchecked);
+            ui->writeChangedLabel->setEnabled(false);
+            ui->writeChangedCheckBox->setEnabled(false);
+        } else {
+            ui->writeChangedLabel->setEnabled(true);
+            ui->writeChangedCheckBox->setEnabled(true);
+        }
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
+}
+
+void DownloadDataSDDialog::sourcePathChanged(QString dirPath){
+
+    QDir dataDir(dirPath);
+    dataDir.setNameFilters(QStringList() << "*.aghlog");
+
+    QStringList files = dataDir.entryList();
+
+    if (files.isEmpty()){
+        QMessageBox::information(this, "Empty folder", "Directory does not contain any .aghlog files.");
+        return;
+    }
+
+    ui->dataFilesListWidget->clear();
+    ui->dataFilesListWidget->addItems(files);
+
+    this->sourceDir = dirPath;
 }

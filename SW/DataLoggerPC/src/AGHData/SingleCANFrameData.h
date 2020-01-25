@@ -22,21 +22,20 @@ public:
     SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, vector<unsigned char> rawPayloadData);
     SingleCANFrameData(unsigned int msTime, const ConfigFrame* pConfigFrame, unsigned char* data, unsigned int dlc);
 
-    const ConfigFrame*  getFrameConfig() const;
+    const ConfigFrame*      getFrameConfig() const;
 
-    unsigned int        getMsTime() const;
-    unsigned int        getFrameID() const;
-    unsigned int        getFrameDLC() const;
-    unsigned char       getRawDataValue(unsigned int byteIndex) const;
+    unsigned int            getMsTime() const;
+    unsigned int            getFrameID() const;
+    unsigned int            getFrameDLC() const;
+    vector<unsigned char>   getRawData() const;
+    unsigned char           getRawDataByte(unsigned int byteIndex) const;
 
-    virtual void        readFromBin(ReadingClass& reader) override;
+    virtual void            readFromBin(ReadingClass& reader) override;
 
-    void                setRawPayloadData(vector<unsigned char> data);
-    void                setRawPayloadData(unsigned char* data, unsigned int dlc);
+    void                    setRawPayloadData(vector<unsigned char> data);
+    void                    setRawPayloadData(unsigned char* data, unsigned int dlc);
 
-    unsigned long long  getSignalValueRaw(const ConfigSignal* pChannel) const;
-    double              getSignalValueTransformed(const ConfigSignal* pChannel) const;
-    long long           getSignalValueTransformedLL(const ConfigSignal* pChannel) const;
+    unsigned long long      getSignalValueRaw(const ConfigSignal* pChannel) const;
 
 };
 

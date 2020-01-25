@@ -2,6 +2,7 @@
 #define CONFIGSIGNAL_H
 
 #include <map>
+#include <vector>
 
 #include "AGHUtils/ReadingClass.h"
 #include "AGHUtils/WritingClass.h"
@@ -79,6 +80,15 @@ public:
     bool                    hasNameForValue(int _channelValue);
     ConfigSignalNamedValue& getNamedValue(int channelValue);
     void                    addNamedValue(int _channelValue, ConfigSignalNamedValue _namedValue);
+
+    double                  convertRawValueToSymbolic(unsigned long long value) const;
+    long long               convertRawValueToSymbolicInt(unsigned long long value) const;
+
+    unsigned long long      convertSymbolicValueToRaw(double value) const;
+
+    unsigned long long      getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const;
+    double                  getSymbolicValueFromFramePayload(std::vector<unsigned char> framePayload) const;
+    long long               getSymbolicIntValueFromFramePayload(std::vector<unsigned char> framePayload) const;
 
     virtual void            writeToBin(WritingClass& writer) override;
     virtual void            readFromBin(ReadingClass& reader) override;

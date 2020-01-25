@@ -1,16 +1,19 @@
 #ifndef CONFIGTRIGGER_H
 #define CONFIGTRIGGER_H
 
+#include <array>
+
 #include "AGHUtils/ReadingClass.h"
 #include "AGHUtils/WritingClass.h"
 
 class Config;
+class ConfigFrame;
 class ConfigSignal;
 
-class ConfigTrigger : public WritableToBin, public ReadableFromBin
-{
+class ConfigTrigger : public WritableToBin, public ReadableFromBin {
+    friend class Config;
 public:
-    enum class TrigerCompareOperator {
+    enum class TriggerCompareOperator {
         EQUAL				= 0x01,
         NOT_EQUAL			= 0x02,
         GREATER             = 0x03,
@@ -23,21 +26,35 @@ public:
         FRAME_OCCURED		= 0x20,
         FRAME_TIMEOUT_MS	= 0x21
     };
+
+    static const std::array<ConfigTrigger::TriggerCompareOperator, 11> getAllCompareOperators();
+    static std::string                         getTriggerCompareOperatorName(TriggerCompareOperator oper);
+    static std::string                         getTriggerCompareOperatorSymbol(TriggerCompareOperator oper);
+
 private:
+    std::string             triggerName;
     const Config*           pConfig;
+    const ConfigFrame*      pFrame;
     const ConfigSignal*     pSignal;
     unsigned long long      compareConstValue;
-    TrigerCompareOperator   compareOperator;
+    TriggerCompareOperator  compareOperator;
+
+    ConfigTrigger (const Config* pConfig, ReadingClass& reader);
+    ConfigTrigger (const Config* pConfig, std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long long compareConstValue, TriggerCompareOperator compareOperator);
 public:
-    ConfigTrigger (ReadingClass& reader, const Config* pConfig);
 
-    void                    setSignal(unsigned int frameID, unsigned int signalID);
-    void                    setCompareConstValue(unsigned long long compareConstVal);
-    void                    setCompareOperator(TrigerCompareOperator triggerCompareOperator);
+    static bool             isSignalUsedForOperator(TriggerCompareOperator compareOperator);
+    static bool             isConstCompareValueUsedForOperator(TriggerCompareOperator compareOperator);
 
+    void                    setTriggerName(std::string triggerName);
+    void                    setFrameSignalOperator(const ConfigFrame* pFrame, const ConfigSignal* _pSignal, ConfigTrigger::TriggerCompareOperator _oper);
+    void                    setCompareConstValue(unsigned long long value);
+
+    std::string             getTriggerName() const;
+    const ConfigFrame*      getFrame() const;
     const ConfigSignal*     getSignal() const;
     unsigned long long      getCompareConstValue() const;
-    TrigerCompareOperator   getCompareOperator() const;
+    TriggerCompareOperator  getCompareOperator() const;
 
 public:
     bool operator==(const ConfigTrigger& b) const;
@@ -46,8 +63,7 @@ public:
     virtual void readFromBin(ReadingClass &reader) override;
     virtual void writeToBin(WritingClass &writer) override;
 
-    ~ConfigTrigger(){
-
+    ~ConfigTrigger() override {
     }
 };
 

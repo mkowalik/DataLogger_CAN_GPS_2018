@@ -30,7 +30,6 @@ private:
     void                                        addSignal(ConfigSignal *pSignal);
     std::vector<ConfigSignal*>::const_iterator  lowerBoundSignalConstIterator(unsigned int signalID) const;
     std::vector<ConfigSignal*>::iterator        lowerBoundSignalIterator(unsigned int signalID);
-    bool                                        signalsEmpty() const;
     void                                        sortSignalsCallback();
     void                                        _setFrameID(unsigned int frameID);
 
@@ -73,6 +72,7 @@ public:
                             );
     void                    removeSignal(const SignalsIterator signalIt);
     void                    removeSignal(unsigned int signalId);
+    bool                    signalsEmpty() const;
 
     SignalsIterator         beginSignals();
     SignalsIterator         endSignals();
