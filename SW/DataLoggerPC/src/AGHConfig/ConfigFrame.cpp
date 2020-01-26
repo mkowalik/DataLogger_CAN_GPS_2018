@@ -14,7 +14,7 @@ static constexpr unsigned int FRAME_NAME_LENGTH = 20;
 
 ConfigFrame::ConfigFrame (Config* _pConfig, unsigned int _frameId, string _frameName) : pParentConfig(_pConfig), frameID(_frameId), frameName(_frameName) {
     if (this->frameID > MAX_ID_VALUE){
-        throw std::invalid_argument("Value of id greather than max value.");
+        throw std::invalid_argument("Value of ID greather than max value.");
     }
     _setFrameID(_frameId);
     setFrameName(_frameName);
@@ -30,7 +30,7 @@ void ConfigFrame::addSignal(ConfigSignal* pSignal){
         throw std::invalid_argument("Signal exeeds maximum length of the frame.");
     }
     if (hasSignalWithID(pSignal->getSignalID())){
-        throw std::invalid_argument("Signal with given id already exists in the frame.");
+        throw std::invalid_argument("Signal with given ID already exists in the frame.");
     }
     signalsVector.insert(lowerBoundSignalConstIterator(pSignal->getSignalID()), pSignal);
 }
@@ -73,10 +73,13 @@ string ConfigFrame::getFrameName() const {
 
 void ConfigFrame::_setFrameID(unsigned int _frameID){
     if (_frameID > MAX_ID_VALUE){
-        throw std::invalid_argument("Value of id greather than max value.");
+        throw std::invalid_argument("Value of ID greather than max value.");
     }
     if (pParentConfig->hasFrameWithId(_frameID)){
-        throw std::invalid_argument("Frame with given id already exists in the parent configuration.");
+        throw std::invalid_argument("Frame with given ID already exists in the parent configuration.");
+    }
+    if (pParentConfig->getRTCConfigurationFrameID() == _frameID){
+        throw std::invalid_argument("Frame ID and RTC configuration Frame ID must not be equal.");
     }
     frameID = _frameID;
     pParentConfig->sortFramesCallback();
@@ -154,7 +157,7 @@ void ConfigFrame::removeSignal(unsigned int signalID)
 {
     auto signalIt = lowerBoundSignalConstIterator(signalID);
     if ((signalIt == signalsVector.cend()) || ((*signalIt)->getSignalID() != signalID)){
-        throw std::out_of_range("Signal with given id does not exist");
+        throw std::out_of_range("Signal with given ID does not exist");
     }
 
     pParentConfig->removeTriggersWithSignal(*signalIt);

@@ -554,8 +554,10 @@ void ConfigureLoggerSDDialog::on_rtcConfigFrameID_spinBox_valueChanged(int val)
     try {
         this->pConfig->setRTCConfigurationFrameID(static_cast<unsigned int>(val));
     } catch (const std::logic_error& e){
+        ui->rtcConfigFrameID_spinBox->setValue(static_cast<int>(pConfig->getRTCConfigurationFrameID()));
         QMessageBox::warning(this, "Error", e.what());
     } catch (const std::exception& e){
+        ui->rtcConfigFrameID_spinBox->setValue(static_cast<int>(pConfig->getRTCConfigurationFrameID()));
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
 }

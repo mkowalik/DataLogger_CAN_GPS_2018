@@ -256,6 +256,9 @@
                <height>0</height>
               </size>
              </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
              <property name="maximum">
               <number>2047</number>
              </property>

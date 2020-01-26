@@ -54,7 +54,7 @@ ConfigSignal::ConfigSignal(ConfigFrame*   _parentFrame,
         std::invalid_argument("SignalID value may not exceed UINT16_MAX");
     }
     if (pParentFrame->hasSignalWithID(_signalID)){
-        throw std::invalid_argument("Signal with given id already exists in the parent frame.");
+        throw std::invalid_argument("Signal with given ID already exists in the parent frame.");
     }
     setStartBit(_startBit);
     setLengthBits(_lengthBits);
@@ -73,7 +73,7 @@ void ConfigSignal::_setSignalId(unsigned int _signalID)
         std::invalid_argument("SignalID value may not exceed UINT16_MAX");
     }
     if (pParentFrame->hasSignalWithID(_signalID)){
-        throw std::invalid_argument("Signal with given id already exists in the parent frame.");
+        throw std::invalid_argument("Signal with given ID already exists in the parent frame.");
     }
     this->signalID = _signalID;
     pParentFrame->sortSignalsCallback();

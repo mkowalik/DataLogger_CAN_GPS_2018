@@ -25,7 +25,10 @@ Config::Config()
 
 void Config::addFrame(ConfigFrame* pFrame){
     if (hasFrameWithId(pFrame->getFrameID())){
-        throw std::invalid_argument("Frame with given id already exists the config.");
+        throw std::invalid_argument("Frame with given ID already exists the config.");
+    }
+    if (pFrame->getFrameID() == getRTCConfigurationFrameID()){
+        throw std::invalid_argument("Frame ID and RTC configuration Frame ID must not be equal.");
     }
     framesVector.emplace(lowerBoundFrameConstIterator(pFrame->getFrameID()), pFrame);
 }
@@ -149,7 +152,12 @@ void Config::setGPSFrequency(EnGPSFrequency frequency){
 void Config::setRTCConfigurationFrameID(unsigned int frameID)
 {
     if (frameID > ConfigFrame::MAX_ID_VALUE){
-        throw std::invalid_argument("Value of id greather than max value");
+        throw std::invalid_argument("Value of ID greather than max value");
+    }
+    for (auto pFrame : framesVector){
+        if (pFrame->getFrameID() == frameID){
+            throw std::invalid_argument("RTC configuration Frame ID must not be equal to ID of any added frame.");
+        }
     }
     this->rtcConfigurationFrameID = frameID;
 }
@@ -171,7 +179,7 @@ Config::EnCANBitrate Config::getCANBitrate() const {
     return canBitrate;
 }
 
-Config::EnGPSFrequency Config::getGPSFrequency() const{
+Config::EnGPSFrequency Config::getGPSFrequency() const {
     return gpsFrequency;
 }
 
@@ -211,7 +219,7 @@ void Config::removeFrame(unsigned int frameID){
 
     auto frameIt = lowerBoundFrameConstIterator(frameID);
     if ((frameIt == framesVector.cend()) || ((*frameIt)->getFrameID() != frameID)){
-        throw std::out_of_range("Frame with given id does not exist");
+        throw std::out_of_range("Frame with given ID does not exist");
     }
     removeTriggersWithFrame(*frameIt);
     delete (*frameIt);
@@ -226,7 +234,7 @@ bool Config::hasFrameWithId(unsigned int frameID) const {
 ConfigFrame* Config::getFrameWithId(unsigned int frameID) const {
     auto frameIt = lowerBoundFrameConstIterator(frameID);
     if ((frameIt == framesVector.cend()) || ((*frameIt)->getFrameID() != frameID)){
-        throw std::out_of_range("Frame with given id does not exist.");
+        throw std::out_of_range("Frame with given ID does not exist.");
     }
     return (*frameIt);
 }
