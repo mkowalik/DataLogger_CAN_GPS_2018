@@ -102,6 +102,7 @@ void DownloadDataSDDialog::on_openDestDirButton_clicked()
     dirPath.remove(position, dirPath.length());*/
 
     try {
+        QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Destination Directory");
         ui->destinationDirComboBox->addItem(dirPath);
         ui->destinationDirComboBox->setCurrentText(dirPath);
     } catch (const std::logic_error& e){
@@ -109,7 +110,6 @@ void DownloadDataSDDialog::on_openDestDirButton_clicked()
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
-    QString dirPath = QFileDialog::getExistingDirectory(this, "Choose Destination Directory");
 }
 
 void DownloadDataSDDialog::on_selectAllButton_clicked()

@@ -93,14 +93,13 @@ private slots:
 
     void on_stopTrigger_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
+    void on_actionAddSignalToClickedFrame_triggered();
+
 private:
     Ui::ConfigureLoggerSDDialog *ui;
 
     RawDataParser& rawDataParser;
     Config* pConfig;
-    map<QTreeWidgetItem*, ConfigFrame*> frameMap;
-    map<QTreeWidgetItem*, ConfigSignal*> signalMap;
-
 
     QListWidgetItem* prepareTriggerListWidget(ConfigTrigger* pTrigger);
 };

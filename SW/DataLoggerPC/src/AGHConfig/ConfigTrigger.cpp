@@ -181,6 +181,7 @@ bool ConfigTrigger::operator==(const ConfigTrigger& b) const {
 
 void ConfigTrigger::readFromBin(ReadingClass &reader)
 {
+    std::string triggerName = reader.reading_string(TRIGGER_NAME_LENGHT, true);
     unsigned int frameID    = reader.reading_uint16(RawDataParser::UseDefaultEndian);
     unsigned int signalID   = reader.reading_uint16(RawDataParser::UseDefaultEndian);
     compareConstValue       = reader.reading_uint64(RawDataParser::UseDefaultEndian);
@@ -213,6 +214,7 @@ void ConfigTrigger::readFromBin(ReadingClass &reader)
 
 void ConfigTrigger::writeToBin(WritingClass &writer)
 {
+    writer.write_string(getTriggerName(), 1, TRIGGER_NAME_LENGHT);
     writer.write_uint16(pSignal->getParentFrame()->getFrameID(), RawDataParser::UseDefaultEndian);
     writer.write_uint16(pSignal->getSignalID(), RawDataParser::UseDefaultEndian);
     writer.write_uint64(getCompareConstValue(), RawDataParser::UseDefaultEndian);

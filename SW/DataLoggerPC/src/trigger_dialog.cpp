@@ -32,7 +32,7 @@ TriggerDialog::TriggerDialog(Config& _config, ConfigTrigger* pTriggerPrototype, 
         text.append("0x");
         text.append(QString::number((*frameIt)->getFrameID(), 16));
         text.append("]");
-        ui->frame_comboBox->addItem(text, QVariant::fromValue(*frameIt)); //TODO
+        ui->frame_comboBox->addItem(text, QVariant::fromValue(*frameIt));
 
         if ((pTriggerPrototype != nullptr) && (pTriggerPrototype->getFrame() == (*frameIt))){
             ui->frame_comboBox->setCurrentIndex(static_cast<int>(std::distance(config.cbeginFrames(), frameIt)));
@@ -162,7 +162,6 @@ void TriggerDialog::on_frame_comboBox_currentIndexChanged(int index)
         if (pFrame->signalsEmpty()){
             on_signal_comboBox_currentIndexChanged(-1);
         } else {
-            ui->signal_comboBox->clear();
             for (auto signalIt = pFrame->cbeginSignals(); signalIt != pFrame->cendSignals(); signalIt++){
                 ui->signal_comboBox->addItem(QString::fromStdString((*signalIt)->getSignalName()), QVariant::fromValue(*signalIt));
             }

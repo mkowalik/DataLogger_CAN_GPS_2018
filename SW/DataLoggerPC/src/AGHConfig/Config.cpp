@@ -9,7 +9,17 @@
 //<----- Private methods ----->//
 //<--------------------------->//
 
-Config::Config() : version(ACTUAL_VERSION), subVersion(ACTUAL_SUB_VERSION), logFileName(), canBitrate(DEFAULT_CAN_BITRATE), gpsFrequency(DEFAULT_GPS_FREQUENCY), rtcConfigurationFrameID(DEFAULT_RTC_CONFIGURATION_FRAME_ID)
+Config::Config()
+    :
+      version(ACTUAL_VERSION),
+      subVersion(ACTUAL_SUB_VERSION),
+      logFileName(),
+      canBitrate(DEFAULT_CAN_BITRATE),
+      gpsFrequency(DEFAULT_GPS_FREQUENCY),
+      rtcConfigurationFrameID(DEFAULT_RTC_CONFIGURATION_FRAME_ID),
+      framesVector(),
+      startConfigTriggers(),
+      stopConfigTriggers()
 {
 }
 
@@ -39,7 +49,7 @@ void Config::addStopTrigger(ConfigTrigger *_pTrigger)
         throw std::logic_error("Max number of stop config triggers reached.");
     }
     for (auto pTrigger: stopConfigTriggers){
-        if (*pTrigger == *_pTrigger){
+        if ((*pTrigger)==(*_pTrigger)){
             throw std::invalid_argument("Given trigger is already defined.");
         }
     }
@@ -67,14 +77,16 @@ void Config::sortFramesCallback()
 //<----- Public methods ----->//
 //<-------------------------->//
 
-Config::Config(std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID) : Config() {
+Config::Config(std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID)
+    : Config() {
     setLogFileName(logFileName);
     setCANBitrate(canBitrate);
     setGPSFrequency(gpsFrequency);
     setRTCConfigurationFrameID(rtcConfigurationFrameID);
 }
 
-Config::Config(unsigned int version, unsigned int subVersion, std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID) : Config() {
+Config::Config(unsigned int version, unsigned int subVersion, std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID)
+    : Config() {
     setVersion(version);
     setSubVersion(subVersion);
     setLogFileName(logFileName);
@@ -189,9 +201,10 @@ ConfigFrame* Config::addFrame(unsigned int frameID, string frameName)
     return pFrame;
 }
 
-void Config::removeFrame(const FramesIterator frameIterator){
-    delete (*frameIterator);
-    framesVector.erase(frameIterator);
+void Config::removeFrame(const FramesIterator frameIt){
+    removeTriggersWithFrame(*frameIt);
+    delete (*frameIt);
+    framesVector.erase(frameIt);
 }
 
 void Config::removeFrame(unsigned int frameID){
@@ -200,6 +213,7 @@ void Config::removeFrame(unsigned int frameID){
     if ((frameIt == framesVector.cend()) || ((*frameIt)->getFrameID() != frameID)){
         throw std::out_of_range("Frame with given id does not exist");
     }
+    removeTriggersWithFrame(*frameIt);
     delete (*frameIt);
     framesVector.erase(frameIt);
 }
@@ -353,32 +367,40 @@ Config::ConstTriggersIterator Config::cendStopTriggers() const
 
 void Config::removeTriggersWithSignal(const ConfigSignal *pSignal)
 {
-    for (auto it = startConfigTriggers.begin(); it != startConfigTriggers.end(); it++){
+    for (auto it = startConfigTriggers.cbegin(); it != startConfigTriggers.cend();){
         if ((*it)->getSignal() == pSignal){
-            startConfigTriggers.erase(it);
-            delete *it;
+            delete (*it);
+            it = startConfigTriggers.erase(it);
+        } else {
+            ++it;
         }
     }
-    for (auto it = stopConfigTriggers.begin(); it != stopConfigTriggers.end(); it++){
+    for (auto it = stopConfigTriggers.cbegin(); it != stopConfigTriggers.cend();){
         if ((*it)->getSignal() == pSignal){
-            stopConfigTriggers.erase(it);
-            delete *it;
+            delete (*it);
+            it = stopConfigTriggers.erase(it);
+        } else {
+            ++it;
         }
     }
 }
 
 void Config::removeTriggersWithFrame(const ConfigFrame *pFrame)
 {
-    for (auto it = startConfigTriggers.begin(); it != startConfigTriggers.end(); it++){
+    for (auto it = startConfigTriggers.begin(); it != startConfigTriggers.end();){
         if ((*it)->getFrame() == pFrame){
-            startConfigTriggers.erase(it);
             delete *it;
+            it = startConfigTriggers.erase(it);
+        } else {
+            ++it;
         }
     }
-    for (auto it = stopConfigTriggers.begin(); it != stopConfigTriggers.end(); it++){
+    for (auto it = stopConfigTriggers.begin(); it != stopConfigTriggers.end();){
         if ((*it)->getFrame() == pFrame){
-            stopConfigTriggers.erase(it);
             delete *it;
+            it = stopConfigTriggers.erase(it);
+        } else {
+            ++it;
         }
     }
 }

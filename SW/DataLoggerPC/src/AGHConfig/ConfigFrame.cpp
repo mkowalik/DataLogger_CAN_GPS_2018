@@ -145,6 +145,7 @@ ConfigSignal *ConfigFrame::addSignal(unsigned int startBit, unsigned int lengthB
 
 void ConfigFrame::removeSignal(const ConfigFrame::SignalsIterator signalIt)
 {
+    pParentConfig->removeTriggersWithSignal(*signalIt);
     delete (*signalIt);
     signalsVector.erase(signalIt);
 }

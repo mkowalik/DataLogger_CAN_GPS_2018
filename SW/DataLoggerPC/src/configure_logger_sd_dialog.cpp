@@ -23,7 +23,7 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
 {
     ui->setupUi(this);
     ui->framesTreeWidget->header()->resizeSection(0, 220);
-    ui->framesTreeWidget->header()->resizeSection(1, 50);
+    ui->framesTreeWidget->header()->resizeSection(1, 70);
     ui->framesTreeWidget->header()->resizeSection(2, 50);
     ui->framesTreeWidget->header()->resizeSection(3, 90);
     ui->framesTreeWidget->header()->resizeSection(4, 70);
@@ -51,20 +51,16 @@ ConfigureLoggerSDDialog::~ConfigureLoggerSDDialog()
 void ConfigureLoggerSDDialog::reloadFramesTreeWidget(){
 
     ui->framesTreeWidget->clear();
-    frameMap.clear();
-    signalMap.clear();
 
     for (Config::FramesIterator frameIt = pConfig->beginFrames(); frameIt!=pConfig->endFrames(); frameIt++){
 
         QTreeWidgetItem* pFrameRow = new QTreeWidgetItem(ui->framesTreeWidget);
         prepareFrameRowWidget(pFrameRow, *frameIt);
         ui->framesTreeWidget->addTopLevelItem(pFrameRow);
-        frameMap.insert({pFrameRow, (*frameIt)});
 
         for (auto sigIt = (*frameIt)->beginSignals(); sigIt != (*frameIt)->endSignals(); sigIt++){
             QTreeWidgetItem* pSignalRow = new QTreeWidgetItem(pFrameRow);
             prepareSignalRowWidget(pSignalRow, *sigIt);
-            signalMap.insert({pSignalRow, (*sigIt)});
         }
     }
 }
@@ -172,10 +168,6 @@ void ConfigureLoggerSDDialog::deleteFrameRow(QTreeWidgetItem *pClickedFrameRow, 
 
     if (QMessageBox::question(this, "Delete frame", "Do you relly want to delete this frame?") == QMessageBox::StandardButton::Yes){
         pFrame->getParentConfig()->removeFrame(pFrame->getFrameID());
-        this->frameMap.erase(pClickedFrameRow);
-        for (auto pSignalRow : pClickedFrameRow->takeChildren()){
-            signalMap.erase(pSignalRow);
-        }
         delete ui->framesTreeWidget->takeTopLevelItem(ui->framesTreeWidget->indexOfTopLevelItem(pClickedFrameRow)); //< Removes the top-level item at the given index in the tree
         ui->framesTreeWidget->clearSelection();
     }
@@ -329,7 +321,9 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareFrameRowWidget(QTreeWidgetItem 
 {
     if (pPreviousFrameRow == nullptr){
         pPreviousFrameRow = new QTreeWidgetItem();
-        frameMap.insert({pPreviousFrameRow, pFrame});
+        QVariant v;
+        v.setValue(pFrame);
+        pPreviousFrameRow->setData(0, Qt::UserRole, v);
     }
 
     QString text;
@@ -344,18 +338,17 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareFrameRowWidget(QTreeWidgetItem 
     return pPreviousFrameRow;
 }
 
-unsigned int ConfigureLoggerSDDialog::insertFrameRowWidget(QTreeWidgetItem* pFrameRow, const ConfigFrame* pFrame)
+unsigned int ConfigureLoggerSDDialog::insertFrameRowWidget(QTreeWidgetItem* pFrameRowToInsert, const ConfigFrame* pFrame)
 {
     int position = 0;
     for (; position < ui->framesTreeWidget->topLevelItemCount(); position++){
-        QTreeWidgetItem* pFrameRow = ui->framesTreeWidget->topLevelItem(position);
-        unsigned int id = frameMap.at(pFrameRow)->getFrameID();
+        unsigned int id = ui->framesTreeWidget->topLevelItem(position)->data(0, Qt::UserRole).value<ConfigFrame*>()->getFrameID();
         if (id > pFrame->getFrameID()){
             break;
         }
     }
 
-    ui->framesTreeWidget->insertTopLevelItem(position, pFrameRow);
+    ui->framesTreeWidget->insertTopLevelItem(position, pFrameRowToInsert);
 
     return static_cast<unsigned int>(position);
 }
@@ -364,7 +357,9 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareSignalRowWidget(QTreeWidgetItem
 {
     if (pPreviousChannelRow == nullptr){
         pPreviousChannelRow = new QTreeWidgetItem();
-        signalMap.insert({pPreviousChannelRow, pSignal});
+        QVariant v;
+        v.setValue(pSignal);
+        pPreviousChannelRow->setData(0, Qt::UserRole, v);
     }
 
     pPreviousChannelRow->setText(0, QString::fromStdString(pSignal->getSignalName()));
@@ -385,7 +380,7 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareSignalRowWidget(QTreeWidgetItem
 unsigned int ConfigureLoggerSDDialog::insertSignalRowWidget(QTreeWidgetItem * pSignalRow, QTreeWidgetItem * pFrameRow, const ConfigSignal* pSignal) {
     int position = 0;
     for (; position < pFrameRow->childCount(); position++){
-        if (signalMap.at(pFrameRow->child(position))->getSignalID() > pSignal->getSignalID()){
+        if (pFrameRow->child(position)->data(0, Qt::UserRole).value<ConfigSignal*>()->getSignalID() > pSignal->getSignalID()){
             break;
         }
     }
@@ -572,9 +567,9 @@ void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(con
             return;
         }
         QMenu menu(this); // add menu items
+        menu.addAction(ui->actionAddSignalToClickedFrame);
         menu.addAction(ui->actionEditFrameOrSignal);
         menu.addAction(ui->actionDeleteFrameOrSignal);
-        menu.addAction(ui->actionAddSignalToClickedFrame);
 
         QTreeWidgetItem *pClickedItem = ui->framesTreeWidget->itemAt(pos);
 
@@ -585,6 +580,7 @@ void ConfigureLoggerSDDialog::on_framesTreeWidget_customContextMenuRequested(con
         QVariant v;
         v.setValue(pClickedItem);
 
+        ui->actionAddSignalToClickedFrame->setData(v); // if you will need the position data save it to the action
         ui->actionDeleteFrameOrSignal->setData(v); // if you will need the position data save it to the action
         ui->actionEditFrameOrSignal->setData(v); // if you will need the position data save it to the action
 
@@ -600,11 +596,9 @@ void ConfigureLoggerSDDialog::on_framesTreeWidget_itemDoubleClicked(QTreeWidgetI
 {
     try {
         if (pClickedItem->parent()){
-            ConfigSignal * pSignal = signalMap.at(pClickedItem);
-            editSignalRow(pClickedItem, pSignal);
+            editSignalRow(pClickedItem, pClickedItem->data(0, Qt::UserRole).value<ConfigSignal*>());
         } else {
-            ConfigFrame* pFrame = frameMap.at(pClickedItem);
-            editFrameRow(pClickedItem, pFrame);
+            editFrameRow(pClickedItem, pClickedItem->data(0, Qt::UserRole).value<ConfigFrame*>());
         }
     } catch (const std::logic_error& e){
         QMessageBox::warning(this, "Error", e.what());
@@ -639,7 +633,8 @@ void ConfigureLoggerSDDialog::on_addSignalButton_clicked() {
             QMessageBox::warning(this, "Select proper frame", "Select proper frame to which add the signal.");
             return;
         }
-        ConfigFrame* pFrame = frameMap.at(pSelectedFrameRow);
+
+        ConfigFrame* pFrame = pSelectedFrameRow->data(0, Qt::UserRole).value<ConfigFrame*>();
         addNewSignalRow(pSelectedFrameRow, pFrame);
 
     } catch (const std::logic_error& e){
@@ -737,11 +732,9 @@ void ConfigureLoggerSDDialog::on_actionEditFrameOrSignal_triggered()
         QTreeWidgetItem *pClickedItem = ui->actionEditFrameOrSignal->data().value<QTreeWidgetItem*>();
 
         if (pClickedItem->parent()){
-            ConfigSignal * pSignal = signalMap.at(pClickedItem);
-            editSignalRow(pClickedItem, pSignal);
+            editSignalRow(pClickedItem, pClickedItem->data(0, Qt::UserRole).value<ConfigSignal*>());
         } else {
-            ConfigFrame* pFrame = this->frameMap.at(pClickedItem);
-            editFrameRow(pClickedItem, pFrame);
+            editFrameRow(pClickedItem, pClickedItem->data(0, Qt::UserRole).value<ConfigFrame*>());
         }
         reloadStartTriggersWidget();
         reloadStopTriggersWidget();
@@ -758,11 +751,9 @@ void ConfigureLoggerSDDialog::on_actionDeleteFrameOrSignal_triggered()
         QTreeWidgetItem *pClickedItem = ui->actionEditFrameOrSignal->data().value<QTreeWidgetItem*>();
 
         if (pClickedItem->parent()){
-            ConfigSignal * pSignal = signalMap.at(pClickedItem);
-            deleteSignalRow(pClickedItem, pSignal);
+            deleteSignalRow(pClickedItem, pClickedItem->data(0, Qt::UserRole).value<ConfigSignal*>());
         } else {
-            ConfigFrame* pFrame = this->frameMap.at(pClickedItem);
-            deleteFrameRow(pClickedItem, pFrame);
+            deleteFrameRow(pClickedItem, pClickedItem->data(0, Qt::UserRole).value<ConfigFrame*>());
         }
         reloadStartTriggersWidget();
         reloadStopTriggersWidget();
@@ -872,15 +863,32 @@ void ConfigureLoggerSDDialog::on_stopTrigger_listWidget_itemDoubleClicked(QListW
     }
 }
 
-QListWidgetItem *ConfigureLoggerSDDialog::prepareTriggerListWidget(ConfigTrigger *pTrigger)
+void ConfigureLoggerSDDialog::on_actionAddSignalToClickedFrame_triggered()
+{
+    try {
+        QTreeWidgetItem *pClickedItem = ui->actionEditFrameOrSignal->data().value<QTreeWidgetItem*>();
 
+        if (pClickedItem->parent()){
+            pClickedItem = pClickedItem->parent();
+        }
+        ConfigFrame* pFrame = pClickedItem->data(0, Qt::UserRole).value<ConfigFrame*>();
+        addNewSignalRow(pClickedItem, pFrame);
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
+
+}
+
+QListWidgetItem *ConfigureLoggerSDDialog::prepareTriggerListWidget(ConfigTrigger *pTrigger)
 {
     QVariant v;
     QListWidgetItem* pTriggerWidgetItem = new QListWidgetItem(
                     QString::fromStdString(pTrigger->getTriggerName()) +
-                    " (" +
+                    QString(" (") +
                     TriggerDialog::prepareFormulaRender(pTrigger->getFrame(), pTrigger->getSignal(), pTrigger->getCompareOperator(), pTrigger->getCompareConstValue()) +
-                    ")"
+                    QString(")")
                 );
     v.setValue<ConfigTrigger*>(pTrigger);
     pTriggerWidgetItem->setData(Qt::UserRole, v);
