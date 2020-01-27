@@ -35,7 +35,7 @@ public:
     void                    setRawPayloadData(vector<unsigned char> data);
     void                    setRawPayloadData(unsigned char* data, unsigned int dlc);
 
-    unsigned long long      getSignalValueRaw(const ConfigSignal* pChannel) const;
+    unsigned long           getSignalValueRaw(const ConfigSignal* pChannel) const;
 
 };
 

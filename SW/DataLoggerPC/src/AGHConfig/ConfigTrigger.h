@@ -36,11 +36,11 @@ private:
     const Config*           pConfig;
     const ConfigFrame*      pFrame;
     const ConfigSignal*     pSignal;
-    unsigned long long      compareConstValue;
+    unsigned long           compareConstValue;
     TriggerCompareOperator  compareOperator;
 
     ConfigTrigger (const Config* pConfig, ReadingClass& reader);
-    ConfigTrigger (const Config* pConfig, std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long long compareConstValue, TriggerCompareOperator compareOperator);
+    ConfigTrigger (const Config* pConfig, std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long compareConstValue, TriggerCompareOperator compareOperator);
 public:
 
     static bool             isSignalUsedForOperator(TriggerCompareOperator compareOperator);
@@ -48,12 +48,12 @@ public:
 
     void                    setTriggerName(std::string triggerName);
     void                    setFrameSignalOperator(const ConfigFrame* pFrame, const ConfigSignal* _pSignal, ConfigTrigger::TriggerCompareOperator _oper);
-    void                    setCompareConstValue(unsigned long long value);
+    void                    setCompareConstValue(unsigned long value);
 
     std::string             getTriggerName() const;
     const ConfigFrame*      getFrame() const;
     const ConfigSignal*     getSignal() const;
-    unsigned long long      getCompareConstValue() const;
+    unsigned long           getCompareConstValue() const;
     TriggerCompareOperator  getCompareOperator() const;
 
 public:

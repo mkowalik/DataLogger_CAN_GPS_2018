@@ -20,20 +20,32 @@ ReadingClass::ReadingClass(string nameOfFile, RawDataParser& dataParser) : dataP
     fileSize = (end-begin);
 }
 
-unsigned long long ReadingClass::reading_uint64(RawDataParser::EndianessMode endianessMode){
-    if (bytes_left() < 8){
-        throw out_of_range("Less than 4 bytes left while reading uint32.");
+unsigned int ReadingClass::reading_uint8(){
+    if (bytes_left() < 1){
+        throw out_of_range("Less than 1 byte left while reading uint8.");
     }
-    data.read(reinterpret_cast<char*>(buffer), 8);
-    return dataParser.interpret_unsigned_long_long(buffer, 8, endianessMode);
+    data.read(reinterpret_cast<char*>(buffer), 1);
+    return dataParser.interpret_unsigned_int(buffer, 1, RawDataParser::LittleEndian);
 }
 
-unsigned int ReadingClass::reading_uint32(RawDataParser::EndianessMode endianessMode){
-    if (bytes_left() < 4){
-        throw out_of_range("Less than 4 bytes left while reading uint32.");
-    }
-    data.read(reinterpret_cast<char*>(buffer), 4);
-    return dataParser.interpret_unsigned_int(buffer, 4, endianessMode);
+unsigned int ReadingClass::reading_uint16()
+{
+    return reading_uint16(dataParser.getDefaultEndianessMode());
+}
+
+unsigned int ReadingClass::reading_uint32()
+{
+    return reading_uint32(dataParser.getDefaultEndianessMode());
+}
+
+unsigned long long ReadingClass::reading_uint64()
+{
+    return reading_uint64(dataParser.getDefaultEndianessMode());
+}
+
+int ReadingClass::reading_int16()
+{
+    return reading_int16(dataParser.getDefaultEndianessMode());
 }
 
 unsigned int ReadingClass::reading_uint16(RawDataParser::EndianessMode endianessMode){
@@ -44,12 +56,20 @@ unsigned int ReadingClass::reading_uint16(RawDataParser::EndianessMode endianess
     return dataParser.interpret_unsigned_int(buffer, 2, endianessMode);
 }
 
-unsigned int ReadingClass::reading_uint8(){
-    if (bytes_left() < 1){
-        throw out_of_range("Less than 1 byte left while reading uint8.");
+unsigned int ReadingClass::reading_uint32(RawDataParser::EndianessMode endianessMode){
+    if (bytes_left() < 4){
+        throw out_of_range("Less than 4 bytes left while reading uint32.");
     }
-    data.read(reinterpret_cast<char*>(buffer), 1);
-    return dataParser.interpret_unsigned_int(buffer, 1, RawDataParser::UseDefaultEndian);
+    data.read(reinterpret_cast<char*>(buffer), 4);
+    return dataParser.interpret_unsigned_int(buffer, 4, endianessMode);
+}
+
+unsigned long long ReadingClass::reading_uint64(RawDataParser::EndianessMode endianessMode){
+    if (bytes_left() < 8){
+        throw out_of_range("Less than 4 bytes left while reading uint32.");
+    }
+    data.read(reinterpret_cast<char*>(buffer), 8);
+    return dataParser.interpret_unsigned_long_long(buffer, 8, endianessMode);
 }
 
 int ReadingClass::reading_int16(RawDataParser::EndianessMode endianessMode){

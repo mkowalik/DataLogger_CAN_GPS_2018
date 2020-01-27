@@ -76,6 +76,15 @@ void Config::sortFramesCallback()
     std::sort(framesVector.begin(), framesVector.end(), [](ConfigFrame* pFr1, ConfigFrame* pFr2){return (pFr1->getFrameID() < pFr2->getFrameID());});
 }
 
+bool Config::isMaxSignalsNumber() const
+{
+    unsigned int signalsCounter = 0;
+    for (auto pFrame : framesVector){
+        signalsCounter += pFrame->getSignalsNumber();
+    }
+    return (signalsCounter == MAX_SIGNALS_NUMBER);
+}
+
 //<-------------------------->//
 //<----- Public methods ----->//
 //<-------------------------->//
@@ -277,7 +286,7 @@ unsigned int Config::getNumberOfStopTriggers()
     return static_cast<unsigned int>(stopConfigTriggers.size());
 }
 
-ConfigTrigger* Config::addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
+ConfigTrigger* Config::addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
     ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, pFrame, pSignal, compareConstValue, compareOperator);
     addStartTrigger(pNewTrigger);
     return pNewTrigger;
@@ -305,7 +314,7 @@ unsigned int Config::getStartTriggersNumber()
     return static_cast<unsigned int>(startConfigTriggers.size());
 }
 
-ConfigTrigger* Config::addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
+ConfigTrigger* Config::addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
     ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, pFrame, pSignal, compareConstValue, compareOperator);
     addStopTrigger(pNewTrigger);
     return pNewTrigger;
@@ -430,12 +439,12 @@ void Config::reset(){
 
 void Config::writeToBin(WritingClass& writer){
 
-    writer.write_uint16(static_cast<unsigned int>(getVersion()), RawDataParser::UseDefaultEndian);
-    writer.write_uint16(static_cast<unsigned int>(getSubVersion()), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(static_cast<unsigned int>(getVersion()));
+    writer.write_uint16(static_cast<unsigned int>(getSubVersion()));
     writer.write_string(logFileName, true, CONFIG_NAME_LENGTH);
-    writer.write_uint16(static_cast<unsigned int>(getCANBitrate()), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(static_cast<unsigned int>(getCANBitrate()));
     writer.write_uint8(static_cast<unsigned int>(getGPSFrequency()));
-    writer.write_uint16(static_cast<unsigned int>(getNumOfFrames()), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(static_cast<unsigned int>(getNumOfFrames()));
 
     for (auto& pFrame : framesVector){
         pFrame->writeToBin(writer);
@@ -457,8 +466,8 @@ void Config::readFromBin(ReadingClass& reader){
 
     this->reset();
 
-    setVersion(reader.reading_uint16(RawDataParser::UseDefaultEndian));
-    setSubVersion(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    setVersion(reader.reading_uint16());
+    setSubVersion(reader.reading_uint16());
 
     if (this->getVersion() != ACTUAL_VERSION || this->getSubVersion() != ACTUAL_SUB_VERSION){
         string exceptionString = "Version of read config file: ";
@@ -475,11 +484,11 @@ void Config::readFromBin(ReadingClass& reader){
 
     setLogFileName(reader.reading_string(CONFIG_NAME_LENGTH, true));
 
-    setCANBitrate(static_cast<EnCANBitrate>(reader.reading_uint16(RawDataParser::UseDefaultEndian)));
+    setCANBitrate(static_cast<EnCANBitrate>(reader.reading_uint16()));
     setGPSFrequency(static_cast<EnGPSFrequency>(reader.reading_uint8()));
-    setRTCConfigurationFrameID(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    setRTCConfigurationFrameID(reader.reading_uint16());
 
-    unsigned int framesNumber = reader.reading_uint16(RawDataParser::UseDefaultEndian);
+    unsigned int framesNumber = reader.reading_uint16();
     for(unsigned int i=0; i<framesNumber; i++){
         ConfigFrame* pFrame = new ConfigFrame(this, reader);
         addFrame(pFrame);

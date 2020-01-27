@@ -6,18 +6,29 @@
 
 using namespace std;
 
-RawDataParser::RawDataParser(EndianessMode rawDataMode) : rawDataMode(rawDataMode) {
+RawDataParser::RawDataParser(EndianessMode rawDataMode) : defaultEndianessMode(rawDataMode) {
+}
+
+int RawDataParser::interpret_signed_int(unsigned char *raw_data, unsigned int bytesNumber) const
+{
+    return interpret_signed_int(raw_data, bytesNumber, defaultEndianessMode);
+}
+
+unsigned int RawDataParser::interpret_unsigned_int(unsigned char *raw_data, unsigned int bytesNumber) const
+{
+    return interpret_unsigned_int(raw_data, bytesNumber, defaultEndianessMode);
+}
+
+unsigned long long RawDataParser::interpret_unsigned_long_long(unsigned char *raw_data, unsigned int bytesNumber) const
+{
+    return interpret_unsigned_long_long(raw_data, bytesNumber, defaultEndianessMode);
 }
 
 int RawDataParser::interpret_signed_int(unsigned char* raw_data, unsigned int bytesNumber, EndianessMode endianessMode) const {  //TODO mocno przetestować! //TODO dlaczego nie zalezy to od mode!!!
 
     bytesNumber = min(bytesNumber, static_cast<unsigned int>(sizeof(int)));
 
-    if (endianessMode == UseDefaultEndian){
-        endianessMode = this->rawDataMode;
-    }
     int retNumber = 0;
-
     if (endianessMode == LittleEndian){
         unsigned int extra_shift = static_cast<unsigned int>(sizeof(int)) - bytesNumber;
         for (unsigned int i=0; i<bytesNumber; i++){
@@ -37,12 +48,8 @@ unsigned int RawDataParser::interpret_unsigned_int(unsigned char* raw_data, unsi
 
     bytesNumber = min(bytesNumber, static_cast<unsigned int>(sizeof(unsigned int)));
 
-    if (endianessMode == UseDefaultEndian){
-        endianessMode = this->rawDataMode;
-    }
     unsigned int retNumber = 0;
-
-    if (rawDataMode == LittleEndian) {
+    if (defaultEndianessMode == LittleEndian) {
         for(unsigned int i=0; i<bytesNumber; i++) {
             retNumber |= (static_cast<unsigned int>(raw_data[i])) << (i*8U);
         }
@@ -61,12 +68,8 @@ unsigned long long RawDataParser::interpret_unsigned_long_long(unsigned char* ra
 
     bytesNumber = min(bytesNumber, static_cast<unsigned int>(sizeof(unsigned long long)));
 
-    if (endianessMode == UseDefaultEndian){
-        endianessMode = this->rawDataMode;
-    }
     unsigned long long retNumber = 0;
-
-    if (rawDataMode == LittleEndian) {
+    if (defaultEndianessMode == LittleEndian) {
         for(unsigned int i=0; i<bytesNumber; i++) {
             retNumber |= (static_cast<unsigned long long>(raw_data[i])) << (i*8U);
         }
@@ -81,15 +84,27 @@ unsigned long long RawDataParser::interpret_unsigned_long_long(unsigned char* ra
     return retNumber;
 }
 
+void RawDataParser::write_signed_int(int value, unsigned char *retBuffer, unsigned int bytesNumber)
+{
+    write_signed_int(value, retBuffer, bytesNumber, defaultEndianessMode);
+}
+
+void RawDataParser::write_unsigned_int(unsigned int value, unsigned char *retBuffer, unsigned int bytesNumber)
+{
+    write_unsigned_int(value, retBuffer, bytesNumber, defaultEndianessMode);
+}
+
+void RawDataParser::write_unsigned_long_long(unsigned long long value, unsigned char *retBuffer, unsigned int bytes)
+{
+    write_unsigned_long_long(value, retBuffer, bytes, defaultEndianessMode);
+}
+
 void RawDataParser::write_signed_int(int value, unsigned char* retBuffer, unsigned int bytes, EndianessMode endianessMode){
     write_unsigned_int(*(reinterpret_cast<unsigned int*>(&value)), retBuffer, bytes, endianessMode);
 }
 
 void RawDataParser::write_unsigned_int(unsigned int value, unsigned char* retBuffer, unsigned int bytes, EndianessMode endianessMode){
     bytes = min(bytes, 4u);
-    if (endianessMode == UseDefaultEndian){
-        endianessMode = this->rawDataMode;
-    }
     if (endianessMode == LittleEndian){
         for(unsigned int i=0; i<bytes; i++) {
             retBuffer[i] = static_cast<unsigned char>((value >> (i*8)) & 0xFF); //TODO do sprawdzenia!!!
@@ -105,9 +120,6 @@ void RawDataParser::write_unsigned_int(unsigned int value, unsigned char* retBuf
 
 void RawDataParser::write_unsigned_long_long(unsigned long long value, unsigned char* retBuffer, unsigned int bytes, EndianessMode endianessMode){
     bytes = min(bytes, 8u);
-    if (endianessMode == UseDefaultEndian){
-        endianessMode = this->rawDataMode;
-    }
     if (endianessMode == LittleEndian){
         for(unsigned int i=0; i<bytes; i++) {
             retBuffer[i] = static_cast<unsigned char>((value >> (i*8)) & 0xFF); //TODO do sprawdzenia!!!
@@ -119,4 +131,9 @@ void RawDataParser::write_unsigned_long_long(unsigned long long value, unsigned 
     } else {
         throw std::invalid_argument("Not supported format");
     }
+}
+
+RawDataParser::EndianessMode RawDataParser::getDefaultEndianessMode()
+{
+    return defaultEndianessMode;
 }

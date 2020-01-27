@@ -73,6 +73,7 @@ public:
     void                    removeSignal(const SignalsIterator signalIt);
     void                    removeSignal(unsigned int signalId);
     bool                    signalsEmpty() const;
+    unsigned int            getSignalsNumber() const;
 
     SignalsIterator         beginSignals();
     SignalsIterator         endSignals();

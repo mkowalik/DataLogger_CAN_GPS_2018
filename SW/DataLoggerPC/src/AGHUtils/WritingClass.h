@@ -18,6 +18,11 @@ private:
 public:
     WritingClass(string nameOfFile, RawDataParser& dataParser);
     void            write_uint8(unsigned int aValue);
+    void            write_uint16(unsigned int aValue);
+    void            write_uint32(unsigned int aValue);
+    void            write_uint64(unsigned long long aValue);
+    void            write_int16(int aValue);
+
     void            write_uint16(unsigned int aValue, RawDataParser::EndianessMode endianessMode);
     void            write_uint32(unsigned int aValue, RawDataParser::EndianessMode endianessMode);
     void            write_uint64(unsigned long long aValue, RawDataParser::EndianessMode endianessMode);

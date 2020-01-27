@@ -32,6 +32,9 @@ void ConfigFrame::addSignal(ConfigSignal* pSignal){
     if (hasSignalWithID(pSignal->getSignalID())){
         throw std::invalid_argument("Signal with given ID already exists in the frame.");
     }
+    if (pParentConfig->isMaxSignalsNumber()){
+        throw std::invalid_argument("Max number of signals had reached.");
+    }
     signalsVector.insert(lowerBoundSignalConstIterator(pSignal->getSignalID()), pSignal);
 }
 
@@ -166,8 +169,14 @@ void ConfigFrame::removeSignal(unsigned int signalID)
     signalsVector.erase(signalIt);
 }
 
-bool ConfigFrame::signalsEmpty() const {
+bool ConfigFrame::signalsEmpty() const
+{
     return signalsVector.empty();
+}
+
+unsigned int ConfigFrame::getSignalsNumber() const
+{
+    return static_cast<unsigned int>(signalsVector.size());
 }
 
 ConfigFrame::SignalsIterator ConfigFrame::beginSignals() {
@@ -203,7 +212,7 @@ ConfigSignal *ConfigFrame::getSignalWithID(unsigned int signalID) const
 
 void ConfigFrame::writeToBin(WritingClass& writer){
 
-    writer.write_uint16(static_cast<unsigned int>(getFrameID()), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(static_cast<unsigned int>(getFrameID()));
     writer.write_string(getFrameName(), true, FRAME_NAME_LENGTH);
     for (auto pSignal : signalsVector){
         pSignal->writeToBin(writer);
@@ -212,10 +221,10 @@ void ConfigFrame::writeToBin(WritingClass& writer){
 
 void ConfigFrame::readFromBin(ReadingClass& reader){
 
-    _setFrameID(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    _setFrameID(reader.reading_uint16());
     setFrameName(reader.reading_string(FRAME_NAME_LENGTH, true));
 
-    unsigned int signalNumber = reader.reading_uint16(RawDataParser::UseDefaultEndian);
+    unsigned int signalNumber = reader.reading_uint16();
 
     for (unsigned int i=0; i<signalNumber; i++){
         ConfigSignal* pSignal = new ConfigSignal(this, reader);

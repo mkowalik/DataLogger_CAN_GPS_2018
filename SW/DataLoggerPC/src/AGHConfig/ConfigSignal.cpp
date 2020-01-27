@@ -220,7 +220,7 @@ void ConfigSignal::addNamedValue(int _channelValue, ConfigSignalNamedValue _name
     channelNamedValues.insert(make_pair(_channelValue, _namedValue));
 }
 
-double ConfigSignal::convertRawValueToSymbolic(unsigned long long value) const {
+double ConfigSignal::convertRawValueToSymbolic(unsigned long value) const {
     double ret = static_cast<double>(value);
     ret += static_cast<double>(getOffset());
     ret *= static_cast<double>(getMultiplier());
@@ -228,7 +228,7 @@ double ConfigSignal::convertRawValueToSymbolic(unsigned long long value) const {
     return ret;
 }
 
-long long ConfigSignal::convertRawValueToSymbolicInt(unsigned long long value) const {
+long long ConfigSignal::convertRawValueToSymbolicInt(unsigned long value) const {
     long long ret = static_cast<long long>(value);
     ret += static_cast<double>(getOffset());
     ret *= static_cast<double>(getMultiplier());
@@ -236,7 +236,7 @@ long long ConfigSignal::convertRawValueToSymbolicInt(unsigned long long value) c
     return ret;
 }
 
-unsigned long long ConfigSignal::convertSymbolicValueToRaw(double value) const
+unsigned long ConfigSignal::convertSymbolicValueToRaw(double value) const
 {
     value *= static_cast<double>(getDivider());
     value /= static_cast<double>(getMultiplier());
@@ -244,10 +244,10 @@ unsigned long long ConfigSignal::convertSymbolicValueToRaw(double value) const
     if (value < 0.0){
         throw std::logic_error("Can't convert given symbolic value to raw value.");
     }
-    return static_cast<unsigned long long>(value);
+    return static_cast<unsigned long>(value);
 }
 
-unsigned long long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const {
+unsigned long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const {
 
     if (getStartBit() + getLengthBits() > (framePayload.size() * 8)){
         throw std::invalid_argument("Signal with given position and length exeeds DLC of the frame.");
@@ -256,7 +256,7 @@ unsigned long long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigne
     unsigned int bitsLeft       = getLengthBits();
     unsigned int bitsShiftRaw   = getStartBit() % 8;
     unsigned int bitIt          = getStartBit();
-    unsigned long long ret      = 0;
+    unsigned long ret      = 0;
 
     if (getValueType().isBigEndianType()){
         while (bitsLeft > 0) {
@@ -272,7 +272,7 @@ unsigned long long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigne
                 actualByte >>= (8U - (bitsLeft % 8));
                 actualByte &= (0xFF >> (8U - (bitsLeft % 8)));
             }
-            ret |= (static_cast<unsigned long long>(actualByte) << (bitsLeft - (((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U))) );
+            ret |= (static_cast<unsigned long>(actualByte) << (bitsLeft - (((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U))) );
             bitIt += ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
             bitsShiftRaw = (bitsShiftRaw + bitsLeft) % 8U;
             bitsLeft -= ((bitsLeft % 8U) == 0) ? 8U : (bitsLeft % 8U);
@@ -291,7 +291,7 @@ unsigned long long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigne
                 actualByte >>= (8U - bitsLeft);
                 actualByte &= (0xFF >> (8U - bitsLeft));
             }
-            ret |= (static_cast<unsigned long long>(actualByte) << (((bitIt - getStartBit())/8) * 8U));
+            ret |= (static_cast<unsigned long>(actualByte) << (((bitIt - getStartBit())/8) * 8U));
             bitIt += min(8U, bitsLeft);
             bitsLeft -= min(8U, bitsLeft);
         }
@@ -309,15 +309,15 @@ long long ConfigSignal::getSymbolicIntValueFromFramePayload(std::vector<unsigned
 
 void ConfigSignal::writeToBin(WritingClass& writer){
 
-    writer.write_uint16(getSignalID(), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(getSignalID());
     writer.write_uint8(getStartBit());
     writer.write_uint8(getLengthBits());
 
     getValueType().writeToBin(writer);
 
-    writer.write_int16(getMultiplier(), RawDataParser::UseDefaultEndian);
-    writer.write_uint16(getDivider(), RawDataParser::UseDefaultEndian);
-    writer.write_int16(getOffset(), RawDataParser::UseDefaultEndian);
+    writer.write_int16(getMultiplier());
+    writer.write_uint16(getDivider());
+    writer.write_int16(getOffset());
 
     writer.write_string(getSignalName(), true, SIGNAL_NAME_LENGHT);
     writer.write_string(getUnitName(), true, UNIT_LENGTH);
@@ -329,15 +329,15 @@ void ConfigSignal::writeToBin(WritingClass& writer){
 
 void ConfigSignal::readFromBin(ReadingClass& reader){
 
-    _setSignalId(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    _setSignalId(reader.reading_uint16());
     setStartBit(reader.reading_uint8());
     setLengthBits(reader.reading_uint8());
 
     valueType.readFromBin(reader);
 
-    setMultiplier(reader.reading_int16(RawDataParser::UseDefaultEndian));
-    setDivider(reader.reading_uint16(RawDataParser::UseDefaultEndian));
-    setOffset(reader.reading_int16(RawDataParser::UseDefaultEndian));
+    setMultiplier(reader.reading_int16());
+    setDivider(reader.reading_uint16());
+    setOffset(reader.reading_int16());
 
     setSignallName(reader.reading_string(SIGNAL_NAME_LENGHT, true));
     setUnitName(reader.reading_string(UNIT_LENGTH, true));

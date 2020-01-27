@@ -42,8 +42,10 @@ private:
     static constexpr EnGPSFrequency DEFAULT_GPS_FREQUENCY   = EnGPSFrequency::freq_10_Hz;
     static constexpr unsigned int   DEFAULT_RTC_CONFIGURATION_FRAME_ID = 0x7FF;
 
-    static constexpr int            START_CONFIG_TRIGGERS_MAX_NUMBER    = 5;
-    static constexpr int            STOP_CONFIG_TRIGGERS_MAX_NUMBER     = 5;
+    static constexpr unsigned int   START_CONFIG_TRIGGERS_MAX_NUMBER    = 5;
+    static constexpr unsigned int   STOP_CONFIG_TRIGGERS_MAX_NUMBER     = 5;
+
+    static constexpr unsigned int   MAX_SIGNALS_NUMBER = 256;
 
     static constexpr unsigned int   CONFIG_NAME_LENGTH = 20;
 
@@ -55,6 +57,7 @@ private:
     std::vector<ConfigFrame*>::const_iterator   lowerBoundFrameConstIterator(unsigned int frameID) const;
     std::vector<ConfigFrame*>::iterator         lowerBoundFrameIterator(unsigned int frameID);
     void                                        sortFramesCallback();
+    bool                                        isMaxSignalsNumber() const;
 
     unsigned int                version;
     unsigned int                subVersion;
@@ -112,12 +115,12 @@ public:
     unsigned int            getNumberOfStartTriggers();
     unsigned int            getNumberOfStopTriggers();
 
-    ConfigTrigger*          addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator);
+    ConfigTrigger*          addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator);
     void                    removeStartTrigger(TriggersIterator trigIt);
     void                    removeStartTrigger(ConfigTrigger* pTrigger);
     unsigned int            getStartTriggersNumber();
 
-    ConfigTrigger*          addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator);
+    ConfigTrigger*          addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator);
     void                    removeStopTrigger(TriggersIterator trigIt);
     void                    removeStopTrigger(ConfigTrigger* pTrigger);
     unsigned int            getStopTriggersNumber();

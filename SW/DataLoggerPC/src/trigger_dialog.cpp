@@ -106,7 +106,7 @@ TriggerDialog::~TriggerDialog()
     delete ui;
 }
 
-QString TriggerDialog::prepareFormulaRender(const ConfigFrame *pFrame, const ConfigSignal *pSignal, ConfigTrigger::TriggerCompareOperator oper, unsigned long long rawConstCompareVal)
+QString TriggerDialog::prepareFormulaRender(const ConfigFrame *pFrame, const ConfigSignal *pSignal, ConfigTrigger::TriggerCompareOperator oper, unsigned long rawConstCompareVal)
 {
     QString strVal;
 
@@ -189,7 +189,7 @@ void TriggerDialog::on_symbolicConstValue_doubleSpinBox_valueChanged(double val)
             return;
         }
         if (pSignal != nullptr){
-            unsigned long long rawVal = pSignal->convertSymbolicValueToRaw(val);
+            unsigned long rawVal = pSignal->convertSymbolicValueToRaw(val);
             ui->rawConstValue_spinBox->setValue(static_cast<int>(rawVal));
         }
         constValueChangeInProgress = false;
@@ -275,7 +275,7 @@ void TriggerDialog::enableSignalReltiveWidgets(const ConfigSignal* pSignal)
     ui->symbolicConstValue_doubleSpinBox->setEnabled(true);
     ui->symbolicConstValue_doubleSpinBox->setValue(
                 pSignal->convertRawValueToSymbolic(
-                    static_cast<unsigned long long>(ui->rawConstValue_spinBox->value())
+                    static_cast<unsigned long>(ui->rawConstValue_spinBox->value())
                 ));
     ui->signal_comboBox->setEnabled(true);
     ui->unit_label->setText(QString::fromStdString(pSignal->getUnitName()));

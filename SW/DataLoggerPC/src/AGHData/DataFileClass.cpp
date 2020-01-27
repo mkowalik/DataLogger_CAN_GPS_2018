@@ -57,7 +57,7 @@ void DataFileClass::readFromBin(ReadingClass& reader) {
 
     this->pConfig = new Config(reader);
 
-    startTime.tm_year = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    startTime.tm_year = static_cast<int>(reader.reading_uint16());
     startTime.tm_mon  = static_cast<int>(reader.reading_uint8());
     startTime.tm_mday = static_cast<int>(reader.reading_uint8());
     startTime.tm_hour = static_cast<int>(reader.reading_uint8());
@@ -65,8 +65,8 @@ void DataFileClass::readFromBin(ReadingClass& reader) {
     startTime.tm_sec  = static_cast<int>(reader.reading_uint8());
 
     while(!reader.eof()){
-        unsigned int msTime   = reader.reading_uint32(RawDataParser::UseDefaultEndian);
-        unsigned int frameID  = reader.reading_uint16(RawDataParser::UseDefaultEndian);
+        unsigned int msTime   = reader.reading_uint32();
+        unsigned int frameID  = reader.reading_uint16();
         if (frameID == DataFileClass::GPS_DATA_ID){
             SingleGPSFrameData* pDataRow = new SingleGPSFrameData(msTime, reader.get_dataParser());
             pDataRow->readFromBin(reader);

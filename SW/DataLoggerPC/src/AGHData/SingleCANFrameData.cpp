@@ -72,6 +72,8 @@ void SingleCANFrameData::setRawPayloadData(unsigned char* data, unsigned int dlc
     }
 }
 
-unsigned long long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSignal) const {
+unsigned long SingleCANFrameData::getSignalValueRaw(const ConfigSignal* pSignal) const {
+
+    return pSignal->getRawValueFromFramePayload(getRawData());
 
 }

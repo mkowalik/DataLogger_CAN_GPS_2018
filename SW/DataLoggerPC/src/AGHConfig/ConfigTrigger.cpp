@@ -124,7 +124,7 @@ void ConfigTrigger::setFrameSignalOperator(const ConfigFrame * _pFrame, const Co
     }
 }
 
-void ConfigTrigger::setCompareConstValue(unsigned long long _value)
+void ConfigTrigger::setCompareConstValue(unsigned long _value)
 {
     compareConstValue = _value;
 }
@@ -134,7 +134,7 @@ string ConfigTrigger::getTriggerName() const
     return triggerName;
 }
 
-ConfigTrigger::ConfigTrigger (const Config* _pConfig, std::string _triggerName, const ConfigFrame* _pFrame, const ConfigSignal* _pSignal, unsigned long long _compareConstValue, TriggerCompareOperator _compareOperator)
+ConfigTrigger::ConfigTrigger (const Config* _pConfig, std::string _triggerName, const ConfigFrame* _pFrame, const ConfigSignal* _pSignal, unsigned long _compareConstValue, TriggerCompareOperator _compareOperator)
     :
       pConfig(_pConfig),
       compareConstValue(_compareConstValue)
@@ -153,7 +153,7 @@ const ConfigSignal *ConfigTrigger::getSignal() const
     return pSignal;
 }
 
-unsigned long long ConfigTrigger::getCompareConstValue() const
+unsigned long ConfigTrigger::getCompareConstValue() const
 {
     return compareConstValue;
 }
@@ -182,9 +182,9 @@ bool ConfigTrigger::operator==(const ConfigTrigger& b) const {
 void ConfigTrigger::readFromBin(ReadingClass &reader)
 {
     std::string triggerName = reader.reading_string(TRIGGER_NAME_LENGHT, true);
-    unsigned int frameID    = reader.reading_uint16(RawDataParser::UseDefaultEndian);
-    unsigned int signalID   = reader.reading_uint16(RawDataParser::UseDefaultEndian);
-    compareConstValue       = reader.reading_uint64(RawDataParser::UseDefaultEndian);
+    unsigned int frameID    = reader.reading_uint16();
+    unsigned int signalID   = reader.reading_uint16();
+    compareConstValue       = reader.reading_uint32();
     compareOperator         = static_cast<TriggerCompareOperator>(reader.reading_uint8());
 
     switch (compareOperator) {
@@ -215,8 +215,8 @@ void ConfigTrigger::readFromBin(ReadingClass &reader)
 void ConfigTrigger::writeToBin(WritingClass &writer)
 {
     writer.write_string(getTriggerName(), 1, TRIGGER_NAME_LENGHT);
-    writer.write_uint16(pSignal->getParentFrame()->getFrameID(), RawDataParser::UseDefaultEndian);
-    writer.write_uint16(pSignal->getSignalID(), RawDataParser::UseDefaultEndian);
-    writer.write_uint64(getCompareConstValue(), RawDataParser::UseDefaultEndian);
+    writer.write_uint16(pSignal->getParentFrame()->getFrameID());
+    writer.write_uint16(pSignal->getSignalID());
+    writer.write_uint32(getCompareConstValue());
     writer.write_uint8(static_cast<unsigned int>(getCompareOperator()));
 }

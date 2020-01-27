@@ -17,10 +17,15 @@ private:
     void                        clear_buffer(size_t length);
 public:
     ReadingClass(string nameOfFile, RawDataParser& dataParser);
-    unsigned long long      reading_uint64(RawDataParser::EndianessMode endianessMode);
-    unsigned int            reading_uint32(RawDataParser::EndianessMode endianessMode);
-    unsigned int            reading_uint16(RawDataParser::EndianessMode endianessMode);
     unsigned int            reading_uint8();
+    unsigned int            reading_uint16();
+    unsigned int            reading_uint32();
+    unsigned long long      reading_uint64();
+    int                     reading_int16();
+
+    unsigned int            reading_uint16(RawDataParser::EndianessMode endianessMode);
+    unsigned int            reading_uint32(RawDataParser::EndianessMode endianessMode);
+    unsigned long long      reading_uint64(RawDataParser::EndianessMode endianessMode);
     int                     reading_int16(RawDataParser::EndianessMode endianessMode);
     string                  reading_string(int length, bool readTerminatingZero);
     void                    reading_bytes(char* buffer, int bytesNumber);

@@ -73,7 +73,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_1()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 8, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x51u);
 
     delete pConfig;
@@ -90,7 +90,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_2()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 4, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x5u);
 
     delete pTestSingleCANFrameData;
@@ -108,7 +108,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_3()
     pSignal = pConfigFrame->addSignal(4, 16, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x6A51u);
 
     delete pTestSingleCANFrameData;
@@ -125,7 +125,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_4()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 12, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x651u);
 
     delete pTestSingleCANFrameData;
@@ -142,7 +142,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_5()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(5, 10, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b1110100010u);
 
     delete pTestSingleCANFrameData;
@@ -159,7 +159,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_6()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(0, 32, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x3AA31615u);
 
     delete pTestSingleCANFrameData;
@@ -176,7 +176,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_7()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(2, 2, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b01u);
 
     delete pTestSingleCANFrameData;
@@ -193,7 +193,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_8()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(7, 2, ValueType(false, false), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b10u);
 
     delete pTestSingleCANFrameData;
@@ -211,7 +211,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_1()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 8, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x51u);
 
     delete pTestSingleCANFrameData;
@@ -228,7 +228,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_2()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 16, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x516Au);
 
     delete pTestSingleCANFrameData;
@@ -244,7 +244,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_3(){
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 16, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x516Au);
 
     delete pTestSingleCANFrameData;
@@ -261,7 +261,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_4()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(4, 12, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x516u);
 
     delete pTestSingleCANFrameData;
@@ -278,7 +278,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_5()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(5, 10, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b1010001011u);
 
     delete pTestSingleCANFrameData;
@@ -295,7 +295,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_6()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(0, 32, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0x1516A33Au);
 
     delete pTestSingleCANFrameData;
@@ -312,7 +312,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_7()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(2, 2, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b01u);
 
     delete pTestSingleCANFrameData;
@@ -329,7 +329,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_8()
     pTestSingleCANFrameData = new SingleCANFrameData(100, pConfigFrame, rawData, 4);
     pSignal = pConfigFrame->addSignal(7, 2, ValueType(false, true), 1, 1, 0, "testSignal", "", "");
 
-    unsigned long long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
+    unsigned long signalVal = pTestSingleCANFrameData->getSignalValueRaw(pSignal);
     QCOMPARE(signalVal, 0b10u);
 
     delete pTestSingleCANFrameData;

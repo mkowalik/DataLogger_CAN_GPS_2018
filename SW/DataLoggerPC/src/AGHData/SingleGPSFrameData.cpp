@@ -61,20 +61,20 @@ FixedPoint SingleGPSFrameData::getVerticalPrecision() const {
 
 void SingleGPSFrameData::readFromBin(ReadingClass &reader){
 
-    gpsDateTime.tm_year = static_cast<int>(reader.reading_uint16(RawDataParser::UseDefaultEndian));
+    gpsDateTime.tm_year = static_cast<int>(reader.reading_uint16());
     gpsDateTime.tm_mon  = static_cast<int>(reader.reading_uint8());
     gpsDateTime.tm_mday = static_cast<int>(reader.reading_uint8());
     gpsDateTime.tm_hour = static_cast<int>(reader.reading_uint8());
     gpsDateTime.tm_min  = static_cast<int>(reader.reading_uint8());
     gpsDateTime.tm_sec  = static_cast<int>(reader.reading_uint8());
 
-    longitude.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
-    latitude.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
+    longitude.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
+    latitude.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
     nSatellites = static_cast<int>(reader.reading_uint8());
-    altitude.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
-    speed.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
-    trackAngle.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
+    altitude.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
+    speed.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
+    trackAngle.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
     fixType = static_cast<SingleGPSFrameData::EnGPSFixType>(reader.reading_uint8());
-    horizontalPrecision.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
-    verticalPrecision.setRawIntegerValue(static_cast<int>(reader.reading_uint32(RawDataParser::UseDefaultEndian)));
+    horizontalPrecision.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
+    verticalPrecision.setRawIntegerValue(static_cast<int>(reader.reading_uint32()));
 }

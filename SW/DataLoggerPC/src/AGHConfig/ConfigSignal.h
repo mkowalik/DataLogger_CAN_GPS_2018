@@ -17,7 +17,7 @@ class ConfigFrame;
 class ConfigSignal : public WritableToBin, public ReadableFromBin {
     friend class ConfigFrame;
 public:
-    static constexpr unsigned int SIGNAL_MAX_LENGTH_BITS = 64;
+    static constexpr unsigned int SIGNAL_MAX_LENGTH_BITS = 32;
     static constexpr unsigned int SIGNAL_ID_MAX_VALUE    = UINT16_MAX;
 private:
     ConfigSignal(ConfigFrame* pParentFrame, ReadingClass& reader);
@@ -81,12 +81,12 @@ public:
     ConfigSignalNamedValue& getNamedValue(int channelValue);
     void                    addNamedValue(int _channelValue, ConfigSignalNamedValue _namedValue);
 
-    double                  convertRawValueToSymbolic(unsigned long long value) const;
-    long long               convertRawValueToSymbolicInt(unsigned long long value) const;
+    double                  convertRawValueToSymbolic(unsigned long value) const;
+    long long               convertRawValueToSymbolicInt(unsigned long value) const;
 
-    unsigned long long      convertSymbolicValueToRaw(double value) const;
+    unsigned long           convertSymbolicValueToRaw(double value) const;
 
-    unsigned long long      getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const;
+    unsigned long           getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const;
     double                  getSymbolicValueFromFramePayload(std::vector<unsigned char> framePayload) const;
     long long               getSymbolicIntValueFromFramePayload(std::vector<unsigned char> framePayload) const;
 
