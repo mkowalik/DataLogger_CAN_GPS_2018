@@ -131,21 +131,21 @@ void ConfigSignal::setSignalID(unsigned int _signalID)
 }
 
 void ConfigSignal::setStartBit(unsigned int startBit){
-    if (startBit > SIGNAL_MAX_LENGTH_BITS){
-        throw std::invalid_argument("Given start bit index exceed maximum length of the signal.");
+    if (startBit >= (pParentFrame->getExpextedDLC() * 8)){
+        throw std::invalid_argument("Given start bit index exceed expected DLC of the frame in which this signals is defined.");
     }
-    if (this->getStartBit() + lengthBits > (ConfigFrame::MAX_DLC_VALUE * 8)){
-        throw std::invalid_argument("Signal with given position and length exeeds max DLC of frame.");
+    if (this->getStartBit() + lengthBits > (pParentFrame->getExpextedDLC() * 8)){
+        throw std::invalid_argument("Signal with given position and length exeeds expected DLC of the frame in which this signals is defined.");
     }
     this->startBit = startBit;
 }
 
 void ConfigSignal::setLengthBits(unsigned int lengthBits){
-    if (lengthBits > ConfigSignal::SIGNAL_MAX_LENGTH_BITS){
-        throw std::invalid_argument("Given length exceed maximum length of the signal.");
+    if (lengthBits > (pParentFrame->getExpextedDLC() * 8)){
+        throw std::invalid_argument("Given length exceed expected DLC of the frame in which this signals is defined.");
     }
-    if (this->getStartBit() + lengthBits > (ConfigFrame::MAX_DLC_VALUE * 8)){
-        throw std::invalid_argument("Signal with given position and length exeeds max DLC of frame.");
+    if (this->getStartBit() + lengthBits > (pParentFrame->getExpextedDLC() * 8)){
+        throw std::invalid_argument("Signal with given position and length exeeds expected DLC of the frame in which this signals is defined.");
     }
     this->lengthBits = lengthBits;
 }

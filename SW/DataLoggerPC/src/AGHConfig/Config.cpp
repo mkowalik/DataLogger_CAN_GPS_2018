@@ -206,9 +206,9 @@ bool Config::framesEmpty() const {
     return framesVector.empty();
 }
 
-ConfigFrame* Config::addFrame(unsigned int frameID, string frameName)
+ConfigFrame* Config::addFrame(unsigned int frameID, unsigned int expectedDLC, string frameName)
 {
-    ConfigFrame* pFrame = new ConfigFrame(this, frameID, frameName);
+    ConfigFrame* pFrame = new ConfigFrame(this, frameID, expectedDLC, frameName);
     try {
         addFrame(pFrame);
     } catch (const std::exception& e){

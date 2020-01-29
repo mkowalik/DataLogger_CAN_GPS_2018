@@ -12,11 +12,12 @@ static constexpr unsigned int FRAME_NAME_LENGTH = 20;
 //<----- Private methods ----->//
 //<--------------------------->//
 
-ConfigFrame::ConfigFrame (Config* _pConfig, unsigned int _frameId, string _frameName) : pParentConfig(_pConfig), frameID(_frameId), frameName(_frameName) {
+ConfigFrame::ConfigFrame (Config* _pConfig, unsigned int _frameId, unsigned int _expectedDLC, string _frameName) : pParentConfig(_pConfig), frameID(_frameId), expectedDLC(_expectedDLC), frameName(_frameName) {
     if (this->frameID > MAX_ID_VALUE){
         throw std::invalid_argument("Value of ID greather than max value.");
     }
     _setFrameID(_frameId);
+    setExpectedDLC(_expectedDLC);
     setFrameName(_frameName);
 }
 
@@ -70,6 +71,11 @@ unsigned int ConfigFrame::getFrameID() const {
     return this->frameID;
 }
 
+unsigned int ConfigFrame::getExpextedDLC() const
+{
+    return expectedDLC;
+}
+
 string ConfigFrame::getFrameName() const {
     return this->frameName;
 }
@@ -86,6 +92,19 @@ void ConfigFrame::_setFrameID(unsigned int _frameID){
     }
     frameID = _frameID;
     pParentConfig->sortFramesCallback();
+}
+
+void ConfigFrame::setExpectedDLC(unsigned int _expectedDLC)
+{
+    if (_expectedDLC > MAX_DLC_VALUE){
+        throw std::logic_error("Expected DLC value exceeds maximum DLC length.");
+    }
+    for (auto pSignal : signalsVector){
+        if ((pSignal->getStartBit() + pSignal->getLengthBits()) > (_expectedDLC * 8)){
+            throw std::logic_error("Some of signals positions defined in given frame exeeds new Expected DLC value.");
+        }
+    }
+    expectedDLC = _expectedDLC;
 }
 
 void ConfigFrame::setFrameName(string _frameName){
@@ -222,6 +241,7 @@ void ConfigFrame::writeToBin(WritingClass& writer){
 void ConfigFrame::readFromBin(ReadingClass& reader){
 
     _setFrameID(reader.reading_uint16());
+    setExpectedDLC(reader.reading_uint8());
     setFrameName(reader.reading_string(FRAME_NAME_LENGTH, true));
 
     unsigned int signalNumber = reader.reading_uint16();

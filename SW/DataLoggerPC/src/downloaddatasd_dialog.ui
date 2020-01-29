@@ -63,6 +63,9 @@
        <property name="text">
         <string>Select Data Directory:</string>
        </property>
+       <property name="buddy">
+        <cstring>dataDirLineEdit</cstring>
+       </property>
       </widget>
      </item>
      <item row="1" column="4">
@@ -207,6 +210,9 @@
        <property name="text">
         <string>Choose CSV file decimal separator:</string>
        </property>
+       <property name="buddy">
+        <cstring>decimalSeparatorComboBox</cstring>
+       </property>
       </widget>
      </item>
      <item row="1" column="1">
@@ -246,6 +252,9 @@
       <widget class="QLabel" name="writeChangedLabel">
        <property name="text">
         <string>Write only changed data:</string>
+       </property>
+       <property name="buddy">
+        <cstring>writeChangedCheckBox</cstring>
        </property>
       </widget>
      </item>

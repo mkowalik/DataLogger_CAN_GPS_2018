@@ -11,6 +11,7 @@ SignalDialog::SignalDialog(ConfigFrame& frame, ConfigSignal* pPreviousSignal, QW
     pPreviousSignal(pPreviousSignal)
 {
     ui->setupUi(this);
+    ui->bigEndian_checkBox->setEnabled(false);
 
     if (pPreviousSignal != nullptr){
 
@@ -23,6 +24,8 @@ SignalDialog::SignalDialog(ConfigFrame& frame, ConfigSignal* pPreviousSignal, QW
             ui->bigEndian_checkBox->setChecked(true);
         }
 
+        ui->startBit_spinBox->setValue(static_cast<int>(pPreviousSignal->getStartBit()));
+        ui->lengthBits_spinBox->setValue(static_cast<int>(pPreviousSignal->getLengthBits()));
         ui->multiplier_spinBox->setValue(pPreviousSignal->getMultiplier());
         ui->divider_spinBox->setValue(static_cast<int>(pPreviousSignal->getDivider()));
         ui->offset_spinBox->setValue(pPreviousSignal->getOffset());
@@ -45,7 +48,7 @@ bool SignalDialog::getIsSigned(){
 }
 
 bool SignalDialog::getIsBigEndian(){
-    return ui->bigEndian_checkBox->isChecked();
+    return ((ui->lengthBits_spinBox->value() > 8) && (ui->bigEndian_checkBox->isChecked()));
 }
 
 int SignalDialog::getMultiplier(){
@@ -94,5 +97,14 @@ void SignalDialog::on_signalIDAuto_checkBox_stateChanged(int state)
         ui->signalID_spinBox->setEnabled(true);
     } else {
         ui->signalID_spinBox->setEnabled(false);
+    }
+}
+
+void SignalDialog::on_lengthBits_spinBox_valueChanged(int val)
+{
+    if (val <= 8){
+        ui->bigEndian_checkBox->setEnabled(false);
+    } else {
+        ui->bigEndian_checkBox->setEnabled(true);
     }
 }

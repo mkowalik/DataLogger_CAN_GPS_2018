@@ -12,15 +12,17 @@ FrameDialog::FrameDialog(const Config& config, const ConfigFrame* _pFrame, QWidg
     ui->setupUi(this);
     if (_pFrame != nullptr){
         ui->id_SpinBox->setValue(static_cast<int>(_pFrame->getFrameID()));
+        ui->dlc_SpinBox->setValue(static_cast<int>(_pFrame->getExpextedDLC()));
         ui->moduleName_lineEdit->setText(QString::fromStdString(_pFrame->getFrameName()));
     }
 }
 
 unsigned int FrameDialog::getFrameID(){
-    if (ui->id_SpinBox->value() < 0){
-        throw std::invalid_argument("ID must be greater or equal to 0.");
-    }
     return static_cast<unsigned int>(ui->id_SpinBox->value());
+}
+
+unsigned int FrameDialog::getExpectedDLC(){
+    return static_cast<unsigned int>(ui->dlc_SpinBox->value());
 }
 
 QString FrameDialog::getModuleName(){

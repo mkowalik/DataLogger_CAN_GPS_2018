@@ -215,8 +215,12 @@ void ConfigTrigger::readFromBin(ReadingClass &reader)
 void ConfigTrigger::writeToBin(WritingClass &writer)
 {
     writer.write_string(getTriggerName(), 1, TRIGGER_NAME_LENGHT);
-    writer.write_uint16(pSignal->getParentFrame()->getFrameID());
-    writer.write_uint16(pSignal->getSignalID());
+    writer.write_uint16(getFrame()->getFrameID());
+    if (getSignal() != nullptr){
+        writer.write_uint16(getSignal()->getSignalID());
+    } else {
+        writer.write_uint16(0U);
+    }
     writer.write_uint32(getCompareConstValue());
     writer.write_uint8(static_cast<unsigned int>(getCompareOperator()));
 }

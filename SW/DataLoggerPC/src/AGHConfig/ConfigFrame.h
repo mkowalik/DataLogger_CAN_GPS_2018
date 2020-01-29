@@ -24,7 +24,7 @@ public:
     using SignalsIterator       = std::vector<ConfigSignal*>::iterator;
     using ConstSignalsIterator  = std::vector<ConfigSignal*>::const_iterator;
 private:
-    ConfigFrame (Config* pConfig, unsigned int frameID, string frameName);
+    ConfigFrame (Config* pConfig, unsigned int frameID, unsigned int expectedDLC, string frameName);
     ConfigFrame (Config* pConfig, ReadingClass& reader);
 
     void                                        addSignal(ConfigSignal *pSignal);
@@ -35,15 +35,18 @@ private:
 
     Config*                     pParentConfig;
     unsigned int                frameID;
+    unsigned int                expectedDLC;
     string                      frameName;
     std::vector<ConfigSignal*>  signalsVector;
 
 public:
     Config*                 getParentConfig() const;
     unsigned int            getFrameID() const;
+    unsigned int            getExpextedDLC() const;
     string                  getFrameName() const;
 
     void                    setFrameID(unsigned int frameID);
+    void                    setExpectedDLC(unsigned int expectedDLC);
     void                    setFrameName(string frameName);
 
     //<----- Access to signals definitions ----->/

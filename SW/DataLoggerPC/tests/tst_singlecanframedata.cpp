@@ -65,7 +65,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_1()
 {
 
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
@@ -83,7 +83,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_1()
 void Test_SingleCANFrameData::test_case_littleEndian_2()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -100,7 +100,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_2()
 void Test_SingleCANFrameData::test_case_littleEndian_3()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -118,7 +118,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_3()
 void Test_SingleCANFrameData::test_case_littleEndian_4()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -135,7 +135,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_4()
 void Test_SingleCANFrameData::test_case_littleEndian_5()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -152,7 +152,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_5()
 void Test_SingleCANFrameData::test_case_littleEndian_6()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -169,7 +169,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_6()
 void Test_SingleCANFrameData::test_case_littleEndian_7()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -186,7 +186,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_7()
 void Test_SingleCANFrameData::test_case_littleEndian_8()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -204,7 +204,7 @@ void Test_SingleCANFrameData::test_case_littleEndian_8()
 void Test_SingleCANFrameData::test_case_bigEndian_1()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -221,7 +221,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_1()
 void Test_SingleCANFrameData::test_case_bigEndian_2()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -237,7 +237,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_2()
 
 void Test_SingleCANFrameData::test_case_bigEndian_3(){
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -254,7 +254,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_3(){
 void Test_SingleCANFrameData::test_case_bigEndian_4()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -271,7 +271,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_4()
 void Test_SingleCANFrameData::test_case_bigEndian_5()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -288,7 +288,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_5()
 void Test_SingleCANFrameData::test_case_bigEndian_6()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -305,7 +305,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_6()
 void Test_SingleCANFrameData::test_case_bigEndian_7()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 
@@ -322,7 +322,7 @@ void Test_SingleCANFrameData::test_case_bigEndian_7()
 void Test_SingleCANFrameData::test_case_bigEndian_8()
 {
     pConfig = new Config("", Config::EnCANBitrate::bitrate_500kbps, Config::EnGPSFrequency::freq_GPS_OFF, 0x7FF);
-    pConfigFrame = pConfig->addFrame(0x100, "testFrame");
+    pConfigFrame = pConfig->addFrame(0x100, 4, "testFrame");
 
     unsigned char rawData[4] = {0x15, 0x16, 0xA3, 0x3A};
 

@@ -34,7 +34,6 @@ private:
     void                   reloadStartTriggersWidget();
     void                   reloadStopTriggersWidget();
     void                   reloadConfigView();
-    void                   reloadEnableDisableSaveButton();
 
     void                   editFrameRow(QTreeWidgetItem *pClickedRow, ConfigFrame* pFrame);
     void                   editSignalRow(QTreeWidgetItem *clickedItem, ConfigSignal* pSignal);
@@ -71,28 +70,16 @@ private slots:
     void on_addStartTrigger_button_clicked();
     void on_addStopTrigger_button_clicked();
     void on_saveConfigButton_clicked();
-
-
     void on_startTrigger_listWidget_customContextMenuRequested(const QPoint &pos);
-
     void on_actionEditFrameOrSignal_triggered();
-
     void on_actionDeleteFrameOrSignal_triggered();
-
     void on_actionDeleteStartLogTrigger_triggered();
-
     void on_actionEditStartLogTrigger_triggered();
-
     void on_startTrigger_listWidget_itemDoubleClicked(QListWidgetItem *item);
-
     void on_stopTrigger_listWidget_customContextMenuRequested(const QPoint &pos);
-
     void on_actionDeleteStopLogTrigger_triggered();
-
     void on_actionEditStopLogTrigger_triggered();
-
     void on_stopTrigger_listWidget_itemDoubleClicked(QListWidgetItem *item);
-
     void on_actionAddSignalToClickedFrame_triggered();
 
 private:

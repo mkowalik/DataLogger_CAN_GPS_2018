@@ -99,7 +99,7 @@ public:
 
     bool                    hasFrameWithId(unsigned int frameID) const;
     ConfigFrame*            getFrameWithId(unsigned int frameID) const;
-    ConfigFrame*            addFrame(unsigned int frameID, string frameName);
+    ConfigFrame*            addFrame(unsigned int frameID, unsigned int expectedDLC, string frameName);
     void                    removeFrame(const FramesIterator frameIterator);
     void                    removeFrame(unsigned int frameID);
 

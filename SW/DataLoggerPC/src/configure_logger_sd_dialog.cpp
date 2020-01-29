@@ -97,15 +97,6 @@ void ConfigureLoggerSDDialog::reloadConfigView(){
     reloadStopTriggersWidget();
 }
 
-void ConfigureLoggerSDDialog::reloadEnableDisableSaveButton()
-{
-    if ((pConfig->getNumberOfStartTriggers() == 0) || (pConfig->framesEmpty())){
-        ui->saveConfigButton->setEnabled(false);
-    } else {
-        ui->saveConfigButton->setEnabled(true);
-    }
-}
-
 void ConfigureLoggerSDDialog::editFrameRow(QTreeWidgetItem *pClickedFrameRow, ConfigFrame* pFrame){
 
     FrameDialog frameDialog(*(this->pConfig), pFrame, this);
@@ -114,6 +105,7 @@ void ConfigureLoggerSDDialog::editFrameRow(QTreeWidgetItem *pClickedFrameRow, Co
         try {
             if (frameDialog.exec() == QDialog::Accepted){
                 pFrame->setFrameID(frameDialog.getFrameID());
+                pFrame->setExpectedDLC(frameDialog.getExpectedDLC());
                 pFrame->setFrameName(frameDialog.getModuleName().toStdString());
 
                 prepareFrameRowWidget(pClickedFrameRow, pFrame);
@@ -191,7 +183,7 @@ void ConfigureLoggerSDDialog::addNewFrameRow() {
         try {
             if (newFrameDialog.exec() == QDialog::Accepted){
 
-                ConfigFrame* pFrame = pConfig->addFrame(newFrameDialog.getFrameID(), newFrameDialog.getModuleName().toStdString());
+                ConfigFrame* pFrame = pConfig->addFrame(newFrameDialog.getFrameID(), newFrameDialog.getExpectedDLC(), newFrameDialog.getModuleName().toStdString());
 
                 QTreeWidgetItem* pFrameRow = prepareFrameRowWidget(nullptr, pFrame);
                 insertFrameRowWidget(pFrameRow, pFrame);
@@ -327,11 +319,14 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareFrameRowWidget(QTreeWidgetItem 
     }
 
     QString text;
-    text.append(QString::fromStdString(pFrame->getFrameName()));
-    text.append(" [");
+    text.append("[");
     text.append("0x");
     text.append(QString::number(pFrame->getFrameID(), 16));
-    text.append("]");
+    text.append("] ");
+    text.append(QString::fromStdString(pFrame->getFrameName()));
+    text.append(" (DLC: ");
+    text.append(QString::number(pFrame->getExpextedDLC()));
+    text.append(")");
 
     pPreviousFrameRow->setText(0, text);
 

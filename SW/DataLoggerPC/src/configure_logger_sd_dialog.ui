@@ -38,6 +38,9 @@
        <property name="text">
         <string>Select output file:</string>
        </property>
+       <property name="buddy">
+        <cstring>selectOutputFileComboBox</cstring>
+       </property>
       </widget>
      </item>
      <item row="0" column="1">
@@ -71,6 +74,9 @@
       <widget class="QLabel" name="prototypeFile_label">
        <property name="text">
         <string>Choose prototype file:</string>
+       </property>
+       <property name="buddy">
+        <cstring>prototypeFile_comboBox</cstring>
        </property>
       </widget>
      </item>
@@ -119,6 +125,9 @@
        <property name="text">
         <string>Log filename:</string>
        </property>
+       <property name="buddy">
+        <cstring>logFilename_lineEdit</cstring>
+       </property>
       </widget>
      </item>
      <item row="2" column="1">
@@ -145,6 +154,9 @@
           <widget class="QLabel" name="canBitrateLabel">
            <property name="text">
             <string>CAN Bitrate:</string>
+           </property>
+           <property name="buddy">
+            <cstring>canBitrateComboBox</cstring>
            </property>
           </widget>
          </item>
@@ -188,6 +200,9 @@
           <widget class="QLabel" name="gpsFrequencyLabel">
            <property name="text">
             <string>GPS Frequency:</string>
+           </property>
+           <property name="buddy">
+            <cstring>gpsFreqComboBox</cstring>
            </property>
           </widget>
          </item>
@@ -236,6 +251,9 @@
           <widget class="QLabel" name="rtcConfigFrameID_label">
            <property name="text">
             <string>RTC Configuratiion frame ID:</string>
+           </property>
+           <property name="buddy">
+            <cstring>rtcConfigFrameID_spinBox</cstring>
            </property>
           </widget>
          </item>
@@ -318,6 +336,9 @@
      </property>
      <property name="text">
       <string>Frames/Signals:</string>
+     </property>
+     <property name="buddy">
+      <cstring>framesTreeWidget</cstring>
      </property>
     </widget>
    </item>
@@ -456,6 +477,9 @@
          <property name="text">
           <string>Start log triggers:</string>
          </property>
+         <property name="buddy">
+          <cstring>startTrigger_listWidget</cstring>
+         </property>
         </widget>
        </item>
        <item>
@@ -520,6 +544,9 @@
          </property>
          <property name="text">
           <string>Stop log triggers:</string>
+         </property>
+         <property name="buddy">
+          <cstring>stopTrigger_listWidget</cstring>
          </property>
         </widget>
        </item>

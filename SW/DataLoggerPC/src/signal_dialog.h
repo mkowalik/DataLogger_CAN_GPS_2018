@@ -33,6 +33,8 @@ public:
 private slots:
     void on_signalIDAuto_checkBox_stateChanged(int state);
 
+    void on_lengthBits_spinBox_valueChanged(int arg1);
+
 private:
     Ui::SignalDialog *ui;
     ConfigFrame& frame;
