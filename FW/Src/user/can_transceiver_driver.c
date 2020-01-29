@@ -50,7 +50,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 	uint32_t prescalerValue;
 
-	switch (pConfig->canSpeed){
+	switch (pConfig->canBitrate){
 	case Config_CANBitrate_1Mbps:
 		prescalerValue = 6;
 		break;

@@ -10,6 +10,7 @@
 #include "user/utils.h"
 
 #include "string.h"
+#include "stdbool.h"
 
 //< ----- Private functions prototypes ----- >//
 
@@ -19,6 +20,8 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateFrameDLC(Conf
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateSignalDefinition(ConfigDataManager_TypeDef* pSelf, ConfigFrame_TypeDef* pFrame, ConfigSignal_TypeDef* pSignal);
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateGPSFrequency(ConfigDataManager_TypeDef* pSelf);
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateCANSpeed(ConfigDataManager_TypeDef* pSelf);
+static bool								_ConfigDataManager_isSignalUsedForOperator(Config_TrigerCompareOperator_TypeDef compareOperator);
+static bool								_ConfigDataManager_isConstCompareValueUsedForOperator(Config_TrigerCompareOperator_TypeDef compareOperator);
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateTrigger(ConfigDataManager_TypeDef* pSelf, Config_Trigger_TypeDef* pTrigger);
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_getFreeSignalListElem(ConfigDataManager_TypeDef* pSelf, ConfigSignalListElem_TypeDef* pRetSignalListElem);
@@ -140,6 +143,30 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_getIDsList(ConfigDataManager_
 
 }
 
+ConfigDataManager_Status_TypeDef ConfigDataManager_findFrmae(ConfigDataManager_TypeDef* pSelf, uint16_t frameID, ConfigFrame_TypeDef** pRetFrame){
+
+	if (pSelf == NULL || pRetFrame == NULL){
+		return ConfigDataManager_Status_NullPointerError;
+	}
+
+	if (pSelf->state != ConfigDataManager_State_Initialized && pSelf->state != ConfigDataManager_State_ReadConfig){
+		return ConfigDataManager_State_UnInitialized;
+	}
+
+	if (pSelf->state != ConfigDataManager_State_ReadConfig){
+		return ConfigDataManager_Status_ConfigNotReadError;
+	}
+
+	if (_ConfigDataManager_validateCorrectFrameID(pSelf, frameID) != ConfigDataManager_Status_FrameIDPreviouslyUsed){
+		return ConfigDataManager_Status_WrongFrameIDError;
+	}
+
+	(*pRetFrame) = pSelf->sConfig.canFramesByID[frameID];
+
+	return ConfigDataManager_Status_OK;
+}
+
+
 ConfigDataManager_Status_TypeDef ConfigDataManager_findSignal(ConfigDataManager_TypeDef* pSelf, uint16_t frameID, uint16_t signalID, ConfigSignal_TypeDef** pRetSignal){
 
 	if (pSelf == NULL || pRetSignal == NULL){
@@ -260,11 +287,11 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateSignalDefinit
 		return ConfigDataManager_Status_WrongSignalLengthError;
 	}
 
-	if (pSignal->startBit + pSignal->lengthBits > CONFIG_MAX_SIGNAL_LENGTH_BITS_VALUE){
+	if (pSignal->startBit + pSignal->lengthBits > (pFrame->expectedDLC * 8)){
 		return ConfigDataManager_Status_WrongSignalLengthError;
 	}
 
-	if ((pSignal->valueType & ~(CONFIG_VALUE_TYPE_SIGNED_TYPE_flag | CONFIG_VALUE_TYPE_BIG_ENDIAN_TYPE_flag)) != 0){
+	if (pSignal->valueType_unused != 0){
 		return ConfigDataManager_Status_WrongSignalDefinitionError;
 	}
 
@@ -290,7 +317,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateGPSFrequency(
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateCANSpeed(ConfigDataManager_TypeDef* pSelf){
 
-	switch (pSelf->sConfig.canSpeed){
+	switch (pSelf->sConfig.canBitrate){
 	case Config_CANBitrate_50kbps:
 	case Config_CANBitrate_125kbps:
 	case Config_CANBitrate_250kbps:
@@ -302,11 +329,24 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateCANSpeed(Conf
 	}
 }
 
+static bool _ConfigDataManager_isSignalUsedForOperator(Config_TrigerCompareOperator_TypeDef compareOperator){
+	return ((compareOperator != Config_TrigerCompareOperator_FRAME_OCCURED) && (compareOperator != Config_TrigerCompareOperator_FRAME_TIMEOUT_MS));
+}
+
+static bool _ConfigDataManager_isConstCompareValueUsedForOperator(Config_TrigerCompareOperator_TypeDef compareOperator){
+	return (compareOperator != Config_TrigerCompareOperator_FRAME_TIMEOUT_MS);
+}
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateTrigger(ConfigDataManager_TypeDef* pSelf, Config_Trigger_TypeDef* pTrigger){
 
-	if (pTrigger->pSignal == NULL){
-		return ConfigDataManager_Status_WrongTriggerDefinitionError;
+	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->operator)){
+		if (pTrigger->pSignal == NULL){
+			return ConfigDataManager_Status_WrongTriggerDefinitionError;
+		}
+	} else {
+		if (pTrigger->pFrame == NULL){
+			return ConfigDataManager_Status_WrongTriggerDefinitionError;
+		}
 	}
 
 	switch (pTrigger->compareConstValue){
@@ -361,7 +401,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readConfigFilePreambu
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 
-	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canSpeed) != FileReadingBuffer_Status_OK){
+	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.canBitrate) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 	if ((ret = _ConfigDataManager_validateCANSpeed(pSelf)) != ConfigDataManager_Status_OK){
@@ -396,6 +436,9 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readFrameDefinition(C
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &(pFrame->ID)) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
+	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pFrame->expectedDLC)) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileReadingBufferError;
+	}
 	if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pFrame->frameName, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
@@ -403,7 +446,9 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readFrameDefinition(C
 	if ((ret = _ConfigDataManager_validateCorrectFrameID(pSelf, pFrame->ID)) != ConfigDataManager_Status_OK){
 		return ret;
 	}
-
+	if ((ret = _ConfigDataManager_validateFrameDLC(pSelf, pFrame->expectedDLC)) != ConfigDataManager_Status_OK){
+		return ret;
+	}
 	uint16_t signalsNumber = 0;
 
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &signalsNumber) != FileReadingBuffer_Status_OK){
@@ -450,7 +495,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readSignalDefinition(
 	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pSignal->lengthBits)) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
-	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pSignal->valueType)) != FileReadingBuffer_Status_OK){
+	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pSignal->valueType_raw)) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 
@@ -489,6 +534,10 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readSingleTriggerDefi
 
 	ConfigSignal_TypeDef* pSignal = NULL;
 
+	if (FileReadingBuffer_readString(&pSelf->sReadingBuffer, pTrigger->triggerName, CONFIG_NAMES_LENGTH) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileReadingBufferError;
+	}
+
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &frameId) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
@@ -497,16 +546,22 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readSingleTriggerDefi
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 
-	if ((ret = ConfigDataManager_findSignal(pSelf, frameId, signalId, &pSignal)) != ConfigDataManager_Status_OK){
-		return ret;
-	}
-
-	if (FileReadingBuffer_readUInt64(&pSelf->sReadingBuffer, &(pTrigger->compareConstValue)) != FileReadingBuffer_Status_OK){
+	if (FileReadingBuffer_readUInt32(&pSelf->sReadingBuffer, &(pTrigger->compareConstValue)) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 
 	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pTrigger->operator)) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
+	}
+
+	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->operator)){
+		if ((ret = ConfigDataManager_findSignal(pSelf, frameId, signalId, &(pTrigger->pSignal))) != ConfigDataManager_Status_OK){
+			return ret;
+		}
+	} else {
+		if ((ret = ConfigDataManager_findFrmae(pSelf, frameId, &(pTrigger->pFrame))) != ConfigDataManager_Status_OK){
+			return ret;
+		}
 	}
 	if ((ret = _ConfigDataManager_validateTrigger(pSelf, pTrigger)) != ConfigDataManager_Status_OK){
 		return ret;
@@ -554,7 +609,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeConfigFilePreamb
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 
-	if (FileWritingBuffer_writeUInt16(pWritingBuffer, pSelf->sConfig.canSpeed) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt16(pWritingBuffer, pSelf->sConfig.canBitrate) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 
@@ -619,7 +674,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeSignalDefinition
 	if (FileWritingBuffer_writeUInt8(pWritingBuffer, (pSignal->lengthBits)) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
-	if (FileWritingBuffer_writeUInt8(pWritingBuffer, (pSignal->valueType)) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(pWritingBuffer, (pSignal->valueType_raw)) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 
@@ -672,15 +727,27 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeTriggersDefiniti
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeSingleTriggerDefinition(ConfigDataManager_TypeDef* pSelf, FileWritingBuffer_TypeDef* pWritingBuffer, Config_Trigger_TypeDef* pTrigger){
 
-	if (FileWritingBuffer_writeUInt16(pWritingBuffer, pTrigger->pSignal->pFrame->ID) != FileWritingBuffer_Status_OK){
+
+	if (FileWritingBuffer_writeString(pWritingBuffer, pTrigger->triggerName, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
-
-	if (FileWritingBuffer_writeUInt16(pWritingBuffer, pTrigger->pSignal->signalID) != FileWritingBuffer_Status_OK){
-		return ConfigDataManager_Status_FileWritingBufferError;
+	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->operator)){
+		if (FileWritingBuffer_writeUInt16(pWritingBuffer, pTrigger->pSignal->pFrame->ID) != FileWritingBuffer_Status_OK){
+			return ConfigDataManager_Status_FileWritingBufferError;
+		}
+		if (FileWritingBuffer_writeUInt16(pWritingBuffer, pTrigger->pSignal->signalID) != FileWritingBuffer_Status_OK){
+			return ConfigDataManager_Status_FileWritingBufferError;
+		}
+	} else {
+		if (FileWritingBuffer_writeUInt16(pWritingBuffer, pTrigger->pFrame->ID) != FileWritingBuffer_Status_OK){
+			return ConfigDataManager_Status_FileWritingBufferError;
+		}
+		if (FileWritingBuffer_writeUInt16(pWritingBuffer, 0) != FileWritingBuffer_Status_OK){
+			return ConfigDataManager_Status_FileWritingBufferError;
+		}
 	}
 
-	if (FileWritingBuffer_writeUInt64(pWritingBuffer, (pTrigger->compareConstValue)) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt32(pWritingBuffer, (pTrigger->compareConstValue)) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 

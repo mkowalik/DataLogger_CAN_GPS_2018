@@ -21,7 +21,7 @@
 #define CONFIG_ID_NUMBER			2048
 
 #define	CONFIG_MAX_FRAME_DLC_VALUE			8
-#define	CONFIG_MAX_SIGNAL_LENGTH_BITS_VALUE	64
+#define	CONFIG_MAX_SIGNAL_LENGTH_BITS_VALUE	32
 #define	CONFIG_MAX_FRAMES_NUMBER			(14 * 4)
 #define	CONFIG_MAX_SIGNALS_NUMBER			256
 
@@ -47,23 +47,27 @@ typedef enum {
 	Config_CANBitrate_1Mbps		= 1000
 } Config_CANBitrate_TypeDef;
 
-#define	CONFIG_VALUE_TYPE_SIGNED_TYPE_flag			(1<<0)
-#define	CONFIG_VALUE_TYPE_BIG_ENDIAN_TYPE_flag		(1<<1)
-
 typedef struct _ConfigFrame_TypeDef ConfigFrame_TypeDef;
 
 typedef struct _ConfigSignal_TypeDef {
-	ConfigFrame_TypeDef*		pFrame;
-	uint16_t					signalID;
-	uint8_t						startBit;
-	uint8_t						lengthBits;
-	uint8_t						valueType;
-	uint16_t 					multiplier;
-	uint16_t 					divider;
-	uint16_t 					offset;
-	char						description[CONFIG_NAMES_LENGTH];
-	char						unit[CONFIG_NAMES_LENGTH];
-	char						comment[CONFIG_NAMES_LENGTH];
+	ConfigFrame_TypeDef*	pFrame;
+	uint16_t				signalID;
+	uint8_t					startBit;
+	uint8_t					lengthBits;
+	union {
+		struct {
+			uint8_t			valueType_unused : 6;
+			uint8_t			valueType_Signed : 1;
+			uint8_t			valueType_BigEndian : 1;
+		};
+		uint8_t valueType_raw;
+	};
+	uint16_t 				multiplier;
+	uint16_t 				divider;
+	uint16_t 				offset;
+	char					description[CONFIG_NAMES_LENGTH];
+	char					unit[CONFIG_NAMES_LENGTH];
+	char					comment[CONFIG_NAMES_LENGTH];
 } ConfigSignal_TypeDef;
 
 typedef struct _ConfigSignalListElem_TypeDef{
@@ -71,11 +75,12 @@ typedef struct _ConfigSignalListElem_TypeDef{
 	struct _ConfigSignalListElem_TypeDef*	pNext;
 } ConfigSignalListElem_TypeDef;
 
-typedef struct _ConfigFrame_TypeDef {
+struct _ConfigFrame_TypeDef {
 	uint16_t 						ID;
+	uint8_t 						expectedDLC; //< in bytes 0-8
 	char							frameName[CONFIG_NAMES_LENGTH];
 	ConfigSignalListElem_TypeDef*	pSignalsListHead;
-} ConfigFrame_TypeDef;
+};
 
 typedef enum {
 	Config_TrigerCompareOperator_EQUAL				= 0x01,
@@ -92,8 +97,12 @@ typedef enum {
 } Config_TrigerCompareOperator_TypeDef;
 
 typedef struct {
-	ConfigSignal_TypeDef*					pSignal;
-	uint64_t								compareConstValue;
+	char									triggerName[CONFIG_NAMES_LENGTH];
+	union {
+		ConfigSignal_TypeDef*				pSignal;
+		ConfigFrame_TypeDef*				pFrame;
+	};
+	uint32_t								compareConstValue;
 	Config_TrigerCompareOperator_TypeDef	operator;
 } Config_Trigger_TypeDef;
 
@@ -101,18 +110,19 @@ typedef struct {
 	uint16_t 						version;
 	uint16_t 						subversion;
 	char							logFileName[CONFIG_NAMES_LENGTH];
-	uint16_t 						numOfFrames;
-	Config_CANBitrate_TypeDef		canSpeed;
+	Config_CANBitrate_TypeDef		canBitrate;
 	Config_GPSFrequency_TypeDef		gpsFrequency;
 	uint16_t						rtcConfigurationFrameID;
+
+	uint16_t 						numOfFrames;
+	ConfigFrame_TypeDef 			canFrames[CONFIG_MAX_FRAMES_NUMBER];
+	ConfigFrame_TypeDef* 			canFramesByID[CONFIG_ID_NUMBER];
+
 	uint8_t							startLogTriggersNumber;
 	uint8_t							stopLogTriggersNumber;
 
 	Config_Trigger_TypeDef			startLogTriggers[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];
 	Config_Trigger_TypeDef			stopLogTriggers[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];
-
-	ConfigFrame_TypeDef 			canFrames[CONFIG_MAX_FRAMES_NUMBER];
-	ConfigFrame_TypeDef* 			canFramesByID[CONFIG_ID_NUMBER];
 } Config_TypeDef;
 
 
@@ -163,6 +173,7 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 ConfigDataManager_Status_TypeDef ConfigDataManager_readConfig(ConfigDataManager_TypeDef* pSelf);
 ConfigDataManager_Status_TypeDef ConfigDataManager_getConfigPointer(ConfigDataManager_TypeDef* pSelf, Config_TypeDef** ppRetConfig);
 ConfigDataManager_Status_TypeDef ConfigDataManager_getIDsList(ConfigDataManager_TypeDef* pSelf, uint16_t* pRetIDsBuffer, uint16_t bufferSize, uint16_t* pIDsWritten);
+ConfigDataManager_Status_TypeDef ConfigDataManager_findFrmae(ConfigDataManager_TypeDef* pSelf, uint16_t frameID, ConfigFrame_TypeDef** pRetFrame);
 ConfigDataManager_Status_TypeDef ConfigDataManager_findSignal(ConfigDataManager_TypeDef* pSelf, uint16_t frameID, uint16_t signalID, ConfigSignal_TypeDef** ppRetSignal);
 
 ConfigDataManager_Status_TypeDef ConfigDataManager_writeConfig(ConfigDataManager_TypeDef* pSelf, FileWritingBuffer_TypeDef* pWritingBuffer);

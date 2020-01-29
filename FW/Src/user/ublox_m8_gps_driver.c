@@ -1143,7 +1143,9 @@ bool GPSDriver_testGNRMC1(volatile Ublox8MGPSDriver_TypeDef* pSelf){
 }
 
 void GPSDriver_test(){
+#ifdef  USE_FULL_ASSERT
 	Ublox8MGPSDriver_TypeDef self;
+#endif
 	assert_param(GPSDriver_testGNGGA1(&self));
 	assert_param(GPSDriver_testGNGSA1(&self));
 	assert_param(GPSDriver_testGNRMC1(&self));
