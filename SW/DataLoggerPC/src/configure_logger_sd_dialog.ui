@@ -131,7 +131,11 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QLineEdit" name="logFilename_lineEdit"/>
+      <widget class="QLineEdit" name="logFilename_lineEdit">
+       <property name="maxLength">
+        <number>20</number>
+       </property>
+      </widget>
      </item>
      <item row="2" column="2" colspan="3">
       <spacer name="horizontalSpacer_2">
