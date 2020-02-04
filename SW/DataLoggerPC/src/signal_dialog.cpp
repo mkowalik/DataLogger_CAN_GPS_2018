@@ -107,4 +107,18 @@ void SignalDialog::on_lengthBits_spinBox_valueChanged(int val)
     } else {
         ui->bigEndian_checkBox->setEnabled(true);
     }
+    QString text;
+    text.append(QString::number(val / 8));
+    text.append(".");
+    text.append(QString::number(val % 8));
+    ui->lengthByteBit_lineEdit->setText(text);
+}
+
+void SignalDialog::on_startBit_spinBox_valueChanged(int val)
+{
+    QString text;
+    text.append(QString::number(val / 8));
+    text.append(".");
+    text.append(QString::number(val % 8));
+    ui->startByteBit_lineEdit->setText(text);
 }

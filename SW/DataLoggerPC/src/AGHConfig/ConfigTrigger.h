@@ -2,6 +2,7 @@
 #define CONFIGTRIGGER_H
 
 #include <array>
+#include <variant>
 
 #include "AGHUtils/ReadingClass.h"
 #include "AGHUtils/WritingClass.h"
@@ -27,30 +28,32 @@ public:
         FRAME_TIMEOUT_MS	= 0x21
     };
 
+    using FrameSignalVariant = std::variant<const ConfigFrame*, const ConfigSignal*>;
+
     static const std::array<ConfigTrigger::TriggerCompareOperator, 11> getAllCompareOperators();
     static std::string                         getTriggerCompareOperatorName(TriggerCompareOperator oper);
     static std::string                         getTriggerCompareOperatorSymbol(TriggerCompareOperator oper);
 
 private:
-    std::string             triggerName;
-    const Config*           pConfig;
-    const ConfigFrame*      pFrame;
-    const ConfigSignal*     pSignal;
-    unsigned long           compareConstValue;
-    TriggerCompareOperator  compareOperator;
+    std::string                 triggerName;
+    const Config*               pConfig;
+    FrameSignalVariant          vpFrameSignal;
+    unsigned long               compareConstValue;
+    TriggerCompareOperator      compareOperator;
 
     ConfigTrigger (const Config* pConfig, ReadingClass& reader);
-    ConfigTrigger (const Config* pConfig, std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal* pSignal, unsigned long compareConstValue, TriggerCompareOperator compareOperator);
+    ConfigTrigger (const Config* _pConfig, std::string _triggerName, const FrameSignalVariant _vpFrameSignal, unsigned long _compareConstValue, TriggerCompareOperator _compareOperator);
 public:
 
     static bool             isSignalUsedForOperator(TriggerCompareOperator compareOperator);
     static bool             isConstCompareValueUsedForOperator(TriggerCompareOperator compareOperator);
 
     void                    setTriggerName(std::string triggerName);
-    void                    setFrameSignalOperator(const ConfigFrame* pFrame, const ConfigSignal* _pSignal, ConfigTrigger::TriggerCompareOperator _oper);
+    void                    setFrameSignalOperator(std::variant<const ConfigFrame*, const ConfigSignal*> _vpFrameSignal, ConfigTrigger::TriggerCompareOperator _oper);
     void                    setCompareConstValue(unsigned long value);
 
     std::string             getTriggerName() const;
+    FrameSignalVariant      getFrameSignal() const;
     const ConfigFrame*      getFrame() const;
     const ConfigSignal*     getSignal() const;
     unsigned long           getCompareConstValue() const;

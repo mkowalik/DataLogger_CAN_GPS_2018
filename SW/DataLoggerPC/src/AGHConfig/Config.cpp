@@ -127,10 +127,13 @@ void Config::setSubVersion(unsigned int sSubVersion){
     subVersion = sSubVersion;
 }
 
-void Config::setLogFileName(const string logFileName)
+void Config::setLogFileName(std::string _logFileName)
 {
-    this->logFileName = logFileName;
-    this->logFileName.resize(CONFIG_NAME_LENGTH);
+    _logFileName.resize(std::min(_logFileName.length(), static_cast<unsigned long long>(CONFIG_NAME_LENGTH)));
+    if (_logFileName.find_first_of(static_cast<char>(0)) != std::string::npos){
+        _logFileName.resize(_logFileName.find_first_of(static_cast<char>(0)));
+    }
+    this->logFileName = _logFileName;
 }
 
 void Config::setCANBitrate(EnCANBitrate bitrate){
@@ -179,7 +182,7 @@ unsigned int Config::getSubVersion() const {
     return subVersion;
 }
 
-string Config::getLogFileName() const
+std::string Config::getLogFileName() const
 {
     return logFileName;
 }
@@ -206,7 +209,7 @@ bool Config::framesEmpty() const {
     return framesVector.empty();
 }
 
-ConfigFrame* Config::addFrame(unsigned int frameID, unsigned int expectedDLC, string frameName)
+ConfigFrame* Config::addFrame(unsigned int frameID, unsigned int expectedDLC, std::string frameName)
 {
     ConfigFrame* pFrame = new ConfigFrame(this, frameID, expectedDLC, frameName);
     try {
@@ -286,8 +289,8 @@ unsigned int Config::getNumberOfStopTriggers()
     return static_cast<unsigned int>(stopConfigTriggers.size());
 }
 
-ConfigTrigger* Config::addStartTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
-    ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, pFrame, pSignal, compareConstValue, compareOperator);
+ConfigTrigger* Config::addStartTrigger(std::string triggerName, ConfigTrigger::FrameSignalVariant frameSignalVariant, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator){
+    ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, frameSignalVariant, compareConstValue, compareOperator);
     addStartTrigger(pNewTrigger);
     return pNewTrigger;
 }
@@ -314,8 +317,8 @@ unsigned int Config::getStartTriggersNumber()
     return static_cast<unsigned int>(startConfigTriggers.size());
 }
 
-ConfigTrigger* Config::addStopTrigger(std::string triggerName, const ConfigFrame* pFrame, const ConfigSignal *pSignal, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator) {
-    ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, pFrame, pSignal, compareConstValue, compareOperator);
+ConfigTrigger* Config::addStopTrigger(std::string triggerName, ConfigTrigger::FrameSignalVariant frameSignalVariant, unsigned long compareConstValue, ConfigTrigger::TriggerCompareOperator compareOperator){
+    ConfigTrigger* pNewTrigger = new ConfigTrigger(this, triggerName, frameSignalVariant, compareConstValue, compareOperator);
     addStopTrigger(pNewTrigger);
     return pNewTrigger;
 }
@@ -435,17 +438,22 @@ void Config::reset(){
         delete pTrigger;
     }
     stopConfigTriggers.clear();
+    logFileName.clear();
+    canBitrate              = DEFAULT_CAN_BITRATE;
+    gpsFrequency            = DEFAULT_GPS_FREQUENCY;
+    rtcConfigurationFrameID = DEFAULT_RTC_CONFIGURATION_FRAME_ID;
 }
 
 void Config::writeToBin(WritingClass& writer){
 
     writer.write_uint16(static_cast<unsigned int>(getVersion()));
     writer.write_uint16(static_cast<unsigned int>(getSubVersion()));
-    writer.write_string(logFileName, true, CONFIG_NAME_LENGTH);
+    writer.write_string(getLogFileName(), true, CONFIG_NAME_LENGTH);
     writer.write_uint16(static_cast<unsigned int>(getCANBitrate()));
     writer.write_uint8(static_cast<unsigned int>(getGPSFrequency()));
-    writer.write_uint16(static_cast<unsigned int>(getNumOfFrames()));
+    writer.write_uint16(getRTCConfigurationFrameID());
 
+    writer.write_uint16(static_cast<unsigned int>(getNumOfFrames()));
     for (auto& pFrame : framesVector){
         pFrame->writeToBin(writer);
     }
@@ -470,7 +478,7 @@ void Config::readFromBin(ReadingClass& reader){
     setSubVersion(reader.reading_uint16());
 
     if (this->getVersion() != ACTUAL_VERSION || this->getSubVersion() != ACTUAL_SUB_VERSION){
-        string exceptionString = "Version of read config file: ";
+        std::string exceptionString = "Version of read config file: ";
         exceptionString += to_string(this->getVersion());
         exceptionString += ".";
         exceptionString += to_string(this->getSubVersion());

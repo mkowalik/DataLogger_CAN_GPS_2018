@@ -54,31 +54,16 @@ TriggerDialog::TriggerDialog(Config& _config, ConfigTrigger* pTriggerPrototype, 
     reloadFormulaRender();
 }
 
-ConfigFrame *TriggerDialog::getSelectedFrame()
+ConfigTrigger::FrameSignalVariant TriggerDialog::getSelectedFrameSignal() const
 {
-    if (ui->frame_comboBox->currentIndex() == -1){
-        throw std::logic_error("No frame selected.");
+    if (ConfigTrigger::isSignalUsedForOperator(getCompareOperator())){
+        return ConfigTrigger::FrameSignalVariant(getSelectedSignal());
+    } else {
+        return ConfigTrigger::FrameSignalVariant(getSelectedFrame());
     }
-    return ui->frame_comboBox->itemData(ui->frame_comboBox->currentIndex()).value<ConfigFrame*>();
 }
 
-/**
- * @brief TriggerDialog::getSelectedSignal
- * @return nullptr if signal is not used for compare operator or signal pointer used with given compare oparetion
- * @throws std::logic_error when operator requires signal pointer, but signal for some reason is not possible to obtain.
- */
-ConfigSignal *TriggerDialog::getSelectedSignal()
-{
-    if (!ConfigTrigger::isSignalUsedForOperator(getCompareOperator())){
-        return nullptr;
-    }
-    if (ui->signal_comboBox->currentIndex() == -1){
-        throw std::logic_error("No signal selected.");
-    }
-    return ui->signal_comboBox->itemData(ui->signal_comboBox->currentIndex()).value<ConfigSignal*>();
-}
-
-ConfigTrigger::TriggerCompareOperator TriggerDialog::getCompareOperator()
+ConfigTrigger::TriggerCompareOperator TriggerDialog::getCompareOperator() const
 {
     if (ui->compareOperator_comboBox->currentIndex() == -1){
         throw std::logic_error("Compare operator not selected.");
@@ -86,17 +71,17 @@ ConfigTrigger::TriggerCompareOperator TriggerDialog::getCompareOperator()
     return ui->compareOperator_comboBox->itemData(ui->compareOperator_comboBox->currentIndex()).value<ConfigTrigger::TriggerCompareOperator>();
 }
 
-unsigned int TriggerDialog::getConstCompareValue()
+unsigned int TriggerDialog::getConstCompareValue() const
 {
     return static_cast<unsigned int>(ui->rawConstValue_spinBox->value());
 }
 
-QString TriggerDialog::getTriggerName()
+QString TriggerDialog::getTriggerName() const
 {
     return ui->triggerName_lineEdit->text();
 }
 
-QString TriggerDialog::getFormulaRenderValue()
+QString TriggerDialog::getFormulaRenderValue() const
 {
     return ui->formulaRender_lineEdit->text();
 }
@@ -135,9 +120,13 @@ QString TriggerDialog::prepareFormulaRender(const ConfigFrame *pFrame, const Con
 
 void TriggerDialog::on_signal_comboBox_currentIndexChanged(int index)
 {
+    if (index == -1){
+        disableSignalRelativeWidgets(false);
+        return;
+    }
     try {
         ConfigSignal* pSignal = ui->signal_comboBox->itemData(index).value<ConfigSignal*>();
-        enableSignalReltiveWidgets(pSignal);
+        enableSignalRelativeWidgets(pSignal);
         on_rawConstValue_spinBox_valueChanged(ui->rawConstValue_spinBox->value());
         ui->symbolicConstValue_doubleSpinBox->setSingleStep(pSignal->convertRawValueToSymbolic(1));
         reloadFormulaRender();
@@ -146,21 +135,19 @@ void TriggerDialog::on_signal_comboBox_currentIndexChanged(int index)
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
-    if (index == -1){
-        disableSignalReltiveWidgets(false);
-        return;
-    }
-
 }
 
 void TriggerDialog::on_frame_comboBox_currentIndexChanged(int index)
 {
+    if (index == -1){
+        return;
+    }
     try {
         ConfigFrame* pFrame = getSelectedFrame();
         ui->signal_comboBox->clear();
 
         if (pFrame->signalsEmpty()){
-            on_signal_comboBox_currentIndexChanged(-1);
+            on_compareOperator_comboBox_currentIndexChanged(ui->compareOperator_comboBox->currentIndex()); //< update signal combo box according to chosen compare operator
         } else {
             for (auto signalIt = pFrame->cbeginSignals(); signalIt != pFrame->cendSignals(); signalIt++){
                 ui->signal_comboBox->addItem(QString::fromStdString((*signalIt)->getSignalName()), QVariant::fromValue(*signalIt));
@@ -172,14 +159,13 @@ void TriggerDialog::on_frame_comboBox_currentIndexChanged(int index)
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
-    if (index == -1){
-        return;
-    }
-
 }
 
 void TriggerDialog::on_symbolicConstValue_doubleSpinBox_valueChanged(double val)
 {
+    if (constValueChangeInProgress){
+        return;
+    }
     try {
         constValueChangeInProgress = true;
         ConfigSignal* pSignal = nullptr;
@@ -199,14 +185,13 @@ void TriggerDialog::on_symbolicConstValue_doubleSpinBox_valueChanged(double val)
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
-    if (constValueChangeInProgress){
-        return;
-    }
-
 }
 
 void TriggerDialog::on_rawConstValue_spinBox_valueChanged(int rawVal)
 {
+    if (constValueChangeInProgress){
+        return;
+    }
     try {
         constValueChangeInProgress = true;
         const ConfigSignal* pSignal = nullptr;
@@ -226,24 +211,24 @@ void TriggerDialog::on_rawConstValue_spinBox_valueChanged(int rawVal)
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
-    if (constValueChangeInProgress){
-        return;
-    }
-
 }
 
 void TriggerDialog::on_compareOperator_comboBox_currentIndexChanged(int)
 {
     try {
-        try {
-            ConfigSignal* pSignal = getSelectedSignal();
-            if (pSignal != nullptr){
-                enableSignalReltiveWidgets(pSignal);
-            } else {
-                disableSignalReltiveWidgets(true);
+        if (ConfigTrigger::isSignalUsedForOperator(getCompareOperator())){
+            try {
+                ConfigSignal* pSignal = getSelectedSignal();
+                if (pSignal != nullptr){
+                    enableSignalRelativeWidgets(pSignal);
+                } else {
+                    disableSignalRelativeWidgets(true);
+                }
+            } catch (const std::logic_error&){
+                disableSignalRelativeWidgets(false);
             }
-        } catch (const std::logic_error&){
-            disableSignalReltiveWidgets(false);
+        } else {
+            disableSignalRelativeWidgets(true);
         }
         if (ConfigTrigger::isConstCompareValueUsedForOperator(getCompareOperator())){
             ui->rawConstValue_spinBox->setEnabled(true);
@@ -258,11 +243,35 @@ void TriggerDialog::on_compareOperator_comboBox_currentIndexChanged(int)
     }
 }
 
-void TriggerDialog::disableSignalReltiveWidgets(bool disableSignalNameWidget)
+ConfigFrame *TriggerDialog::getSelectedFrame() const
+{
+    if (ui->frame_comboBox->currentIndex() == -1){
+        throw std::logic_error("No frame selected.");
+    }
+    return ui->frame_comboBox->itemData(ui->frame_comboBox->currentIndex()).value<ConfigFrame*>();
+}
+
+/**
+ * @brief TriggerDialog::getSelectedSignal
+ * @return nullptr if signal is not used for compare operator or signal pointer used with given compare oparetion
+ * @throws std::logic_error when operator requires signal pointer, but signal for some reason is not possible to obtain.
+ */
+ConfigSignal *TriggerDialog::getSelectedSignal() const
+{
+    if (!ConfigTrigger::isSignalUsedForOperator(getCompareOperator())){
+        return nullptr;
+    }
+    if (ui->signal_comboBox->currentIndex() == -1){
+        throw std::logic_error("No signal selected.");
+    }
+    return ui->signal_comboBox->itemData(ui->signal_comboBox->currentIndex()).value<ConfigSignal*>();
+}
+
+void TriggerDialog::disableSignalRelativeWidgets(bool disableSignalNameWidget)
 {
     ui->symbolicConstValue_doubleSpinBox->setEnabled(false);
     ui->symbolicConstValue_doubleSpinBox->clear();
-    ui->unit_label->clear();
+    ui->symbolicConstValue_doubleSpinBox->setSuffix("");
     if (disableSignalNameWidget){
         ui->signal_comboBox->setEnabled(false);
     } else {
@@ -270,7 +279,7 @@ void TriggerDialog::disableSignalReltiveWidgets(bool disableSignalNameWidget)
     }
 }
 
-void TriggerDialog::enableSignalReltiveWidgets(const ConfigSignal* pSignal)
+void TriggerDialog::enableSignalRelativeWidgets(const ConfigSignal* pSignal)
 {
     ui->symbolicConstValue_doubleSpinBox->setEnabled(true);
     ui->symbolicConstValue_doubleSpinBox->setValue(
@@ -278,7 +287,7 @@ void TriggerDialog::enableSignalReltiveWidgets(const ConfigSignal* pSignal)
                     static_cast<unsigned long>(ui->rawConstValue_spinBox->value())
                 ));
     ui->signal_comboBox->setEnabled(true);
-    ui->unit_label->setText(QString::fromStdString(pSignal->getUnitName()));
+    ui->symbolicConstValue_doubleSpinBox->setSuffix(" " + QString::fromStdString(pSignal->getUnitName()));
 }
 
 void TriggerDialog::reloadFormulaRender()

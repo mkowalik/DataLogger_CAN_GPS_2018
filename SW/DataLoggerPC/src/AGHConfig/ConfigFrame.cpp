@@ -108,9 +108,7 @@ void ConfigFrame::setExpectedDLC(unsigned int _expectedDLC)
 }
 
 void ConfigFrame::setFrameName(string _frameName){
-    if (_frameName.length() > FRAME_NAME_LENGTH){
-        _frameName.resize(FRAME_NAME_LENGTH);
-    }
+    _frameName.resize(std::min(_frameName.length(), static_cast<unsigned long long>(FRAME_NAME_LENGTH)));
     if (_frameName.find_first_of(static_cast<char>(0)) != string::npos){
         _frameName.resize(_frameName.find_first_of(static_cast<char>(0)));
     }
@@ -223,7 +221,7 @@ bool ConfigFrame::hasSignalWithID(unsigned int signalID) const
 ConfigSignal *ConfigFrame::getSignalWithID(unsigned int signalID) const
 {
     auto signalIt = lowerBoundSignalConstIterator(signalID);
-    if ((signalIt == signalsVector.cend()) || ((*(signalIt))->getSignalID() == signalID)){
+    if ((signalIt == signalsVector.cend()) || ((*(signalIt))->getSignalID() != signalID)){
         throw std::invalid_argument("Signal with given ID does not exist in this frame.");
     }
     return (*signalIt);
@@ -231,8 +229,10 @@ ConfigSignal *ConfigFrame::getSignalWithID(unsigned int signalID) const
 
 void ConfigFrame::writeToBin(WritingClass& writer){
 
-    writer.write_uint16(static_cast<unsigned int>(getFrameID()));
+    writer.write_uint16(getFrameID());
+    writer.write_uint8(getExpextedDLC());
     writer.write_string(getFrameName(), true, FRAME_NAME_LENGTH);
+    writer.write_uint16(getSignalsNumber());
     for (auto pSignal : signalsVector){
         pSignal->writeToBin(writer);
     }

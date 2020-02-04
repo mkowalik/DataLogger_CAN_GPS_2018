@@ -85,6 +85,15 @@ ConfigTrigger::ConfigTrigger (const Config* pConfig, ReadingClass& reader) : pCo
     readFromBin(reader);
 }
 
+ConfigTrigger::ConfigTrigger (const Config* _pConfig, std::string _triggerName, FrameSignalVariant _vpFrameSignal, unsigned long _compareConstValue, TriggerCompareOperator _compareOperator)
+    :
+      pConfig(_pConfig),
+      compareConstValue(_compareConstValue)
+{
+    setFrameSignalOperator(_vpFrameSignal, _compareOperator);
+    setTriggerName(_triggerName);
+}
+
 bool ConfigTrigger::isSignalUsedForOperator(ConfigTrigger::TriggerCompareOperator compareOperator)
 {
     return ((compareOperator != ConfigTrigger::TriggerCompareOperator::FRAME_OCCURED) && (compareOperator != ConfigTrigger::TriggerCompareOperator::FRAME_TIMEOUT_MS));
@@ -107,21 +116,15 @@ void ConfigTrigger::setTriggerName(string _triggerName)
 
 }
 
-void ConfigTrigger::setFrameSignalOperator(const ConfigFrame * _pFrame, const ConfigSignal* _pSignal, ConfigTrigger::TriggerCompareOperator _oper)
+void ConfigTrigger::setFrameSignalOperator(FrameSignalVariant _vpFrameSignal, ConfigTrigger::TriggerCompareOperator _oper)
 {
-    pFrame = _pFrame;
-    compareOperator = _oper;
-    if (!isSignalUsedForOperator(compareOperator)){
-        pSignal = nullptr;
-    } else {
-        if (_pSignal == nullptr){
-            throw std::logic_error("Signal may not be undefined. Value of signal necessery for operator.");
-        }
-        if (_pSignal->getParentFrame() != _pFrame){
-            throw std::logic_error("Signal must be member of given frame.");
-        }
-        pSignal = _pSignal;
+    if (isSignalUsedForOperator(_oper) && !std::holds_alternative<const ConfigSignal*>(_vpFrameSignal)){
+        throw std::logic_error("Definition of signal necessery for the compare operator.");
+    } else if (!isSignalUsedForOperator(_oper) && !std::holds_alternative<const ConfigFrame*>(_vpFrameSignal)){
+        throw std::logic_error("Definition of frame necessery for the compare operator.");
     }
+    compareOperator = _oper;
+    vpFrameSignal = _vpFrameSignal;
 }
 
 void ConfigTrigger::setCompareConstValue(unsigned long _value)
@@ -134,23 +137,27 @@ string ConfigTrigger::getTriggerName() const
     return triggerName;
 }
 
-ConfigTrigger::ConfigTrigger (const Config* _pConfig, std::string _triggerName, const ConfigFrame* _pFrame, const ConfigSignal* _pSignal, unsigned long _compareConstValue, TriggerCompareOperator _compareOperator)
-    :
-      pConfig(_pConfig),
-      compareConstValue(_compareConstValue)
+std::variant<const ConfigFrame*, const ConfigSignal*> ConfigTrigger::getFrameSignal() const
 {
-    setFrameSignalOperator(_pFrame, _pSignal, _compareOperator);
-    setTriggerName(_triggerName);
+    return vpFrameSignal;
 }
 
 const ConfigFrame *ConfigTrigger::getFrame() const
 {
-    return pFrame;
+    if (std::holds_alternative<const ConfigSignal*>(getFrameSignal())){
+        return std::get<const ConfigSignal*>(getFrameSignal())->getParentFrame();
+    } else {
+        return std::get<const ConfigFrame*>(getFrameSignal());
+    }
 }
 
 const ConfigSignal *ConfigTrigger::getSignal() const
 {
-    return pSignal;
+    if (std::holds_alternative<const ConfigSignal*>(getFrameSignal())){
+        return std::get<const ConfigSignal*>(getFrameSignal());
+    } else {
+        return nullptr;
+    }
 }
 
 unsigned long ConfigTrigger::getCompareConstValue() const
@@ -164,10 +171,7 @@ ConfigTrigger::TriggerCompareOperator ConfigTrigger::getCompareOperator() const
 }
 
 bool ConfigTrigger::operator==(const ConfigTrigger& b) const {
-    if (getFrame() != b.getFrame()){
-        return false;
-    }
-    if (getSignal() != b.getSignal()){
+    if (getFrameSignal() != b.getFrameSignal()){
         return false;
     }
     if (getCompareConstValue() != b.getCompareConstValue()){
@@ -204,21 +208,21 @@ void ConfigTrigger::readFromBin(ReadingClass &reader)
         throw std::invalid_argument("Value of Trigger Compare Operator is invalid.");
     }
 
-    pFrame = pConfig->getFrameWithId(frameID);
     if (isSignalUsedForOperator(compareOperator)){
-        pSignal = pConfig->getSignal(frameID, signalID);
+        vpFrameSignal = pConfig->getSignal(frameID, signalID);
     } else {
-        pSignal = nullptr;
+        vpFrameSignal = pConfig->getFrameWithId(frameID);
     }
 }
 
 void ConfigTrigger::writeToBin(WritingClass &writer)
 {
     writer.write_string(getTriggerName(), 1, TRIGGER_NAME_LENGHT);
-    writer.write_uint16(getFrame()->getFrameID());
-    if (getSignal() != nullptr){
-        writer.write_uint16(getSignal()->getSignalID());
+    if (isSignalUsedForOperator(compareOperator)){
+        writer.write_uint16(std::get<const ConfigSignal*>(getFrameSignal())->getParentFrame()->getFrameID());
+        writer.write_uint16(std::get<const ConfigSignal*>(getFrameSignal())->getSignalID());
     } else {
+        writer.write_uint16(std::get<const ConfigFrame*>(getFrameSignal())->getFrameID());
         writer.write_uint16(0U);
     }
     writer.write_uint32(getCompareConstValue());

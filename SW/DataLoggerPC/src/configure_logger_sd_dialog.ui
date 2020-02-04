@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Configure Data Logger</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
@@ -163,7 +163,7 @@
          <item>
           <widget class="QComboBox" name="canBitrateComboBox">
            <property name="currentText">
-            <string>50kbps</string>
+            <string>500kbps</string>
            </property>
            <item>
             <property name="text">
@@ -209,7 +209,7 @@
          <item>
           <widget class="QComboBox" name="gpsFreqComboBox">
            <property name="currentText">
-            <string>GPS OFF</string>
+            <string>10 Hz</string>
            </property>
            <item>
             <property name="text">
@@ -258,37 +258,29 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <widget class="QLabel" name="x_label">
-             <property name="text">
-              <string>0x</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="rtcConfigFrameID_spinBox">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="maximum">
-              <number>2047</number>
-             </property>
-             <property name="value">
-              <number>2047</number>
-             </property>
-             <property name="displayIntegerBase">
-              <number>16</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <widget class="QSpinBox" name="rtcConfigFrameID_spinBox">
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
+           <property name="prefix">
+            <string>0x</string>
+           </property>
+           <property name="maximum">
+            <number>2047</number>
+           </property>
+           <property name="value">
+            <number>2047</number>
+           </property>
+           <property name="displayIntegerBase">
+            <number>16</number>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

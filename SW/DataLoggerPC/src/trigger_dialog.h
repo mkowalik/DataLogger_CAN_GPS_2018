@@ -19,12 +19,11 @@ public:
     explicit TriggerDialog(Config& config, ConfigTrigger* pTriggerPrototype, QWidget *parent = nullptr);
 
 
-    ConfigFrame*                            getSelectedFrame();
-    ConfigSignal*                           getSelectedSignal();
-    ConfigTrigger::TriggerCompareOperator   getCompareOperator();
-    unsigned int                            getConstCompareValue();
-    QString                                 getTriggerName();
-    QString                                 getFormulaRenderValue();
+    ConfigTrigger::FrameSignalVariant       getSelectedFrameSignal() const; //TODO zmienic ta funkcje w cpp i dodac consty
+    ConfigTrigger::TriggerCompareOperator   getCompareOperator() const;
+    unsigned int                            getConstCompareValue() const;
+    QString                                 getTriggerName() const;
+    QString                                 getFormulaRenderValue() const;
 
     ~TriggerDialog();
 
@@ -37,14 +36,16 @@ private slots:
     void on_compareOperator_comboBox_currentIndexChanged(int index);
 
 private:
-    Ui::TriggerDialog *ui;
-    Config& config;
-    ConfigTrigger* pTriggerPrototype;
-    bool constValueChangeInProgress;
+    Ui::TriggerDialog*  ui;
+    Config&             config;
+    ConfigTrigger*      pTriggerPrototype;
+    bool                constValueChangeInProgress;
 
-    void disableSignalReltiveWidgets(bool diableSignalNameWidget);
-    void enableSignalReltiveWidgets(const ConfigSignal* pSignal);
-    void reloadFormulaRender();
+    ConfigFrame*    getSelectedFrame() const;
+    ConfigSignal*   getSelectedSignal() const;
+    void            disableSignalRelativeWidgets(bool diableSignalNameWidget);
+    void            enableSignalRelativeWidgets(const ConfigSignal* pSignal);
+    void            reloadFormulaRender();
 };
 
 Q_DECLARE_METATYPE(ConfigFrame*)

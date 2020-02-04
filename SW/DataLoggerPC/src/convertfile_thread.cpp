@@ -90,6 +90,3 @@ void ConvertFileThread::setFileTimingMode(WritableToCSV::FileTimingMode mode){
 void ConvertFileThread::setWriteOnlyChangedValues(bool val){
     this->writeOnlyChangedValues = val;
 }
-/*Thread::~Thread(){
-    //tutaj sprzatamy
-}*/

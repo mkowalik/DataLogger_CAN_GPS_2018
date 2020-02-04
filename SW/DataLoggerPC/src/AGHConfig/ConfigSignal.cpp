@@ -175,14 +175,12 @@ void ConfigSignal::setOffset(int aOffset){
     this->offset = aOffset;
 }
 
-void ConfigSignal::setSignallName(string aSignalName){
-    if (aSignalName.length() > SIGNAL_NAME_LENGHT){
-        aSignalName.resize(SIGNAL_NAME_LENGHT);
+void ConfigSignal::setSignallName(string _signalName){
+    _signalName.resize(std::min(_signalName.length(), static_cast<unsigned long long>(SIGNAL_NAME_LENGHT)));
+    if (_signalName.find_first_of(static_cast<char>(0)) != string::npos){
+        _signalName.resize(_signalName.find_first_of(static_cast<char>(0)));
     }
-    if (aSignalName.find_first_of(static_cast<char>(0)) != string::npos){
-        aSignalName.resize(aSignalName.find_first_of(static_cast<char>(0)));
-    }
-    this->signalName = aSignalName;
+    this->signalName = _signalName;
 }
 
 void ConfigSignal::setUnitName(string aUnitName){

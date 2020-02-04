@@ -31,6 +31,8 @@ private:
     void                   reloadFramesTreeWidget();
     void                   reloadCANBusBitrateWidget();
     void                   reloadGPSFrequencyWidget();
+    void                   reloadRTCConfigurationFrameIDWidget();
+    void                   realodLogFilenameWidget();
     void                   reloadStartTriggersWidget();
     void                   reloadStopTriggersWidget();
     void                   reloadConfigView();
@@ -60,7 +62,7 @@ private slots:
     void on_selectOutputFileButton_clicked();
     void on_selectPrototypeFileButton_clicked();
     void on_resetButton_clicked();
-    void on_canBitrateComboBox_editTextChanged(const QString &arg1);
+    void on_canBitrateComboBox_currentTextChanged(const QString &arg1);
     void on_gpsFreqComboBox_currentTextChanged(const QString &arg1);
     void on_rtcConfigFrameID_spinBox_valueChanged(int arg1);
     void on_framesTreeWidget_customContextMenuRequested(const QPoint &pos);
@@ -81,6 +83,8 @@ private slots:
     void on_actionEditStopLogTrigger_triggered();
     void on_stopTrigger_listWidget_itemDoubleClicked(QListWidgetItem *item);
     void on_actionAddSignalToClickedFrame_triggered();
+    void on_logFilename_lineEdit_textChanged(const QString &arg1);
+
 
 private:
     Ui::ConfigureLoggerSDDialog *ui;

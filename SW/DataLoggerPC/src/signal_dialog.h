@@ -35,6 +35,8 @@ private slots:
 
     void on_lengthBits_spinBox_valueChanged(int arg1);
 
+    void on_startBit_spinBox_valueChanged(int arg1);
+
 private:
     Ui::SignalDialog *ui;
     ConfigFrame& frame;

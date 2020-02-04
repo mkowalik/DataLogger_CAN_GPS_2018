@@ -10,6 +10,7 @@ FrameDialog::FrameDialog(const Config& config, const ConfigFrame* _pFrame, QWidg
     pFrame(_pFrame)
 {
     ui->setupUi(this);
+    ui->id_SpinBox->clear();
     if (_pFrame != nullptr){
         ui->id_SpinBox->setValue(static_cast<int>(_pFrame->getFrameID()));
         ui->dlc_SpinBox->setValue(static_cast<int>(_pFrame->getExpextedDLC()));

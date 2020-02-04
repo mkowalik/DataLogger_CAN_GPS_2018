@@ -54,13 +54,13 @@ void ConfigureLoggerSDDialog::reloadFramesTreeWidget(){
 
     for (Config::FramesIterator frameIt = pConfig->beginFrames(); frameIt!=pConfig->endFrames(); frameIt++){
 
-        QTreeWidgetItem* pFrameRow = new QTreeWidgetItem(ui->framesTreeWidget);
-        prepareFrameRowWidget(pFrameRow, *frameIt);
-        ui->framesTreeWidget->addTopLevelItem(pFrameRow);
+        QTreeWidgetItem* pFrameRow = prepareFrameRowWidget(nullptr, *frameIt);
+        insertFrameRowWidget(pFrameRow, *frameIt);
 
         for (auto sigIt = (*frameIt)->beginSignals(); sigIt != (*frameIt)->endSignals(); sigIt++){
-            QTreeWidgetItem* pSignalRow = new QTreeWidgetItem(pFrameRow);
-            prepareSignalRowWidget(pSignalRow, *sigIt);
+
+            QTreeWidgetItem* pSignalRow = prepareSignalRowWidget(nullptr, *sigIt);
+            insertSignalRowWidget(pSignalRow, pFrameRow, *sigIt);
         }
     }
 }
@@ -73,6 +73,16 @@ void ConfigureLoggerSDDialog::reloadCANBusBitrateWidget(){
 void ConfigureLoggerSDDialog::reloadGPSFrequencyWidget(){
     QString gpsFrequencyString = QString::fromStdString(this->gpsFrequencyToString(this->pConfig->getGPSFrequency()));
     ui->gpsFreqComboBox->setCurrentText(gpsFrequencyString);
+}
+
+void ConfigureLoggerSDDialog::reloadRTCConfigurationFrameIDWidget()
+{
+    ui->rtcConfigFrameID_spinBox->setValue(static_cast<int>(pConfig->getRTCConfigurationFrameID()));
+}
+
+void ConfigureLoggerSDDialog::realodLogFilenameWidget()
+{
+    ui->logFilename_lineEdit->setText(QString::fromStdString(pConfig->getLogFileName()));
 }
 
 void ConfigureLoggerSDDialog::reloadStartTriggersWidget(){
@@ -93,6 +103,8 @@ void ConfigureLoggerSDDialog::reloadConfigView(){
     reloadFramesTreeWidget();
     reloadCANBusBitrateWidget();
     reloadGPSFrequencyWidget();
+    reloadRTCConfigurationFrameIDWidget();
+    realodLogFilenameWidget();
     reloadStartTriggersWidget();
     reloadStopTriggersWidget();
 }
@@ -250,11 +262,11 @@ void ConfigureLoggerSDDialog::addNewTriggerRow(TriggerType triggerType) {
             if (newTriggerDialog.exec() == QDialog::Accepted){
                 switch (triggerType) {
                 case TriggerType::StartTrigger:
-                    pTrigger            = pConfig->addStartTrigger(newTriggerDialog.getTriggerName().toStdString(), newTriggerDialog.getSelectedFrame(), newTriggerDialog.getSelectedSignal(), newTriggerDialog.getConstCompareValue(), newTriggerDialog.getCompareOperator());
+                    pTrigger            = pConfig->addStartTrigger(newTriggerDialog.getTriggerName().toStdString(), newTriggerDialog.getSelectedFrameSignal(), newTriggerDialog.getConstCompareValue(), newTriggerDialog.getCompareOperator());
                     ui->startTrigger_listWidget->addItem(prepareTriggerListWidget(pTrigger));
                     break;
                 case TriggerType::StopTrigger:
-                    pTrigger            = pConfig->addStopTrigger(newTriggerDialog.getTriggerName().toStdString(), newTriggerDialog.getSelectedFrame(), newTriggerDialog.getSelectedSignal(), newTriggerDialog.getConstCompareValue(), newTriggerDialog.getCompareOperator());
+                    pTrigger            = pConfig->addStopTrigger(newTriggerDialog.getTriggerName().toStdString(), newTriggerDialog.getSelectedFrameSignal(), newTriggerDialog.getConstCompareValue(), newTriggerDialog.getCompareOperator());
                     ui->stopTrigger_listWidget->addItem(prepareTriggerListWidget(pTrigger));
                     break;
                 }
@@ -277,7 +289,7 @@ void ConfigureLoggerSDDialog::editTriggerRow(QListWidgetItem *pClickedItem, Trig
             if (newTriggerDialog.exec() == QDialog::Accepted){
                 pTrigger->setTriggerName(newTriggerDialog.getTriggerName().toStdString());
                 pTrigger->setCompareConstValue(newTriggerDialog.getConstCompareValue());
-                pTrigger->setFrameSignalOperator(newTriggerDialog.getSelectedFrame(), newTriggerDialog.getSelectedSignal(), newTriggerDialog.getCompareOperator());
+                pTrigger->setFrameSignalOperator(newTriggerDialog.getSelectedFrameSignal(), newTriggerDialog.getCompareOperator());
                 pClickedItem->setText(newTriggerDialog.getTriggerName() + " (" + newTriggerDialog.getFormulaRenderValue() + ")");
             }
             return;
@@ -487,6 +499,8 @@ void ConfigureLoggerSDDialog::on_selectPrototypeFileButton_clicked()
 
         ReadingClass reader(prototypeFilePath.toStdString(), rawDataParser);
         pConfig->reset();
+        reloadConfigView();
+
         try {
             pConfig->readFromBin(reader);
         } catch(const std::logic_error& e){
@@ -522,7 +536,7 @@ void ConfigureLoggerSDDialog::on_resetButton_clicked()
     }
 }
 
-void ConfigureLoggerSDDialog::on_canBitrateComboBox_editTextChanged(const QString &val)
+void ConfigureLoggerSDDialog::on_canBitrateComboBox_currentTextChanged(const QString &val)
 {
     try {
         this->pConfig->setCANBitrate(this->stringToCANBitrate(val.toStdString()));
@@ -890,4 +904,15 @@ QListWidgetItem *ConfigureLoggerSDDialog::prepareTriggerListWidget(ConfigTrigger
     v.setValue<ConfigTrigger*>(pTrigger);
     pTriggerWidgetItem->setData(Qt::UserRole, v);
     return pTriggerWidgetItem;
+}
+
+void ConfigureLoggerSDDialog::on_logFilename_lineEdit_textChanged(const QString &logFilename)
+{
+    try {
+        pConfig->setLogFileName(logFilename.toStdString());
+    } catch (const std::logic_error& e){
+        QMessageBox::warning(this, "Error", e.what());
+    } catch (const std::exception& e){
+        QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
+    }
 }

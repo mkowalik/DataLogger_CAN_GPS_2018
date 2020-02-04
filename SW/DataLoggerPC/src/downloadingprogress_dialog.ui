@@ -11,13 +11,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Converting</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="downloadingLabel">
      <property name="text">
-      <string>Downloading and converting files...</string>
+      <string>Converting files...</string>
      </property>
     </widget>
    </item>
@@ -87,8 +87,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>326</x>
+     <y>454</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -103,8 +103,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>258</x>
+     <y>454</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
