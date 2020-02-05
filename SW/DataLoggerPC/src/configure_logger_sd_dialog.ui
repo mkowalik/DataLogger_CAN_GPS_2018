@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>917</width>
+    <width>1103</width>
     <height>899</height>
    </rect>
   </property>
@@ -167,7 +167,7 @@
          <item>
           <widget class="QComboBox" name="canBitrateComboBox">
            <property name="currentText">
-            <string>500kbps</string>
+            <string>50kbps</string>
            </property>
            <item>
             <property name="text">
@@ -213,7 +213,7 @@
          <item>
           <widget class="QComboBox" name="gpsFreqComboBox">
            <property name="currentText">
-            <string>10 Hz</string>
+            <string>GPS OFF</string>
            </property>
            <item>
             <property name="text">
@@ -369,12 +369,12 @@
        </column>
        <column>
         <property name="text">
-         <string>Start Bit</string>
+         <string>Start Bit [byte.bit]</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>Length [in bits]</string>
+         <string>Length bits [bytes.bits]</string>
         </property>
        </column>
        <column>

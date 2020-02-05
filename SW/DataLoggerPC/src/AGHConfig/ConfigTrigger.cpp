@@ -94,6 +94,24 @@ ConfigTrigger::ConfigTrigger (const Config* _pConfig, std::string _triggerName, 
     setTriggerName(_triggerName);
 }
 
+const ConfigFrame *ConfigTrigger::getFrame() const
+{
+    if (std::holds_alternative<const ConfigSignal*>(getFrameSignal())){
+        return std::get<const ConfigSignal*>(getFrameSignal())->getParentFrame();
+    } else {
+        return std::get<const ConfigFrame*>(getFrameSignal());
+    }
+}
+
+const ConfigSignal *ConfigTrigger::getSignal() const
+{
+    if (std::holds_alternative<const ConfigSignal*>(getFrameSignal())){
+        return std::get<const ConfigSignal*>(getFrameSignal());
+    } else {
+        return nullptr;
+    }
+}
+
 bool ConfigTrigger::isSignalUsedForOperator(ConfigTrigger::TriggerCompareOperator compareOperator)
 {
     return ((compareOperator != ConfigTrigger::TriggerCompareOperator::FRAME_OCCURED) && (compareOperator != ConfigTrigger::TriggerCompareOperator::FRAME_TIMEOUT_MS));
@@ -140,24 +158,6 @@ string ConfigTrigger::getTriggerName() const
 std::variant<const ConfigFrame*, const ConfigSignal*> ConfigTrigger::getFrameSignal() const
 {
     return vpFrameSignal;
-}
-
-const ConfigFrame *ConfigTrigger::getFrame() const
-{
-    if (std::holds_alternative<const ConfigSignal*>(getFrameSignal())){
-        return std::get<const ConfigSignal*>(getFrameSignal())->getParentFrame();
-    } else {
-        return std::get<const ConfigFrame*>(getFrameSignal());
-    }
-}
-
-const ConfigSignal *ConfigTrigger::getSignal() const
-{
-    if (std::holds_alternative<const ConfigSignal*>(getFrameSignal())){
-        return std::get<const ConfigSignal*>(getFrameSignal());
-    } else {
-        return nullptr;
-    }
 }
 
 unsigned long ConfigTrigger::getCompareConstValue() const

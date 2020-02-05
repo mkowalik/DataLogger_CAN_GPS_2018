@@ -43,6 +43,8 @@ private:
 
     ConfigTrigger (const Config* pConfig, ReadingClass& reader);
     ConfigTrigger (const Config* _pConfig, std::string _triggerName, const FrameSignalVariant _vpFrameSignal, unsigned long _compareConstValue, TriggerCompareOperator _compareOperator);
+    const ConfigFrame*      getFrame() const;
+    const ConfigSignal*     getSignal() const;
 public:
 
     static bool             isSignalUsedForOperator(TriggerCompareOperator compareOperator);
@@ -54,8 +56,6 @@ public:
 
     std::string             getTriggerName() const;
     FrameSignalVariant      getFrameSignal() const;
-    const ConfigFrame*      getFrame() const;
-    const ConfigSignal*     getSignal() const;
     unsigned long           getCompareConstValue() const;
     TriggerCompareOperator  getCompareOperator() const;
 

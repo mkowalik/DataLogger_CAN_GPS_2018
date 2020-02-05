@@ -62,7 +62,7 @@ ConfigSignal::ConfigSignal(ConfigFrame*   _parentFrame,
     setMultiplier(_multiplier);
     setDivider(_divider);
     setOffset(_offset);
-    setSignallName(_signalName);
+    setSignalName(_signalName);
     setUnitName(_unitName);
     setComment(_comment);
 }
@@ -175,7 +175,7 @@ void ConfigSignal::setOffset(int aOffset){
     this->offset = aOffset;
 }
 
-void ConfigSignal::setSignallName(string _signalName){
+void ConfigSignal::setSignalName(string _signalName){
     _signalName.resize(std::min(_signalName.length(), static_cast<unsigned long long>(SIGNAL_NAME_LENGHT)));
     if (_signalName.find_first_of(static_cast<char>(0)) != string::npos){
         _signalName.resize(_signalName.find_first_of(static_cast<char>(0)));
@@ -337,7 +337,7 @@ void ConfigSignal::readFromBin(ReadingClass& reader){
     setDivider(reader.reading_uint16());
     setOffset(reader.reading_int16());
 
-    setSignallName(reader.reading_string(SIGNAL_NAME_LENGHT, true));
+    setSignalName(reader.reading_string(SIGNAL_NAME_LENGHT, true));
     setUnitName(reader.reading_string(UNIT_LENGTH, true));
     setComment(reader.reading_string(COMMENT_LENGTH, true));
 

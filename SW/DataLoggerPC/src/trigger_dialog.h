@@ -27,7 +27,7 @@ public:
 
     ~TriggerDialog();
 
-    static QString prepareFormulaRender(const ConfigFrame* pFrame, const ConfigSignal* pSignal, ConfigTrigger::TriggerCompareOperator oper, unsigned long rawConstCompareVal);
+    static QString prepareFormulaRender(ConfigTrigger::FrameSignalVariant _frameSignalVariant, ConfigTrigger::TriggerCompareOperator oper, unsigned long rawConstCompareVal);
 private slots:
     void on_signal_comboBox_currentIndexChanged(int index);
     void on_frame_comboBox_currentIndexChanged(int index);

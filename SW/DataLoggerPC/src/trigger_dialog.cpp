@@ -25,6 +25,18 @@ TriggerDialog::TriggerDialog(Config& _config, ConfigTrigger* pTriggerPrototype, 
         }
     }
 
+    const ConfigFrame* pPrototypeFrame = nullptr;
+    const ConfigSignal* pPrototypeSignal = nullptr;
+
+    if (pTriggerPrototype != nullptr){
+        if (ConfigTrigger::isSignalUsedForOperator(pTriggerPrototype->getCompareOperator())){
+            pPrototypeSignal = std::get<const ConfigSignal*>(pTriggerPrototype->getFrameSignal());
+            pPrototypeFrame = pPrototypeSignal->getParentFrame();
+        } else {
+            pPrototypeFrame = std::get<const ConfigFrame*>(pTriggerPrototype->getFrameSignal());
+        }
+    }
+
     for (auto frameIt = config.cbeginFrames(); frameIt != config.cendFrames(); frameIt++){
         QString text;
         text.append(QString::fromStdString((*frameIt)->getFrameName()));
@@ -34,11 +46,11 @@ TriggerDialog::TriggerDialog(Config& _config, ConfigTrigger* pTriggerPrototype, 
         text.append("]");
         ui->frame_comboBox->addItem(text, QVariant::fromValue(*frameIt));
 
-        if ((pTriggerPrototype != nullptr) && (pTriggerPrototype->getFrame() == (*frameIt))){
+        if (pPrototypeFrame == (*frameIt)){
             ui->frame_comboBox->setCurrentIndex(static_cast<int>(std::distance(config.cbeginFrames(), frameIt)));
             //<----- here is automaticly generated on_frame_comboBox_currentIndexChanged ----->//
             for (int index = 0; index < ui->signal_comboBox->count(); index++){
-                if (ui->signal_comboBox->itemData(index).value<ConfigSignal*>() == pTriggerPrototype->getSignal()){
+                if (ui->signal_comboBox->itemData(index).value<ConfigSignal*>() == pPrototypeSignal){
                     ui->signal_comboBox->setCurrentIndex(index);
                 }
             }
@@ -91,17 +103,27 @@ TriggerDialog::~TriggerDialog()
     delete ui;
 }
 
-QString TriggerDialog::prepareFormulaRender(const ConfigFrame *pFrame, const ConfigSignal *pSignal, ConfigTrigger::TriggerCompareOperator oper, unsigned long rawConstCompareVal)
+QString TriggerDialog::prepareFormulaRender(ConfigTrigger::FrameSignalVariant _frameSignalVariant, ConfigTrigger::TriggerCompareOperator oper, unsigned long rawConstCompareVal)
 {
     QString strVal;
 
-    strVal += QString::fromStdString(pFrame->getFrameName()) + " [0x" + QString::number(pFrame->getFrameID(), 16) + "]";
     if (ConfigTrigger::isSignalUsedForOperator(oper)){
-        if (pSignal == nullptr){
+        if (!std::holds_alternative<const ConfigSignal*>(_frameSignalVariant)){
             throw std::logic_error("Signal must be defined for given compare operator.");
         }
-        strVal += "::";
-        strVal += QString::fromStdString(pSignal->getSignalName());
+        strVal += QString::fromStdString(std::get<const ConfigSignal*>(_frameSignalVariant)->getParentFrame()->getFrameName());
+        strVal += " [0x";
+        strVal += QString::number(std::get<const ConfigSignal*>(_frameSignalVariant)->getParentFrame()->getFrameID(), 16);
+        strVal += "]::";
+        strVal += QString::fromStdString(std::get<const ConfigSignal*>(_frameSignalVariant)->getSignalName());
+    } else {
+        if (!std::holds_alternative<const ConfigFrame*>(_frameSignalVariant)){
+            throw std::logic_error("Frame must be defined for given compare operator.");
+        }
+        strVal += QString::fromStdString(std::get<const ConfigFrame*>(_frameSignalVariant)->getFrameName());
+        strVal += " [0x";
+        strVal += QString::number(std::get<const ConfigFrame*>(_frameSignalVariant)->getFrameID(), 16);
+        strVal += "]";
     }
 
     strVal += " ";
@@ -110,7 +132,7 @@ QString TriggerDialog::prepareFormulaRender(const ConfigFrame *pFrame, const Con
 
     if (ConfigTrigger::isConstCompareValueUsedForOperator(oper)){
         if (ConfigTrigger::isSignalUsedForOperator(oper)){
-            strVal += QString::number(pSignal->convertRawValueToSymbolic(rawConstCompareVal), 'f', 2);
+            strVal += QString::number(std::get<const ConfigSignal*>(_frameSignalVariant)->convertRawValueToSymbolic(rawConstCompareVal), 'f', 2);
         } else {
             strVal += QString::number(rawConstCompareVal);
         }
@@ -294,7 +316,7 @@ void TriggerDialog::reloadFormulaRender()
 {
     QString strVal;
     try {
-        ui->formulaRender_lineEdit->setText(prepareFormulaRender(getSelectedFrame(), getSelectedSignal(), getCompareOperator(), getConstCompareValue()));
+        ui->formulaRender_lineEdit->setText(prepareFormulaRender(getSelectedFrameSignal(), getCompareOperator(), getConstCompareValue()));
     } catch (const logic_error&) {
         ui->formulaRender_lineEdit->clear();
         return;

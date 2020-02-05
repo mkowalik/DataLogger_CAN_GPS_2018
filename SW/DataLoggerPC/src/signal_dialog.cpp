@@ -12,6 +12,8 @@ SignalDialog::SignalDialog(ConfigFrame& frame, ConfigSignal* pPreviousSignal, QW
 {
     ui->setupUi(this);
     ui->bigEndian_checkBox->setEnabled(false);
+    on_startBit_spinBox_valueChanged(ui->startBit_spinBox->value());
+    on_lengthBits_spinBox_valueChanged(ui->lengthBits_spinBox->value());
 
     if (pPreviousSignal != nullptr){
 

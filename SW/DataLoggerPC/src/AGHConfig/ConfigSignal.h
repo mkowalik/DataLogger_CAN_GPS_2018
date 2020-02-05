@@ -73,7 +73,7 @@ public:
     void                setMultiplier(int);
     void                setDivider(unsigned int);
     void                setOffset(int);
-    void                setSignallName(string);
+    void                setSignalName(string);
     void                setUnitName(string);
     void                setComment(string);
 

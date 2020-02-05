@@ -24,8 +24,8 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
     ui->setupUi(this);
     ui->framesTreeWidget->header()->resizeSection(0, 220);
     ui->framesTreeWidget->header()->resizeSection(1, 70);
-    ui->framesTreeWidget->header()->resizeSection(2, 50);
-    ui->framesTreeWidget->header()->resizeSection(3, 90);
+    ui->framesTreeWidget->header()->resizeSection(2, 100);
+    ui->framesTreeWidget->header()->resizeSection(3, 130);
     ui->framesTreeWidget->header()->resizeSection(4, 70);
     ui->framesTreeWidget->header()->resizeSection(5, 50);
     ui->framesTreeWidget->header()->resizeSection(6, 60);
@@ -147,7 +147,7 @@ void ConfigureLoggerSDDialog::editSignalRow(QTreeWidgetItem *pClickedSignalRow, 
                 pSignal->setMultiplier(signalDialog.getMultiplier());
                 pSignal->setDivider(signalDialog.getDivider());
                 pSignal->setOffset(signalDialog.getOffset());
-                pSignal->setSignallName(signalDialog.getSignalName().toStdString());
+                pSignal->setSignalName(signalDialog.getSignalName().toStdString());
                 pSignal->setUnitName(signalDialog.getUnit().toStdString());
                 pSignal->setComment(signalDialog.getComment().toStdString());
                 pSignal->setSignalID(signalDialog.getSignalID());
@@ -371,8 +371,18 @@ QTreeWidgetItem *ConfigureLoggerSDDialog::prepareSignalRowWidget(QTreeWidgetItem
 
     pPreviousChannelRow->setText(0, QString::fromStdString(pSignal->getSignalName()));
     pPreviousChannelRow->setText(1, QString::number(pSignal->getSignalID()));
-    pPreviousChannelRow->setText(2, QString::number(pSignal->getStartBit()));
-    pPreviousChannelRow->setText(3, QString::number(pSignal->getLengthBits()));
+    pPreviousChannelRow->setText(2, QString::number(pSignal->getStartBit()) +
+                                 " [" +
+                                 QString::number((pSignal->getStartBit()) / 8) +
+                                 "." +
+                                 QString::number((pSignal->getStartBit()) % 8) +
+                                 + "]");
+    pPreviousChannelRow->setText(3, QString::number(pSignal->getLengthBits()) +
+                                 " [" +
+                                 QString::number(pSignal->getLengthBits() / 8) +
+                                 "." +
+                                 QString::number((pSignal->getLengthBits()) % 8) +
+                                 + "]");
     pPreviousChannelRow->setText(4, QString(pSignal->getValueType().isBigEndianType() ? "true" : "false"));
     pPreviousChannelRow->setText(5, QString(pSignal->getValueType().isSignedType() ? "true" : "false"));
     pPreviousChannelRow->setText(6, QString::number(pSignal->getMultiplier()));
@@ -898,7 +908,7 @@ QListWidgetItem *ConfigureLoggerSDDialog::prepareTriggerListWidget(ConfigTrigger
     QListWidgetItem* pTriggerWidgetItem = new QListWidgetItem(
                     QString::fromStdString(pTrigger->getTriggerName()) +
                     QString(" (") +
-                    TriggerDialog::prepareFormulaRender(pTrigger->getFrame(), pTrigger->getSignal(), pTrigger->getCompareOperator(), pTrigger->getCompareConstValue()) +
+                    TriggerDialog::prepareFormulaRender(pTrigger->getFrameSignal(), pTrigger->getCompareOperator(), pTrigger->getCompareConstValue()) +
                     QString(")")
                 );
     v.setValue<ConfigTrigger*>(pTrigger);
