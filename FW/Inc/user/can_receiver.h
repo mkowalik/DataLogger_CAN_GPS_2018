@@ -14,13 +14,16 @@
 #ifndef CAN_RECEIVER_DRIVER_H_
 #define CAN_RECEIVER_DRIVER_H_
 
-#define CAN_MSG_QUEUE_SIZE	512
+#define CAN_MSG_QUEUE_SIZE	4096
 
 typedef enum {
 	CANReceiver_Status_OK = 0,
 	CANReceiver_Status_Empty,
 	CANReceiver_Status_InitError,
-	CANReceiver_Status_RunTimeError,
+	CANReceiver_Status_CANTransceiverDriverError,
+	CANReceiver_Status_FullFIFOError,
+	CANReceiver_Status_MSTimerError,
+	CANReceiver_Status_FIFOError,
 	CANReceiver_Status_Error
 } CANReceiver_Status_TypeDef;
 

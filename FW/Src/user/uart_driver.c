@@ -508,9 +508,11 @@ UartDriver_Status_TypeDef UartDriver_getState(volatile UartDriver_TypeDef* pSelf
 
 	return UartDriver_Status_OK;
 }
+
 //<----- Private functions implementations ----->//
 
 void _UartDriver_synchronousReceiverInnerByteReceivedCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs){
+	UNUSED(timestamp);
 
 	UartDriver_TypeDef* pSelf = (UartDriver_TypeDef*) pArgs;
 
@@ -634,6 +636,7 @@ static UartDriver_Status_TypeDef _UartDriver_initHAL(volatile UartDriver_TypeDef
 extern volatile UartDriver_TypeDef uartGpsDriver;
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	UNUSED(huart);
 
 	if (_UartDriver_transmitCompleteCallback(&uartGpsDriver) != UartDriver_Status_OK){
 		Error_Handler();
@@ -641,6 +644,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	UNUSED(huart);
 
 	UartDriver_Status_TypeDef ret;
 	if ((ret = _UartDriver_receivedBytesCallback(&uartGpsDriver)) != UartDriver_Status_OK){
@@ -649,6 +653,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
+	UNUSED(huart);
 
 	UartDriver_Status_TypeDef ret;
 	if ((ret = _UartDriver_errorCallback(&uartGpsDriver)) != UartDriver_Status_OK){

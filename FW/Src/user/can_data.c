@@ -8,13 +8,13 @@
 #include "user/can_data.h"
 #include "user/utils.h"
 
-CANData_Status_TypeDef CANData_GetValueRawOfSignal(CANData_TypeDef* pData, ConfigSignal_TypeDef* pSignal, uint32_t* pRetSignalRawVal){
+CANData_Status_TypeDef CANData_GetValueRawOfSignal(const CANData_TypeDef* pData, const ConfigSignal_TypeDef* pSignal, uint32_t* pRetSignalRawVal){
 
 	if (pData == NULL || pSignal == NULL || pRetSignalRawVal == NULL){
 		return CANData_Status_NullPointerError;
 	}
 
-	if (pSignal->pFrame->ID != pData->ID){
+	if (pSignal->pParentFrame->ID != pData->ID){
 		return CANData_Status_SignalNotInGivenFrameError;
 	}
 
@@ -66,5 +66,5 @@ CANData_Status_TypeDef CANData_GetValueRawOfSignal(CANData_TypeDef* pData, Confi
 		}
 	}
 
-	return CANData_Status_Error;
+	return CANData_Status_OK;
 }

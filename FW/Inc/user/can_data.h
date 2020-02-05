@@ -26,6 +26,6 @@ typedef enum {
 	CANData_Status_Error
 } CANData_Status_TypeDef;
 
-CANData_Status_TypeDef CANData_GetValueRawOfSignal(CANData_TypeDef* pData, ConfigSignal_TypeDef* pSignal, uint32_t* pRetSignalRawVal);
+CANData_Status_TypeDef CANData_GetValueRawOfSignal(const CANData_TypeDef* pData, const ConfigSignal_TypeDef* pSignal, uint32_t* pRetSignalRawVal);
 
 #endif /* CAN_DATA_H_ */

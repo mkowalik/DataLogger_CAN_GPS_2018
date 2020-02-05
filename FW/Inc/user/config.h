@@ -50,7 +50,7 @@ typedef enum {
 typedef struct _ConfigFrame_TypeDef ConfigFrame_TypeDef;
 
 typedef struct _ConfigSignal_TypeDef {
-	ConfigFrame_TypeDef*	pFrame;
+	ConfigFrame_TypeDef*	pParentFrame;
 	uint16_t				signalID;
 	uint8_t					startBit;
 	uint8_t					lengthBits;
@@ -96,12 +96,15 @@ typedef enum {
 	Config_TrigerCompareOperator_FRAME_TIMEOUT_MS	= 0x21
 } Config_TrigerCompareOperator_TypeDef;
 
+typedef union {
+	ConfigSignal_TypeDef*				pSignal;
+	ConfigFrame_TypeDef*				pFrame;
+} Config_FrameSignal_Union;
+
 typedef struct {
 	char									triggerName[CONFIG_NAMES_LENGTH];
-	union {
-		ConfigSignal_TypeDef*				pSignal;
-		ConfigFrame_TypeDef*				pFrame;
-	};
+	Config_FrameSignal_Union				uFrameSignal;
+	uint16_t								usedFrameID;
 	uint32_t								compareConstValue;
 	Config_TrigerCompareOperator_TypeDef	compareOperator;
 } Config_Trigger_TypeDef;

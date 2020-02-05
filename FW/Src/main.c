@@ -297,7 +297,7 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &msTimerDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){

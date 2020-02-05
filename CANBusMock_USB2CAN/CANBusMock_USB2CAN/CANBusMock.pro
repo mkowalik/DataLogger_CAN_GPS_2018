@@ -33,7 +33,6 @@ SOURCES += \
 HEADERS += \
         widget.h \
         widget.h \
-        ui_widget.h \
         EUSB2CAN_Class.h \
         EUSB2CAN_DLL.h \
         canspeedwidget.h \

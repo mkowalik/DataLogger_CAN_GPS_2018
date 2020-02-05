@@ -21,7 +21,6 @@ FIFO_Status_TypeDef FIFOQueue_init(volatile FIFOQueue_TypeDef* pSelf, volatile v
 	pSelf->pTabPtr			= pTabPtrArg;
 	pSelf->elementSize		= elementSize;
 	pSelf->queueLength		= queueSize;
-	pSelf->elementsNumber	= 0;
 	pSelf->headIndex		= 0;
 	pSelf->tailIndex		= 0;
 
@@ -44,10 +43,16 @@ FIFO_Status_TypeDef FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatil
 		return FIFO_Status_Full;
 	}
 
-	pSelf->tailIndex = (pSelf->tailIndex + 1) % (pSelf->queueLength); // Notice incrementing tail value
-	pSelf->elementsNumber++;
+	(pSelf->tailIndex)++;
 
-	memcpy((void*)(((uint8_t*)pSelf->pTabPtr) + (pSelf->tailIndex * pSelf->elementSize)), (void*)pElement, pSelf->elementSize);
+	memcpy((void*)(((uint8_t*)pSelf->pTabPtr) + ((pSelf->tailIndex % pSelf->queueLength) * pSelf->elementSize)), (void*)pElement, pSelf->elementSize);
+
+	if (pSelf->dequeueInProgress == false){
+		if ((pSelf->tailIndex > pSelf->queueLength) && (pSelf->headIndex > pSelf->queueLength)){
+			pSelf->tailIndex -= pSelf->queueLength;
+			pSelf->headIndex -= pSelf->queueLength;
+		}
+	}
 
 	return FIFO_Status_OK;
 
@@ -63,14 +68,17 @@ FIFO_Status_TypeDef FIFOQueue_dequeue(volatile FIFOQueue_TypeDef* pSelf, volatil
 		return FIFO_Status_UnInitializedError;
 	}
 
+	pSelf->dequeueInProgress = true;
+
 	if (FIFOQueue_isEmpty(pSelf)){
 		return FIFO_Status_Empty;
 	}
 
-	memcpy((void*)pRetElement, ((uint8_t*)pSelf->pTabPtr) + (pSelf->headIndex * pSelf->elementSize), pSelf->elementSize);
+	memcpy((void*)pRetElement, ((uint8_t*)pSelf->pTabPtr) + ((pSelf->headIndex % pSelf->queueLength) * pSelf->elementSize), pSelf->elementSize);
 
-	pSelf->headIndex = (pSelf->headIndex + 1) % (pSelf->queueLength); // Notice incrementing head value
-	pSelf->elementsNumber--;
+	(pSelf->headIndex)++;
+
+	pSelf->dequeueInProgress = false;
 
 	return FIFO_Status_OK;
 }
@@ -89,10 +97,7 @@ FIFO_Status_TypeDef FIFOQueue_lastElement(volatile FIFOQueue_TypeDef* pSelf, vol
 		return FIFO_Status_Empty;
 	}
 
-	memcpy((void*)pRetElement, (void*)(((uint8_t*)pSelf->pTabPtr) + (pSelf->headIndex * pSelf->elementSize)), pSelf->elementSize);
-
-	pSelf->headIndex = (pSelf->headIndex + 1) % (pSelf->queueLength); // Notice incrementing head value
-	pSelf->elementsNumber--;
+	memcpy((void*)pRetElement, (void*)(((uint8_t*)pSelf->pTabPtr) + ((pSelf->headIndex % pSelf->queueLength) * pSelf->elementSize)), pSelf->elementSize);
 
 	return FIFO_Status_OK;
 }
@@ -107,33 +112,33 @@ FIFO_Status_TypeDef FIFOQueue_elementsNumber(volatile FIFOQueue_TypeDef* pSelf, 
 		return FIFO_Status_UnInitializedError;
 	}
 
-	*pRetElementsNumber = pSelf->elementsNumber;
+	*pRetElementsNumber = (pSelf->tailIndex - pSelf->headIndex);
 
 	return FIFO_Status_OK;
 }
 
-uint8_t FIFOQueue_isFull(volatile FIFOQueue_TypeDef* pSelf){
+bool FIFOQueue_isFull(volatile FIFOQueue_TypeDef* pSelf){
 
 	if (pSelf == NULL){
 		return FIFO_Status_Error;
 	}
 
 	if (pSelf->state == FIFO_State_UnInitialized){
-		return 1;
+		return true;
 	}
 
-	return pSelf->elementsNumber >= pSelf->queueLength;
+	return ((pSelf->tailIndex - pSelf->headIndex) >= pSelf->queueLength);
 }
 
-uint8_t FIFOQueue_isEmpty(volatile FIFOQueue_TypeDef* pSelf){
+bool FIFOQueue_isEmpty(volatile FIFOQueue_TypeDef* pSelf){
 
 	if (pSelf == NULL){
 		return FIFO_Status_Error;
 	}
 
 	if (pSelf->state == FIFO_State_UnInitialized){
-		return 1;
+		return true;
 	}
 
-	return (pSelf->elementsNumber == 0) ? 1 : 0;
+	return (pSelf->tailIndex == pSelf->headIndex);
 }
