@@ -24,7 +24,7 @@ static bool								_ConfigDataManager_isSignalUsedForOperator(Config_TrigerCompa
 static bool								_ConfigDataManager_isConstCompareValueUsedForOperator(Config_TrigerCompareOperator_TypeDef compareOperator);
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateTrigger(ConfigDataManager_TypeDef* pSelf, Config_Trigger_TypeDef* pTrigger);
 
-static ConfigDataManager_Status_TypeDef _ConfigDataManager_getFreeSignalListElem(ConfigDataManager_TypeDef* pSelf, ConfigSignalListElem_TypeDef* pRetSignalListElem);
+static ConfigDataManager_Status_TypeDef _ConfigDataManager_getFreeSignalListElem(ConfigDataManager_TypeDef* pSelf, ConfigSignalListElem_TypeDef** ppRetSignalListElem);
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_readConfigFilePreambule(ConfigDataManager_TypeDef* pSelf);
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_readFrameDefinition(ConfigDataManager_TypeDef* pSelf, ConfigFrame_TypeDef* pFrame);
@@ -68,13 +68,15 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_readConfig(ConfigDataManager_
 		return ConfigDataManager_Status_NullPointerError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_Initialized && pSelf->state != ConfigDataManager_State_ReadConfig){
-		return ConfigDataManager_State_UnInitialized;
+	if (pSelf->state == ConfigDataManager_State_UnInitialized || pSelf->state == ConfigDataManager_State_DuringInit){
+		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
 	if ((ret = _ConfigDataManager_openConfigFile(pSelf)) != ConfigDataManager_Status_OK){
 		return ret;
 	}
+
+	pSelf->state =	ConfigDataManager_State_DuringConfigReading;
 
 	if ((ret = _ConfigDataManager_readConfigFilePreambule(pSelf)) != ConfigDataManager_Status_OK){
 		return ret;
@@ -95,6 +97,8 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_readConfig(ConfigDataManager_
 		return ret;
 	}
 
+	pSelf->state	= ConfigDataManager_State_ConfigRead;
+
 	return ConfigDataManager_Status_OK;
 }
 
@@ -104,11 +108,11 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_getConfigPointer(ConfigDataMa
 		return ConfigDataManager_Status_NullPointerError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_Initialized && pSelf->state != ConfigDataManager_State_ReadConfig){
-		return ConfigDataManager_State_UnInitialized;
+	if (pSelf->state == ConfigDataManager_State_UnInitialized || pSelf->state == ConfigDataManager_State_DuringInit){
+		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_ReadConfig){
+	if (pSelf->state != ConfigDataManager_State_ConfigRead){
 		return ConfigDataManager_Status_ConfigNotReadError;
 	}
 
@@ -123,11 +127,11 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_getIDsList(ConfigDataManager_
 		return ConfigDataManager_Status_NullPointerError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_Initialized && pSelf->state != ConfigDataManager_State_ReadConfig){
-		return ConfigDataManager_State_UnInitialized;
+	if (pSelf->state == ConfigDataManager_State_UnInitialized || pSelf->state == ConfigDataManager_State_DuringInit){
+		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_ReadConfig){
+	if (pSelf->state != ConfigDataManager_State_ConfigRead){
 		return ConfigDataManager_Status_ConfigNotReadError;
 	}
 
@@ -149,11 +153,11 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_findFrmae(ConfigDataManager_T
 		return ConfigDataManager_Status_NullPointerError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_Initialized && pSelf->state != ConfigDataManager_State_ReadConfig){
-		return ConfigDataManager_State_UnInitialized;
+	if (pSelf->state == ConfigDataManager_State_UnInitialized || pSelf->state == ConfigDataManager_State_DuringInit){
+		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_ReadConfig){
+	if ((pSelf->state != ConfigDataManager_State_ConfigRead) && (pSelf->state != ConfigDataManager_State_DuringConfigReading)){
 		return ConfigDataManager_Status_ConfigNotReadError;
 	}
 
@@ -173,11 +177,11 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_findSignal(ConfigDataManager_
 		return ConfigDataManager_Status_NullPointerError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_Initialized && pSelf->state != ConfigDataManager_State_ReadConfig){
-		return ConfigDataManager_State_UnInitialized;
+	if (pSelf->state == ConfigDataManager_State_UnInitialized || pSelf->state == ConfigDataManager_State_DuringInit){
+		return ConfigDataManager_Status_NotInitialisedError;
 	}
 
-	if (pSelf->state != ConfigDataManager_State_ReadConfig){
+	if ((pSelf->state != ConfigDataManager_State_ConfigRead) && (pSelf->state != ConfigDataManager_State_DuringConfigReading)){
 		return ConfigDataManager_Status_ConfigNotReadError;
 	}
 
@@ -339,7 +343,7 @@ static bool _ConfigDataManager_isConstCompareValueUsedForOperator(Config_TrigerC
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateTrigger(ConfigDataManager_TypeDef* pSelf, Config_Trigger_TypeDef* pTrigger){
 
-	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->operator)){
+	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->compareOperator)){
 		if (pTrigger->pSignal == NULL){
 			return ConfigDataManager_Status_WrongTriggerDefinitionError;
 		}
@@ -349,7 +353,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateTrigger(Confi
 		}
 	}
 
-	switch (pTrigger->compareConstValue){
+	switch (pTrigger->compareOperator){
 	case Config_TrigerCompareOperator_EQUAL:
 	case Config_TrigerCompareOperator_NOT_EQUAL:
 	case Config_TrigerCompareOperator_GREATER:
@@ -370,14 +374,14 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_validateTrigger(Confi
 }
 
 
-static ConfigDataManager_Status_TypeDef _ConfigDataManager_getFreeSignalListElem(ConfigDataManager_TypeDef* pSelf, ConfigSignalListElem_TypeDef* pRetSignalListElem){
+static ConfigDataManager_Status_TypeDef _ConfigDataManager_getFreeSignalListElem(ConfigDataManager_TypeDef* pSelf, ConfigSignalListElem_TypeDef** ppRetSignalListElem){
 
 	if (pSelf->signalsCounter < CONFIG_MAX_SIGNALS_NUMBER){
-		pRetSignalListElem	= &(pSelf->signalsListElemsPoll[pSelf->signalsCounter++]);
+		(*ppRetSignalListElem)		= &(pSelf->signalsListElemsPoll[pSelf->signalsCounter++]);
 	} else {
 		return ConfigDataManager_Status_SignalsBufferOverflowError;
 	}
-	pRetSignalListElem->pNext	= NULL;
+	(*ppRetSignalListElem)->pNext	= NULL;
 
 	return ConfigDataManager_Status_OK;
 }
@@ -460,7 +464,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readFrameDefinition(C
 	for (uint16_t signalIt=0; signalIt < signalsNumber; signalIt++){
 
 		ConfigSignalListElem_TypeDef*	pSignalListElem	= NULL;
-		if ((ret = _ConfigDataManager_getFreeSignalListElem(pSelf, pSignalListElem)) != ConfigDataManager_Status_OK){
+		if ((ret = _ConfigDataManager_getFreeSignalListElem(pSelf, &pSignalListElem)) != ConfigDataManager_Status_OK){
 			return ret;
 		}
 
@@ -473,7 +477,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readFrameDefinition(C
 			pLastSignalListElem			= pSignalListElem;
 		} else {
 			pLastSignalListElem->pNext	= pSignalListElem;
-			pLastSignalListElem			= pLastSignalListElem->pNext;
+			pLastSignalListElem			= pSignalListElem;
 		}
 	}
 
@@ -550,11 +554,11 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readSingleTriggerDefi
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 
-	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pTrigger->operator)) != FileReadingBuffer_Status_OK){
+	if (FileReadingBuffer_readUInt8(&pSelf->sReadingBuffer, &(pTrigger->compareOperator)) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
 
-	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->operator)){
+	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->compareOperator)){
 		if ((ret = ConfigDataManager_findSignal(pSelf, frameId, signalId, &(pTrigger->pSignal))) != ConfigDataManager_Status_OK){
 			return ret;
 		}
@@ -632,6 +636,9 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeFrameDefinition(
 	ConfigDataManager_Status_TypeDef	ret		= ConfigDataManager_Status_OK;
 
 	if (FileWritingBuffer_writeUInt16(pWritingBuffer, pFrame->ID) != FileWritingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileWritingBufferError;
+	}
+	if (FileWritingBuffer_writeUInt8(pWritingBuffer, pFrame->expectedDLC) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 	if (FileWritingBuffer_writeString(pWritingBuffer, pFrame->frameName, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
@@ -731,7 +738,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeSingleTriggerDef
 	if (FileWritingBuffer_writeString(pWritingBuffer, pTrigger->triggerName, CONFIG_NAMES_LENGTH) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
-	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->operator)){
+	if (_ConfigDataManager_isSignalUsedForOperator(pTrigger->compareOperator)){
 		if (FileWritingBuffer_writeUInt16(pWritingBuffer, pTrigger->pSignal->pFrame->ID) != FileWritingBuffer_Status_OK){
 			return ConfigDataManager_Status_FileWritingBufferError;
 		}
@@ -751,7 +758,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeSingleTriggerDef
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 
-	if (FileWritingBuffer_writeUInt8(pWritingBuffer, (uint8_t)(pTrigger->operator)) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt8(pWritingBuffer, (uint8_t)(pTrigger->compareOperator)) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 

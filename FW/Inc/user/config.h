@@ -103,7 +103,7 @@ typedef struct {
 		ConfigFrame_TypeDef*				pFrame;
 	};
 	uint32_t								compareConstValue;
-	Config_TrigerCompareOperator_TypeDef	operator;
+	Config_TrigerCompareOperator_TypeDef	compareOperator;
 } Config_Trigger_TypeDef;
 
 typedef struct {
@@ -154,7 +154,8 @@ typedef enum {
 	ConfigDataManager_State_UnInitialized = 0,
 	ConfigDataManager_State_DuringInit,
 	ConfigDataManager_State_Initialized,
-	ConfigDataManager_State_ReadConfig
+	ConfigDataManager_State_DuringConfigReading,
+	ConfigDataManager_State_ConfigRead
 } ConfigDataManager_State_TypeDef;
 
 typedef struct {

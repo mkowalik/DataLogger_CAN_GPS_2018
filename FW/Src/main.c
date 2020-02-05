@@ -234,6 +234,10 @@ int main(void)
 	  Error_Handler();
   }
 
+  if (ConfigDataManager_readConfig(&configDataManager) != ConfigDataManager_Status_OK){
+	  Error_Handler();
+  }
+
   Config_TypeDef* pConfig;
   if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
 	  Error_Handler();
