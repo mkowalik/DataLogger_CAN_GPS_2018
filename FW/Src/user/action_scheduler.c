@@ -206,9 +206,17 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_idleState(ActionScheduler
 
 static ActionScheduler_Status_TypeDef _ActionScheduler_logInitState(ActionScheduler_TypeDef* pSelf){
 
+	ActionScheduler_Status_TypeDef ret = ActionScheduler_Status_OK;
+
 	DateTime_TypeDef dateTime;
 	if (RTCDriver_getDateAndTime(pSelf->pRTCDriver, &dateTime) != RTCDriver_Status_OK){
 		return ActionScheduler_Status_Error;
+	}
+
+	for (uint8_t i=0; i<pSelf->pConfig->stopLogTriggersNumber; i++){
+		if ((ret = _getFrameTimeoutValue(pSelf, &(pSelf->pConfig->stopLogTriggers[i]), &(pSelf->stopTriggerFrameTimeout[i]))) != ActionScheduler_Status_OK){
+			return ret;
+		}
 	}
 
 	if (pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF){
