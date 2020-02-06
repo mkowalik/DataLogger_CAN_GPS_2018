@@ -185,7 +185,7 @@ bool ConfigTrigger::operator==(const ConfigTrigger& b) const {
 
 void ConfigTrigger::readFromBin(ReadingClass &reader)
 {
-    std::string triggerName = reader.reading_string(TRIGGER_NAME_LENGHT, true);
+    triggerName             = reader.reading_string(TRIGGER_NAME_LENGHT, true);
     unsigned int frameID    = reader.reading_uint16();
     unsigned int signalID   = reader.reading_uint16();
     compareConstValue       = reader.reading_uint32();
