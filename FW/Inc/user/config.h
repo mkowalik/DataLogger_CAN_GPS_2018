@@ -56,9 +56,9 @@ typedef struct _ConfigSignal_TypeDef {
 	uint8_t					lengthBits;
 	union {
 		struct {
-			uint8_t			valueType_unused : 6;
-			uint8_t			valueType_Signed : 1;
-			uint8_t			valueType_BigEndian : 1;
+			uint8_t			valueType_BigEndian	: 1;
+			uint8_t			valueType_Signed	: 1;
+			uint8_t			valueType_unused	: 6;
 		};
 		uint8_t valueType_raw;
 	};

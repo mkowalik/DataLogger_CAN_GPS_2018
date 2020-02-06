@@ -50,7 +50,6 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDe
 	pSelf->pFileSystem		= pFileSystem;
 	pSelf->signalsCounter	= 0;
 
-
 	memset(&pSelf->sConfig, 0, sizeof(pSelf->sConfig));
 	memset(&pSelf->sConfigFileHandler, 0, sizeof(pSelf->sConfigFileHandler));
 	memset(&pSelf->sReadingBuffer, 0, sizeof(pSelf->sReadingBuffer));
