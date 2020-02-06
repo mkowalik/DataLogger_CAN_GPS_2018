@@ -548,7 +548,7 @@ static UartDriver_Status_TypeDef _UartDriver_receivedBytesCallback(volatile Uart
 		return UartDriver_Status_MSTimerError;
 	}
 
-	//< ----- Handling one byte callback ----- >//
+	//< ----- Handling received byte callback ----- >//
 	for (uint16_t fooIt=0; fooIt<UART_DRIVER_MAX_CALLBACKS_NUMBER; fooIt++){
 		if (pSelf->callbacksByte[fooIt] != NULL){
 			pSelf->callbacksByte[fooIt](pSelf->actuallyReceivingByte, timestamp, pSelf->callbacksByteArgs[fooIt]);

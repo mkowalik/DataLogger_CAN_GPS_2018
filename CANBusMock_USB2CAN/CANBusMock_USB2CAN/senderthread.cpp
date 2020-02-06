@@ -141,7 +141,7 @@ void SenderThread::run(){
         s = canHandle.write(&msg);
         s = canHandle.flush();
 
-        QThread::msleep(10);
+        QThread::msleep(5);
     }
 }
 

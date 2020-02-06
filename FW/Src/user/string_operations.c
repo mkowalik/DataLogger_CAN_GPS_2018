@@ -93,7 +93,7 @@ StringOperations_Status_TypeDef decChar2Uint8(uint8_t c, uint8_t* pRetInt){
 }
 
 
-StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint8_t length, uint32_t* pRetInt){
+StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint16_t length, uint32_t* pRetInt){
 
 	if (sentence == NULL || pRetInt == NULL){
 		return StringOperations_Status_NullPointerError;

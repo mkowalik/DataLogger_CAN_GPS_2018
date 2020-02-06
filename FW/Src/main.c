@@ -297,26 +297,11 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &msTimerDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &msTimerDriver, &rtcDriver, &ledDebug2Driver, &ledDebug1Driver) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
 	  Error_Handler();
-  }
-
-  GPSDriver_State_TypeDef gpsState;
-  if ((retGps = GPSDriver_getState(&gpsDriver, &gpsState)) != GPSDriver_Status_OK){
-	  Warning_Handler("GPS initialization error");
-  }
-
-  if ((retGps == GPSDriver_Status_OK) && (gpsState == GPSDriver_State_Initialized)){
-	  if (LedDriver_OnLed(&ledDebug1Driver) != LedDriver_Status_OK){
-		  Warning_Handler("LED driver problem.");
-	  }
-  } else {
-	  if (LedDriver_OffLed(&ledDebug1Driver) != LedDriver_Status_OK){
-		  Warning_Handler("LED driver problem.");
-	  }
   }
 
   /* USER CODE END 2 */
@@ -454,14 +439,15 @@ void Error_Handler(void)
   if (errorInCounter++ > 0){
 	  return;
   }
+
   while(1)
   {
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
-	  HAL_Delay(50);
-	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
 	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
-	  HAL_Delay(50);
+	  HAL_Delay(75);
+	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
+	  HAL_Delay(75);
   }
   /* USER CODE END Error_Handler_Debug */
 }

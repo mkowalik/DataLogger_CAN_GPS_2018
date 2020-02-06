@@ -30,7 +30,7 @@ StringOperations_Status_TypeDef	stringToFixedPoint(uint8_t* sentence, uint16_t l
 StringOperations_Status_TypeDef	decChar2Uint8(uint8_t c, uint8_t* pRetInt);
 StringOperations_Status_TypeDef	hexChar2Uint8(uint8_t c, uint8_t* pRetInt);
 
-StringOperations_Status_TypeDef	string2UInt32(uint8_t* sentence, uint8_t length, uint32_t* pRetInt);
+StringOperations_Status_TypeDef	string2UInt32(uint8_t* sentence, uint16_t length, uint32_t* pRetInt);
 
 StringOperations_Status_TypeDef	uInt8ToString(uint8_t* pRetBuffer, uint8_t val);
 StringOperations_Status_TypeDef appendUInt8ToString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize);

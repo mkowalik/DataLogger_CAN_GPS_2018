@@ -16,6 +16,7 @@ typedef enum {
 	FIFO_Status_Full,
 	FIFO_Status_Empty,
 	FIFO_Status_UnInitializedError,
+	FIFO_Status_DequeueInProgressError,
 	FIFO_Status_Error
 } FIFO_Status_TypeDef;
 
@@ -39,6 +40,7 @@ FIFO_Status_TypeDef	FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatil
 FIFO_Status_TypeDef	FIFOQueue_dequeue(volatile FIFOQueue_TypeDef* pSelf, volatile void* pRetElement);
 FIFO_Status_TypeDef	FIFOQueue_lastElement(volatile FIFOQueue_TypeDef* pSelf, volatile void* pLastElement);
 FIFO_Status_TypeDef	FIFOQueue_elementsNumber(volatile FIFOQueue_TypeDef* pSelf, volatile uint16_t* pRetElementsNumber);
+FIFO_Status_TypeDef	FIFOQueue_clear(volatile FIFOQueue_TypeDef* pSelf);
 bool				FIFOQueue_isFull(volatile FIFOQueue_TypeDef* pSelf);
 bool				FIFOQueue_isEmpty(volatile FIFOQueue_TypeDef* pSelf);
 

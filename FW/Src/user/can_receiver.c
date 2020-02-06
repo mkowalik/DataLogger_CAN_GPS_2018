@@ -20,9 +20,14 @@ void						CANReceiver_ErrorCallbackWrapper(CANTransceiverDriver_ErrorCode_TypeDe
 
 CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler){
 
-	pSelf->pConfig = pConfig;
-	pSelf->pCanTransceiverHandler = pCanTransceiverHandler;
-	pSelf->pMsTimerDriverHandler = pMsTimerDriverHandler;
+	if ((pSelf == NULL) || (pConfig == NULL) || (pCanTransceiverHandler == NULL) || (pMsTimerDriverHandler == NULL)){
+		return CANReceiver_Status_NullPointerError;
+	}
+
+	pSelf->state					= CANReceiver_State_NotInitialised;
+	pSelf->pConfig					= pConfig;
+	pSelf->pCanTransceiverHandler	= pCanTransceiverHandler;
+	pSelf->pMsTimerDriverHandler	= pMsTimerDriverHandler;
 
 	if (FIFOQueue_init(&(pSelf->framesFIFO), pSelf->aReceiverQueueBuffer, sizeof(CANData_TypeDef), CAN_MSG_QUEUE_SIZE) != FIFO_Status_OK){ //TODO czy alignment nie popusje sizeof
 		return CANReceiver_Status_FIFOError;
@@ -50,20 +55,44 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 		return CANReceiver_Status_CANTransceiverDriverError;
 	}
 
+	pSelf->state = CANReceiver_State_Initialised;
+
 	return CANReceiver_Status_OK;
 
 }
 
 CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return CANReceiver_Status_NullPointerError;
+	}
+
+	if (pSelf->state == CANReceiver_State_NotInitialised){
+		return CANReceiver_Status_NotInitialisedError;
+	}
+
+	if (pSelf->state == CANReceiver_State_Running){
+		return CANReceiver_Status_AlreadyRunningError;
+	}
+
 	if (CANTransceiverDriver_start(pSelf->pCanTransceiverHandler) != CANTransceiverDriver_Status_OK){
 		return CANReceiver_Status_CANTransceiverDriverError;
 	}
+
+	pSelf->state = CANReceiver_State_Running;
 
 	return CANReceiver_Status_OK;
 }
 
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg){
+
+	if ((pSelf == NULL) || (pRetMsg == NULL)){
+		return CANReceiver_Status_NullPointerError;
+	}
+
+	if (pSelf->state != CANReceiver_State_Running){
+		return CANReceiver_Status_NotRunningError;
+	}
 
 	FIFO_Status_TypeDef fifoStatus = FIFO_Status_OK;
 
@@ -76,12 +105,31 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 			return CANReceiver_Status_Empty;
 		case FIFO_Status_Full:
 			return CANReceiver_Status_FullFIFOError;
+		case FIFO_Status_DequeueInProgressError:
+		case FIFO_Status_UnInitializedError:
+		case FIFO_Status_Error:
 		default:
 			return CANReceiver_Status_FIFOError;
 	}
 
 	return CANReceiver_Status_OK;
+}
 
+CANReceiver_Status_TypeDef CANReceiver_reset(CANReceiver_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return CANReceiver_Status_NullPointerError;
+	}
+
+	if (pSelf->state == CANReceiver_State_NotInitialised){
+		return CANReceiver_Status_NotInitialisedError;
+	}
+
+	if (FIFOQueue_clear(&(pSelf->framesFIFO)) != FIFO_Status_OK){
+		return CANReceiver_Status_FIFOError;
+	}
+
+	return CANReceiver_Status_OK;
 }
 
 //< ----- Callback functions ----- >//

@@ -13,9 +13,10 @@
 #include "user/fixed_point.h"
 
 typedef enum {
-	GPSFixType_NoFix = 1,
-	GPSFixType_2DFix = 2,
-	GPSFixType_3DFix = 3
+	GPSFixType_Unknown	= 0,
+	GPSFixType_NoFix	= 1,
+	GPSFixType_2DFix	= 2,
+	GPSFixType_3DFix	= 3
 } GPSFixType;
 
 typedef struct {

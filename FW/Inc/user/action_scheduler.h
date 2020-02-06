@@ -23,14 +23,20 @@ typedef enum {
 	ActionScheduler_Status_MSTimerError,
 	ActionScheduler_Status_WrongCompareOperatorError,
 	ActionScheduler_Status_CANReceiverError,
+	ActionScheduler_Status_GPSDriverError,
 	ActionScheduler_Status_DataSaverError,
 	ActionScheduler_Status_Error
 } ActionScheduler_Status_TypeDef;
 
-#define	ACTION_SCHEDULER_IDLE_LED_ON_TIME		50
-#define	ACTION_SCHEDULER_IDLE_LED_OFF_TIME		950
+#define	ACTION_SCHEDULER_IDLE_LED_ON_TIME		200
+#define	ACTION_SCHEDULER_IDLE_LED_OFF_TIME		800
 #define	ACTION_SCHEDULER_LOGGING_LED_ON			100
 #define	ACTION_SCHEDULER_LOGGING_LED_OFF		100
+
+#define	ACTION_SCHEDULER_GPS_LED_2DFIX_ON	500
+#define	ACTION_SCHEDULER_GPS_LED_2DFIX_OFF	500
+#define	ACTION_SCHEDULER_GPS_LED_3DFIX_ON	50
+#define ACTION_SCHEDULER_GPS_LED_3DFIX_OFF	950
 
 #define	ACTION_SCHEDULER_RTC_SETUP_FRAME_DLC	7
 
@@ -61,6 +67,8 @@ typedef struct _ActionScheduler_TypeDef {
 	MSTimerDriver_TypeDef*			pMSTimerDriver;
 	RTCDriver_TypeDef*				pRTCDriver;
 	LedDriver_TypeDef*				pStatusLedDriver;
+	LedDriver_TypeDef*				pGPSLedDriver;
+	GPSFixType						prevDisplayedGPSFixType;
 	uint32_t						logStartMsTime;
 	CompareOperatorFunction			startTriggersCompareOperatorFunctions[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];
 	uint32_t						startTriggerFrameTimeout[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];
@@ -69,8 +77,8 @@ typedef struct _ActionScheduler_TypeDef {
 } ActionScheduler_TypeDef;
 
 
-ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager,
-		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, GPSDriver_TypeDef* pGPSDriver, MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver);
+ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver,
+		GPSDriver_TypeDef* pGPSDriver, MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver, LedDriver_TypeDef* pGPSLedDriver);
 ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_TypeDef* pSelf);
 ActionScheduler_Status_TypeDef ActionScheduler_thread(ActionScheduler_TypeDef* pSelf);
 //ActionScheduler_Status_TypeDef ActionScheduler_1msElapsedCallbackHandler(ActionScheduler_TypeDef* pSelf);

@@ -37,10 +37,10 @@ static bool _ActionScheduler_compareOperator_FRAME_TIMEOUT_MS(ActionScheduler_Ty
 
 //< ----- Public functions ----- >//
 
-ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager,
-		DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver, GPSDriver_TypeDef* pGPSDriver, MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver) {
+ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver,
+		GPSDriver_TypeDef* pGPSDriver, MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver, LedDriver_TypeDef* pGPSLedDriver) {
 
-	if (pSelf == NULL || pConfigManager == NULL || pDataSaver == NULL || pCANReceiver == NULL || pGPSDriver == NULL || pMSTimerDriver == NULL || pRTCDriver == NULL || pStatusLedDriver == NULL){
+	if (pSelf == NULL || pConfigManager == NULL || pDataSaver == NULL || pCANReceiver == NULL || pGPSDriver == NULL || pMSTimerDriver == NULL || pRTCDriver == NULL || pStatusLedDriver == NULL || pGPSLedDriver == NULL){
 		return ActionScheduler_Status_NullPointerError;
 	}
 
@@ -49,12 +49,14 @@ ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSe
 	}
 
 	ConfigDataManager_getConfigPointer(pConfigManager, &pSelf->pConfig);
-	pSelf->pDataSaver		= pDataSaver;
-	pSelf->pCANReceiver		= pCANReceiver;
-	pSelf->pGPSDriver		= pGPSDriver;
-	pSelf->pMSTimerDriver	= pMSTimerDriver;
-	pSelf->pRTCDriver		= pRTCDriver;
-	pSelf->pStatusLedDriver	= pStatusLedDriver;
+	pSelf->pDataSaver				= pDataSaver;
+	pSelf->pCANReceiver				= pCANReceiver;
+	pSelf->pGPSDriver				= pGPSDriver;
+	pSelf->pMSTimerDriver			= pMSTimerDriver;
+	pSelf->pRTCDriver				= pRTCDriver;
+	pSelf->pStatusLedDriver			= pStatusLedDriver;
+	pSelf->pGPSLedDriver			= pGPSLedDriver;
+	pSelf->prevDisplayedGPSFixType	= GPSFixType_Unknown;
 
 	for (uint8_t i=0; i<CONFIG_MAX_START_LOG_TRIGGER_NUMBER; i++){
 		pSelf->startTriggersCompareOperatorFunctions[i]	= NULL;
@@ -66,6 +68,9 @@ ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSe
 	}
 
 	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){
+		return ActionScheduler_Status_Error;
+	}
+	if (LedDriver_OffLed(pSelf->pGPSLedDriver) != LedDriver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
 	pSelf->state = ActionScheduler_State_Idle;
@@ -111,26 +116,63 @@ ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_Ty
 
 ActionScheduler_Status_TypeDef ActionScheduler_thread(ActionScheduler_TypeDef* pSelf){
 
+	ActionScheduler_Status_TypeDef ret = ActionScheduler_Status_OK;
 	switch (pSelf->state){
 	case ActionScheduler_State_UnInitialized:
 	default:
 		return ActionScheduler_Status_UnInitializedError;
 		break;
 	case ActionScheduler_State_Idle:
-		return _ActionScheduler_idleState(pSelf);
+		if ((ret = _ActionScheduler_idleState(pSelf)) != ActionScheduler_Status_OK) {
+			return ret;
+		};
 		break;
 	case ActionScheduler_State_LogInit:
-		return _ActionScheduler_logInitState(pSelf);
+		if ((ret = _ActionScheduler_logInitState(pSelf)) != ActionScheduler_Status_OK) {
+			return ret;
+		};
 		break;
 	case ActionScheduler_State_Logging:
-		return _ActionScheduler_loggingState(pSelf);
+		if ((ret = _ActionScheduler_loggingState(pSelf)) != ActionScheduler_Status_OK) {
+			return ret;
+		};
 		break;
 	case ActionScheduler_State_LogClose:
-		return _ActionScheduler_logCloseState(pSelf);
+		if ((ret = _ActionScheduler_logCloseState(pSelf)) != ActionScheduler_Status_OK) {
+			return ret;
+		};
 		break;
 	}
 
-	return ActionScheduler_Status_Error;
+	if (pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF){
+		GPSFixType gpsFixType = GPSFixType_NoFix;
+		if (GPSDriver_getFixType(pSelf->pGPSDriver, &gpsFixType) != GPSDriver_Status_OK){
+			return ActionScheduler_Status_GPSDriverError;
+		}
+		if (pSelf->prevDisplayedGPSFixType != gpsFixType){
+			switch (gpsFixType){
+			case GPSFixType_NoFix:
+			default:
+				if (LedDriver_OnLed(pSelf->pGPSLedDriver) != LedDriver_Status_OK){
+					return ActionScheduler_Status_Error;
+				}
+				break;
+			case GPSFixType_2DFix:
+				if (LedDriver_BlinkingLed(pSelf->pGPSLedDriver, ACTION_SCHEDULER_GPS_LED_2DFIX_ON, ACTION_SCHEDULER_GPS_LED_2DFIX_OFF) != LedDriver_Status_OK){
+					return ActionScheduler_Status_Error;
+				}
+				break;
+			case GPSFixType_3DFix:
+				if (LedDriver_BlinkingLed(pSelf->pGPSLedDriver, ACTION_SCHEDULER_GPS_LED_3DFIX_ON, ACTION_SCHEDULER_GPS_LED_3DFIX_OFF) != LedDriver_Status_OK){
+					return ActionScheduler_Status_Error;
+				}
+				break;
+			}
+			pSelf->prevDisplayedGPSFixType = gpsFixType;
+		}
+	}
+
+	return ActionScheduler_Status_OK;
 }
 
 //< ----- Private functions ----- >//
@@ -167,7 +209,7 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_idleState(ActionScheduler
 
 		//< ----- CAN msg handling ----- >//
 		CANData_TypeDef msg;
-		CANReceiver_Status_TypeDef status = status = CANReceiver_pullLastFrame(pSelf->pCANReceiver, &msg);
+		CANReceiver_Status_TypeDef status = CANReceiver_pullLastFrame(pSelf->pCANReceiver, &msg);
 
 		if (status == CANReceiver_Status_OK){
 
@@ -321,6 +363,11 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_logCloseState(ActionSched
 	if (LedDriver_BlinkingLed(pSelf->pStatusLedDriver, ACTION_SCHEDULER_IDLE_LED_ON_TIME, ACTION_SCHEDULER_IDLE_LED_OFF_TIME) != LedDriver_Status_OK){
 		return ActionScheduler_Status_Error;
 	}
+
+	if (CANReceiver_reset(pSelf->pCANReceiver) != CANReceiver_Status_OK){
+		return ActionScheduler_Status_CANReceiverError;
+	}
+
 	pSelf->state = ActionScheduler_State_Idle;
 
 	return ActionScheduler_Status_OK;

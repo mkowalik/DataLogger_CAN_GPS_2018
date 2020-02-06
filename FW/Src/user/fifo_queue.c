@@ -117,6 +117,26 @@ FIFO_Status_TypeDef FIFOQueue_elementsNumber(volatile FIFOQueue_TypeDef* pSelf, 
 	return FIFO_Status_OK;
 }
 
+FIFO_Status_TypeDef	FIFOQueue_clear(volatile FIFOQueue_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return FIFO_Status_Error;
+	}
+
+	if (pSelf->state == FIFO_State_UnInitialized){
+		return FIFO_Status_UnInitializedError;
+	}
+
+	if (pSelf->dequeueInProgress){
+		return FIFO_Status_DequeueInProgressError;
+	}
+
+	pSelf->tailIndex			= 0;
+	pSelf->headIndex			= 0;
+
+	return FIFO_Status_OK;
+}
+
 bool FIFOQueue_isFull(volatile FIFOQueue_TypeDef* pSelf){
 
 	if (pSelf == NULL){
