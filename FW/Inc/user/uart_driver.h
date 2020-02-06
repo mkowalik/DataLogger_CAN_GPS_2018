@@ -63,7 +63,6 @@ typedef struct {
 
 	void											  (*callbacksByte[UART_DRIVER_MAX_CALLBACKS_NUMBER])(uint8_t dataByte, uint32_t timestamp, void* pArgs);
 	void* volatile										callbacksByteArgs[UART_DRIVER_MAX_CALLBACKS_NUMBER];
-//	volatile FIFOMultireadReaderIdentifier_TypeDef		callbacksByteReaders[UART_DRIVER_MAX_CALLBACK_NUMBER];
 } UartDriver_TypeDef;
 
 /*typedef enum {
@@ -87,7 +86,7 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t length, uint32_t timeout);
 
 UartDriver_Status_TypeDef UartDriver_receiveBytesTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pReceiveBuffer,
-		uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout); //TODO dorobic wersje z timeoutem
+		uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout);
 UartDriver_Status_TypeDef UartDriver_receiveNBytes(volatile UartDriver_TypeDef* pSelf, volatile uint8_t* pReceiveBuffer, uint16_t bytesToRead, uint32_t timeout);
 
 UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer,

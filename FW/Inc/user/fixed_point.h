@@ -10,8 +10,6 @@
 
 #include "stdint.h"
 
-//TODO for construction FixedPoint objects from float
-
 typedef struct {
 	int32_t	integer;
 	uint8_t	fractionalBits;

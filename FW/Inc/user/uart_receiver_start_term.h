@@ -56,7 +56,8 @@ typedef enum {
 	UartReceiverStartTerm_Status_UartDriverNotStartedError,
 	UartReceiverStartTerm_Status_InvalidArgumentsError,
 	UartReceiverStartTerm_Status_ReceivedAlreadyStartedError,
-	UartReceiverStartTerm_Status_ReceiverNotReceivingError,
+	UartReceiverStartTerm_Status_ReceiverNotReceivingStateError,
+	UartReceiverStartTerm_Status_BufferTooShortError,
 	UartReceiverStartTerm_Status_Error
 } UartReceiverStartTerm_Status_TypeDef;
 
@@ -71,7 +72,14 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_unregisterReader(vola
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_start(volatile UartReceiverStartTerm_TypeDef* pSelf);
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartReceiverStartTerm_TypeDef* pSelf);
 
-UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(volatile UartReceiverStartTerm_TypeDef* pSelf, UartReceiverStartTerm_ReaderIterator_TypeDef readerIt, uint8_t* pRetSentence, uint16_t* pRetLength, uint32_t* pRetTimestamp);
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(
+		volatile UartReceiverStartTerm_TypeDef* pSelf,
+		UartReceiverStartTerm_ReaderIterator_TypeDef readerIt,
+		uint8_t* pRetSentence,
+		uint16_t sentenceBufferSize,
+		uint16_t* pRetLength,
+		uint32_t* pRetTimestamp
+	);
 
 
 #endif /* USER_UART_RECEIVER_START_TERM_H_ */

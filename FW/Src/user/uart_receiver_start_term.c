@@ -159,7 +159,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartRec
 	}
 
 	if (pSelf->state != UartReceiverStartTerm_State_Receiving){
-		return UartReceiverStartTerm_Status_ReceiverNotReceivingError;
+		return UartReceiverStartTerm_Status_ReceiverNotReceivingStateError;
 	}
 
 	pSelf->state	= UartReceiverStartTerm_State_Initialized;
@@ -167,12 +167,20 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartRec
 	return UartReceiverStartTerm_Status_OK;
 }
 
-UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(volatile UartReceiverStartTerm_TypeDef* pSelf, UartReceiverStartTerm_ReaderIterator_TypeDef readerIt, uint8_t* pRetSentence, uint16_t* pRetLength, uint32_t* pRetTimestamp){
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(
+		volatile UartReceiverStartTerm_TypeDef* pSelf,
+		UartReceiverStartTerm_ReaderIterator_TypeDef readerIt,
+		uint8_t* pRetSentenceBuffer,
+		uint16_t sentenceBufferSize,
+		uint16_t* pRetLength,
+		uint32_t* pRetTimestamp)
+{
 
 	volatile UartReceiverStartTerm_FIFOElem_TypeDef	elemBuffer;
-	volatile FIFOMultiread_Status_TypeDef			fifoStatus;
+	volatile FIFOMultiread_Status_TypeDef			fifoStatus	= FIFOMultiread_Status_OK;
+	UartReceiverStartTerm_Status_TypeDef			ret			= UartReceiverStartTerm_Status_OK;
 
-	if (pSelf == NULL || pRetSentence == NULL || pRetLength == NULL){
+	if (pSelf == NULL || pRetSentenceBuffer == NULL || pRetLength == NULL){
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 
@@ -230,7 +238,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(vola
 			}
 
 			if (elemBuffer.dataByte == pSelf->startSignVal[readerIt]){ //< found start sign
-				pRetSentence[(*pRetLength)++]	= elemBuffer.dataByte;
+				pRetSentenceBuffer[(*pRetLength)++]	= elemBuffer.dataByte;
 				if (pRetTimestamp != NULL){
 					*pRetTimestamp				= elemBuffer.msTime;
 				}
@@ -254,8 +262,12 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(vola
 				}
 				pSelf->receivedStartSignsNumber[readerIt]--;
 			}
-
-			pRetSentence[(*pRetLength)++] = elemBuffer.dataByte;
+			if ((*pRetLength) < sentenceBufferSize){
+				pRetSentenceBuffer[(*pRetLength)++] = elemBuffer.dataByte;
+			} else {
+				(*pRetLength)++;
+				ret = UartReceiverStartTerm_Status_BufferTooShortError;
+			}
 
 			if (elemBuffer.dataByte == pSelf->terminationSignVal[readerIt]){ //< found termination sign
 				pSelf->receivedTerminationSignsNumber[readerIt]--;
@@ -266,7 +278,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(vola
 		return UartReceiverStartTerm_Status_Empty;
 	}
 
-	return UartReceiverStartTerm_Status_OK;
+	return ret;
 }
 
 

@@ -38,7 +38,6 @@ typedef enum {
 } CANReceiver_State_TypeDef;
 
 typedef struct {
-	//TODO dodac state zeby trzeba bylo zainicjalizowac
 	CANData_TypeDef 				aReceiverQueueBuffer [CAN_MSG_QUEUE_SIZE];
 	FIFOQueue_TypeDef				framesFIFO;
 	CANTransceiverDriver_TypeDef*	pCanTransceiverHandler;

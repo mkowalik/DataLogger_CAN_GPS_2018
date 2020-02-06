@@ -150,7 +150,9 @@ GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSe
 
 //< ----- Unit-test-like functions ----- >//
 
-void GPSDriver_test();
+#ifdef USE_FULL_ASSERT
+void GPSDriver_UnitTests();
+#endif //USE_FULL_ASSERT
 
 #endif /* USER_UBLOX_M8_GPS_DRIVER_H_ */
 #endif

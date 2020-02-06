@@ -28,4 +28,8 @@ typedef enum {
 
 CANData_Status_TypeDef CANData_GetValueRawOfSignal(const CANData_TypeDef* pData, const ConfigSignal_TypeDef* pSignal, uint32_t* pRetSignalRawVal);
 
+#ifdef USE_FULL_ASSERT
+void CANData_UnitTests();
+#endif //USE_FULL_ASSERT
+
 #endif /* CAN_DATA_H_ */

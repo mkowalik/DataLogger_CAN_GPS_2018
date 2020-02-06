@@ -29,7 +29,7 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 	pSelf->pCanTransceiverHandler	= pCanTransceiverHandler;
 	pSelf->pMsTimerDriverHandler	= pMsTimerDriverHandler;
 
-	if (FIFOQueue_init(&(pSelf->framesFIFO), pSelf->aReceiverQueueBuffer, sizeof(CANData_TypeDef), CAN_MSG_QUEUE_SIZE) != FIFO_Status_OK){ //TODO czy alignment nie popusje sizeof
+	if (FIFOQueue_init(&(pSelf->framesFIFO), pSelf->aReceiverQueueBuffer, sizeof(CANData_TypeDef), CAN_MSG_QUEUE_SIZE) != FIFO_Status_OK){
 		return CANReceiver_Status_FIFOError;
 	}
 
@@ -142,7 +142,7 @@ CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CA
 
 	FIFO_Status_TypeDef fifoStatus;
 	if ((fifoStatus = FIFOQueue_enqueue(&(pSelf->framesFIFO), pData)) != FIFO_Status_OK){
-		return CANReceiver_Status_FIFOError;	//TODO moze jak sie nie zmiesci do kolejki, to nie Error tylko jakas sytuacja wyjatkowa???
+		return CANReceiver_Status_FIFOError;
 	}
 
 	return CANReceiver_Status_OK;

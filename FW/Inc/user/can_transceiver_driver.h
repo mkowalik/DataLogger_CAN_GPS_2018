@@ -60,6 +60,4 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_start(CANTransceiverDri
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTransceiverDriver_TypeDef* pSelf, CANData_TypeDef* pData);
 
-//TODO zapisuje tu: time triggered communication mode
-
 #endif /* CAN_TRANSCEIVER_DRIVER_H_ */

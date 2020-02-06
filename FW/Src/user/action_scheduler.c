@@ -151,6 +151,7 @@ ActionScheduler_Status_TypeDef ActionScheduler_thread(ActionScheduler_TypeDef* p
 		}
 		if (pSelf->prevDisplayedGPSFixType != gpsFixType){
 			switch (gpsFixType){
+			case GPSFixType_Unknown:
 			case GPSFixType_NoFix:
 			default:
 				if (LedDriver_OnLed(pSelf->pGPSLedDriver) != LedDriver_Status_OK){

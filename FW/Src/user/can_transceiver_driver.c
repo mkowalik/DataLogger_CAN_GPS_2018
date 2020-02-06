@@ -69,7 +69,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 	default:
 		return CANTransceiverDriver_Status_IncorrectCANBitrateValueError;
 	}
-	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, prescalerValue, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){//TODO pass proper prescaller
+	if ((ret = CANTransceiverDriver_HALCANInit(pSelf->pHcan, prescalerValue, pCANInstance, CAN_BS1_6TQ, CAN_BS2_1TQ)) != CANTransceiverDriver_Status_OK){
 		return ret;
 	}
 
@@ -100,8 +100,6 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 }
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTransceiverDriver_TypeDef* pSelf, uint16_t* pFilters, uint16_t filtersNumber){
-
-	//TODO zrobic obsluge wiekszej ilosci filtrow niz 14*4
 
 	CAN_FilterTypeDef filterConfig;
 

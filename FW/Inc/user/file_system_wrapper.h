@@ -38,9 +38,14 @@ typedef enum {
 	FileSystemWrapper_Status_Error
 } FileSystemWrapper_Status_TypeDef;
 
+typedef enum {
+	FileSystemWrapper_State_NotInitialized = 0,
+	FileSystemWrapper_State_Initialized
+} FileSystemWrapper_State_TypeDef;
+
 typedef struct {
-	volatile FATFS		sFatFS;
-	volatile uint8_t	bInitialized;
+	volatile FATFS								sFatFS;
+	volatile FileSystemWrapper_State_TypeDef	state;
 } FileSystemWrapper_TypeDef;
 
 typedef struct {

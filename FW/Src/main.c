@@ -189,7 +189,8 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
 #ifdef  USE_FULL_ASSERT
-	GPSDriver_test();
+	GPSDriver_UnitTests();
+	CANData_UnitTests();
 #endif
 
   /* USER CODE END SysInit */
