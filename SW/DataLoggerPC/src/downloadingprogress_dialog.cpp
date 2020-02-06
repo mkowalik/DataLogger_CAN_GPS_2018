@@ -10,8 +10,7 @@ FilesDownloadDialog::FilesDownloadDialog(QWidget *parent) :
     ui(new Ui::FilesDownloadDialog)
 {
     ui->setupUi(this);
-    ui->filesListWidget->clear();
-    ui->progressBar->setValue(0);
+    cleanUp();
 }
 
 void FilesDownloadDialog::updateProgressBar(int progressBarValue){
@@ -40,10 +39,19 @@ void FilesDownloadDialog::downloadingComplete(){
 
 void FilesDownloadDialog::convertingThreadStarted(){
     ui->progressBar->setValue(0);
+    ui->filesListWidget->clear();
     ui->downloadingLabel->setText(startingString);
     ui->closeCancelButtonBox->button(QDialogButtonBox::Close)->setEnabled(false);
     ui->closeCancelButtonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
+}
+
+void FilesDownloadDialog::cleanUp()
+{
+    ui->progressBar->setValue(0);
     ui->filesListWidget->clear();
+    ui->downloadingLabel->setText("");
+    ui->closeCancelButtonBox->button(QDialogButtonBox::Close)->setEnabled(true);
+    ui->closeCancelButtonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
 }
 
 FilesDownloadDialog::~FilesDownloadDialog(){

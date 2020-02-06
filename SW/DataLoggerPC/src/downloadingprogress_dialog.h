@@ -23,6 +23,7 @@ public slots:
     void errorInLastFile(QString reasonDescription);
     void downloadingComplete();
     void convertingThreadStarted();
+    void cleanUp();
 };
 
 #endif // FILESDOWNLOAD_DIALOG_H

@@ -166,6 +166,7 @@ void DownloadDataSDDialog::on_convertSelectedButton_clicked()
         }
 
         convertFileThread->cancelExecution();
+        filesDownloadDialog->cleanUp();
     } catch (const std::logic_error& e){
         QMessageBox::warning(this, "Error", e.what());
     } catch (const std::exception& e){

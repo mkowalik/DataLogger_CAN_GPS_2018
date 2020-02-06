@@ -8,9 +8,9 @@ class ValueType : public WritableToBin, public ReadableFromBin {
 private:
     union ByteValueType {
         struct {
-            unsigned char _unused : 6;
             unsigned char isBigEndian : 1;
             unsigned char isSigned : 1;
+            unsigned char _unused : 6;
         } s;
         unsigned char b;
     } byteValue;
