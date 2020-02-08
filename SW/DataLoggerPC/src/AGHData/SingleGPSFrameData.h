@@ -28,11 +28,9 @@ private:
     FixedPoint	 horizontalPrecision;//< GPGSA
     FixedPoint	 verticalPrecision; //< GPGSA
 
-    const RawDataParser& dataParser;
-
     static const int GPS_FIXED_POINT_FRACTIONAL_BITS = 12;
 public:
-    SingleGPSFrameData(unsigned int msTime, const RawDataParser& dataParser);
+    SingleGPSFrameData(unsigned int msTime, ReadingClass& reader);
 
     unsigned int getMsTime() const;
     tm           getGpsDateTime() const;

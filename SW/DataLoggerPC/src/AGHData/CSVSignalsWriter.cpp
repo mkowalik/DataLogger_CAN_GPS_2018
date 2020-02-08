@@ -12,14 +12,18 @@ CSVSignalsWriter::CSVSignalsWriter (char decimalSeparator, const Config* pConfig
     }
 }
 
-void CSVSignalsWriter::writeSingleRow(unsigned int msTime, map<const ConfigFrame*, const SingleCANFrameData*>& actualCANFramesToWrite, const SingleGPSFrameData* actualGPSValue) {
+void CSVSignalsWriter::writeSingleRow(unsigned int msTime,
+                                      const map<const ConfigFrame*, const SingleCANFrameData*>& actualCANFramesToWriteMap,
+                                      const CANErrorCode canErrorCode,
+                                      const SingleGPSFrameData* pActualGPSValue)
+{
 
     writer.write_int_to_string(msTime, false);
     writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
     for (const ConfigSignal* pSignal: this->columsOrderVector){
-        if (actualCANFramesToWrite.find(pSignal->getParentFrame()) != actualCANFramesToWrite.end()){
-            const SingleCANFrameData* pActualFrame = actualCANFramesToWrite.at(pSignal->getParentFrame());
+        if (actualCANFramesToWriteMap.find(pSignal->getParentFrame()) != actualCANFramesToWriteMap.end()){
+            const SingleCANFrameData* pActualFrame = actualCANFramesToWriteMap.at(pSignal->getParentFrame());
             if (pSignal->getDivider() != 1){
                 writer.write_double_to_string(pSignal->getSymbolicValueFromFramePayload(pActualFrame->getRawData()), CSVSignalsWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
             } else {
@@ -29,58 +33,63 @@ void CSVSignalsWriter::writeSingleRow(unsigned int msTime, map<const ConfigFrame
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     }
 
+    if (!canErrorCode.noError()){
+        writer.write_string(errorCodeToString(canErrorCode), false);
+    }
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
+
     if (this->pConfig->getGPSFrequency() != Config::EnGPSFrequency::freq_GPS_OFF){
 
-        if (actualGPSValue != nullptr){
-            writer.write_int_to_string(actualGPSValue->getGpsDateTime().tm_year, false, 4);
+        if (pActualGPSValue != nullptr){
+            writer.write_int_to_string(pActualGPSValue->getGpsDateTime().tm_year, false, 4);
             writer.write_string("-", false);
-            writer.write_int_to_string(actualGPSValue->getGpsDateTime().tm_mon, false, 2);
+            writer.write_int_to_string(pActualGPSValue->getGpsDateTime().tm_mon, false, 2);
             writer.write_string("-", false);
-            writer.write_int_to_string(actualGPSValue->getGpsDateTime().tm_mday, false, 2);
+            writer.write_int_to_string(pActualGPSValue->getGpsDateTime().tm_mday, false, 2);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_int_to_string(actualGPSValue->getGpsDateTime().tm_hour, false, 2);
+        if (pActualGPSValue != nullptr){
+            writer.write_int_to_string(pActualGPSValue->getGpsDateTime().tm_hour, false, 2);
             writer.write_string(":", false);
-            writer.write_int_to_string(actualGPSValue->getGpsDateTime().tm_min, false, 2);
+            writer.write_int_to_string(pActualGPSValue->getGpsDateTime().tm_min, false, 2);
             writer.write_string(":", false);
-            writer.write_int_to_string(actualGPSValue->getGpsDateTime().tm_sec, false, 2);
+            writer.write_int_to_string(pActualGPSValue->getGpsDateTime().tm_sec, false, 2);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getLongitude().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getLongitude().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getLatitude().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getLatitude().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_int_to_string(actualGPSValue->getNSatellites(), false);
+        if (pActualGPSValue != nullptr){
+            writer.write_int_to_string(pActualGPSValue->getNSatellites(), false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getAltitude().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getAltitude().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getSpeed().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getSpeed().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getTrackAngle().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getTrackAngle().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            switch(actualGPSValue->getFixType()){
+        if (pActualGPSValue != nullptr){
+            switch(pActualGPSValue->getFixType()){
             case SingleGPSFrameData::EnGPSFixType::Fix_NoFix:
                 writer.write_string("No fix", false);
                 break;
@@ -94,13 +103,13 @@ void CSVSignalsWriter::writeSingleRow(unsigned int msTime, map<const ConfigFrame
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getHorizontalPrecision().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getHorizontalPrecision().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 
-        if (actualGPSValue != nullptr){
-            writer.write_double_to_string(actualGPSValue->getVerticalPrecision().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+        if (pActualGPSValue != nullptr){
+            writer.write_double_to_string(pActualGPSValue->getVerticalPrecision().getDoubleVal(), CSVWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     }
@@ -110,11 +119,14 @@ void CSVSignalsWriter::writeSingleRow(unsigned int msTime, map<const ConfigFrame
 
 void CSVSignalsWriter::writeHeaderRow(){
 
-    writer.write_string("time [ms];", false);
+    writer.write_string("time [ms]", false);
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     for (const ConfigSignal* pSignal : this->columsOrderVector){
         writer.write_string(pSignal->getSignalName() + " [" + pSignal->getUnitName() + "]", false);
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     }
+    writer.write_string("CAN Bus Error", false);
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     if (this->pConfig->getGPSFrequency() != Config::EnGPSFrequency::freq_GPS_OFF){
         writer.write_string("gps date[YYYY-MM-DD]", false);
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);

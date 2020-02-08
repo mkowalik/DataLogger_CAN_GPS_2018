@@ -13,6 +13,7 @@ SOURCES +=  tst_singlecanframedata.cpp \
     ../src/AGHConfig/ValueType.cpp \
     ../src/AGHConfig/ConfigTrigger.cpp \
     ../src/AGHData/CSVSignalsWriter.cpp \
+    ../src/AGHData/CSVWriter.cpp \
     ../src/AGHData/CSVWriterEventMode.cpp \
     ../src/AGHData/CSVWriterFrameByFrame.cpp \
     ../src/AGHData/CSVWriterStaticFreq.cpp \
@@ -22,7 +23,8 @@ SOURCES +=  tst_singlecanframedata.cpp \
     ../src/AGHUtils/FixedPoint.cpp \
     ../src/AGHUtils/RawDataParser.cpp \
     ../src/AGHUtils/ReadingClass.cpp \
-    ../src/AGHUtils/WritingClass.cpp
+    ../src/AGHUtils/WritingClass.cpp \
+    ../src/AGHData/SingleCANErrorData.cpp
 
 HEADERS += \
     ../src/AGHConfig/Config.h \
@@ -42,7 +44,8 @@ HEADERS += \
     ../src/AGHUtils/FixedPoint.h \
     ../src/AGHUtils/RawDataParser.h \
     ../src/AGHUtils/ReadingClass.h \
-    ../src/AGHUtils/WritingClass.h
+    ../src/AGHUtils/WritingClass.h \
+    ../src/AGHData/SingleCANErrorData.h
 
 
 qnx: target.path = /tmp/$${TARGET}/bin

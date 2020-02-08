@@ -14,6 +14,8 @@ void CSVWriterFrameByFrame::writeHeaderRow() {
         writer.write_int_to_string(i, false);
         writer.write_string("];", false);
     }
+    writer.write_string("CAN Error type", false);
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     if (this->pConfig->getGPSFrequency() != Config::EnGPSFrequency::freq_GPS_OFF){
         writer.write_string("gps date[YYYY-MM-DD]", false);
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
@@ -65,6 +67,18 @@ void CSVWriterFrameByFrame::writeTimeAndId(const SingleGPSFrameData* pGpsFrame){
     writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 }
 
+void CSVWriterFrameByFrame::writeTimeAndId(const SingleCANErrorData* pCANError){
+    if (pCANError == nullptr){
+        throw std::invalid_argument("Null pointer in argument.");
+    }
+
+    writer.write_int_to_string(pCANError->getMsTime(), false);
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
+
+    writer.write_string("CAN BUS ERROR", false);
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
+}
+
 void CSVWriterFrameByFrame::writeCANData(const SingleCANFrameData* pCanFrame){
 
     if (pCanFrame != nullptr){
@@ -81,6 +95,14 @@ void CSVWriterFrameByFrame::writeCANData(const SingleCANFrameData* pCanFrame){
     for (unsigned int i = (pCanFrame!=nullptr) ? pCanFrame->getFrameDLC() : 0; i < ConfigFrame::MAX_DLC_VALUE; i++){
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     }
+}
+
+void CSVWriterFrameByFrame::writeCANError(const SingleCANErrorData* pCanError){
+
+    if (pCanError != nullptr){
+        writer.write_string(errorCodeToString(pCanError->getErrorCode()), false);
+    }
+    writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
 }
 
 void CSVWriterFrameByFrame::writeGPSData(const SingleGPSFrameData* actualGPSValue){
@@ -167,37 +189,33 @@ void CSVWriterFrameByFrame::writeToCSV(const DataFileClass &dataFileClass){
 
     this->writeHeaderRow();
 
-    vector<SingleCANFrameData*>::const_iterator canIt = dataFileClass.getCANData().cbegin();
-    vector<SingleGPSFrameData*>::const_iterator gpsIt = dataFileClass.getGPSData().cbegin();
+    map<const ConfigFrame*, const SingleCANFrameData*> actualCANFramesValues;
+    CANErrorCode actualCANError;
 
-    while (true){
+    for (const DataFileClass::DataRow& row : dataFileClass.getDataRows()){
 
-        if ((canIt == dataFileClass.getCANData().cend()) && (gpsIt == dataFileClass.getGPSData().cend())) {
-            break;
-        }
-
-        if ((canIt != dataFileClass.getCANData().cend() && gpsIt != dataFileClass.getGPSData().cend() && ((*canIt)->getMsTime() <= (*gpsIt)->getMsTime())) ||
-            (canIt != dataFileClass.getCANData().cend() && gpsIt == dataFileClass.getGPSData().cend())) {
-
-            this->writeTimeAndId(*canIt);
-            this->writeCANData(*canIt);
+        if (std::holds_alternative<const SingleCANFrameData*>(row)) {
+            actualCANFramesValues[std::get<const SingleCANFrameData*>(row)->getFrameConfig()] = std::get<const SingleCANFrameData*>(row);
+            this->writeTimeAndId(std::get<const SingleCANFrameData*>(row));
+            this->writeCANData(std::get<const SingleCANFrameData*>(row));
+            this->writeCANError(nullptr);
             this->writeGPSData(nullptr);
-
             writer.write_string("\r\n", false);
-            ++canIt;
-            continue;
-        }
 
-        if ((canIt != dataFileClass.getCANData().cend() && gpsIt != dataFileClass.getGPSData().cend() && ((*gpsIt)->getMsTime() <= (*canIt)->getMsTime())) ||
-            (canIt == dataFileClass.getCANData().cend() && gpsIt != dataFileClass.getGPSData().cend())) {
-
-            this->writeTimeAndId(*gpsIt);
+        } else if (std::holds_alternative<const SingleCANErrorData*>(row)) {
+            this->writeTimeAndId(std::get<const SingleCANErrorData*>(row));
             this->writeCANData(nullptr);
-            this->writeGPSData(*gpsIt);
-
+            this->writeCANError(std::get<const SingleCANErrorData*>(row));
+            this->writeGPSData(nullptr);
             writer.write_string("\r\n", false);
-            ++gpsIt;
-            continue;
+
+        } else if (std::holds_alternative<const SingleGPSFrameData*>(row)) {
+            this->writeTimeAndId(std::get<const SingleGPSFrameData*>(row));
+            this->writeCANData(nullptr);
+            this->writeCANError(nullptr);
+            this->writeGPSData(std::get<const SingleGPSFrameData*>(row));
+            writer.write_string("\r\n", false);
+
         }
     }
 }

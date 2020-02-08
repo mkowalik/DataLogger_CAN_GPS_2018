@@ -2,16 +2,18 @@
 
 using namespace std;
 
-SingleGPSFrameData::SingleGPSFrameData(unsigned int msTime, const RawDataParser& dataParser) :
+SingleGPSFrameData::SingleGPSFrameData(unsigned int msTime, ReadingClass& reader) :
     msTime(msTime),
+    gpsDateTime(),
     longitude(GPS_FIXED_POINT_FRACTIONAL_BITS),
     latitude(GPS_FIXED_POINT_FRACTIONAL_BITS),
     altitude(GPS_FIXED_POINT_FRACTIONAL_BITS),
     speed(GPS_FIXED_POINT_FRACTIONAL_BITS),
     trackAngle(GPS_FIXED_POINT_FRACTIONAL_BITS),
     horizontalPrecision(GPS_FIXED_POINT_FRACTIONAL_BITS),
-    verticalPrecision(GPS_FIXED_POINT_FRACTIONAL_BITS),
-    dataParser(dataParser) {
+    verticalPrecision(GPS_FIXED_POINT_FRACTIONAL_BITS)
+{
+    readFromBin(reader);
 }
 
 

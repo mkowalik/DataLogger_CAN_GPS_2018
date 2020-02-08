@@ -34,7 +34,7 @@ void ConfigFrame::addSignal(ConfigSignal* pSignal){
         throw std::invalid_argument("Signal with given ID already exists in the frame.");
     }
     if (pParentConfig->isMaxSignalsNumber()){
-        throw std::invalid_argument("Max number of signals had reached.");
+        throw std::invalid_argument("Max number of signals is reached.");
     }
     signalsVector.insert(lowerBoundSignalConstIterator(pSignal->getSignalID()), pSignal);
 }

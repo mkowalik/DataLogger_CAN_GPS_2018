@@ -6,11 +6,13 @@
 #include <set>
 #include <ctime>
 
-#include "AGHUtils/ReadingClass.h"
 #include "AGHConfig/Config.h"
+
+#include "AGHUtils/ReadingClass.h"
 #include "AGHUtils/RawDataParser.h"
 #include "AGHUtils/FixedPoint.h"
 #include "AGHData/SingleCANFrameData.h"
+#include "AGHData/SingleCANErrorData.h"
 #include "AGHData/SingleGPSFrameData.h"
 #include "AGHData/WritableToCSV.h"
 
@@ -19,14 +21,17 @@ using namespace std;
 /*****      DataFileClass       *****/
 
 class DataFileClass : public ReadableFromBin {
+public:
+    using DataRow = std::variant<const SingleCANFrameData*, const SingleCANErrorData*, const SingleGPSFrameData*>;
 private:
-    static constexpr int        GPS_DATA_ID = 0x800;
-    static constexpr int        DEFAULT_CHANNEL_RAW_VALUE = 0;
-    static constexpr double     DEFAULT_CHANNEL_TRANSFORMED_VALUE = 0.0;
-    Config*                     pConfig;
-    tm                          startTime;
-    vector<SingleCANFrameData*> pCanDataVector;
-    vector<SingleGPSFrameData*> pGpsDataVector;
+    static constexpr unsigned int   GPS_DATA_ID                       = 0x800;
+    static constexpr unsigned int   CAN_ERROR_ID                      = 0x801;
+    static constexpr unsigned int   DEFAULT_CHANNEL_RAW_VALUE         = 0;
+    static constexpr double         DEFAULT_CHANNEL_TRANSFORMED_VALUE = 0.0;
+    Config*                         pConfig;
+    tm                              startTime;
+
+    vector<DataRow>                 dataRows;
 
     void freeMemory();
 
@@ -39,12 +44,11 @@ public:
 
     virtual void                        readFromBin(ReadingClass& reader) override;
 
-    const vector<SingleCANFrameData*>&  getCANData() const {return this->pCanDataVector;}
-    const vector<SingleGPSFrameData*>&  getGPSData() const {return this->pGpsDataVector;}
+    const vector<DataRow>&              getDataRows() const {return this->dataRows;}
 
     virtual void                        write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator, bool writeOnlyChangedValues);
 
-    ~DataFileClass();
+    ~DataFileClass() override;
 
 };
 

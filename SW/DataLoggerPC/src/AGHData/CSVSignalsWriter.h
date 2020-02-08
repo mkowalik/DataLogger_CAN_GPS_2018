@@ -8,18 +8,6 @@
 
 using namespace std;
 
-/*class CSVColumn {
-private:
-    string id;
-    string firstRow;
-public:
-    CSVColumn (string id, string firstRow) : id(id), firstRow(firstRow){ }
-    string getId() {return id;}
-    string getFirstRow() {return firstRow;}
-};*/
-
-
-
 class CSVSignalsWriter : public CSVWriter
 {
 private:
@@ -30,7 +18,10 @@ private:
 protected:
                  CSVSignalsWriter (char decimalSeparator, const Config* pConfig, WritingClass& writer);
     virtual void writeHeaderRow();
-    virtual void writeSingleRow(unsigned int msTime, map<const ConfigFrame*, const SingleCANFrameData*>& actualCANFramesToWrite, const SingleGPSFrameData* actualGPSValue);
+    virtual void writeSingleRow(unsigned int msTime,
+                                const map<const ConfigFrame*, const SingleCANFrameData*>& actualCANFramesToWriteMap,
+                                const CANErrorCode canErrorCode,
+                                const SingleGPSFrameData* pActualGPSValue);
 public:
     virtual ~CSVSignalsWriter() override;
 };

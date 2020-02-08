@@ -50,7 +50,9 @@ SOURCES += \
     AGHConfig/ConfigTrigger.cpp \
     trigger_dialog.cpp \
     frame_dialog.cpp \
-    signal_dialog.cpp
+    signal_dialog.cpp \
+    AGHData/SingleCANErrorData.cpp \
+    AGHData/CSVWriter.cpp
 
 
 HEADERS += \
@@ -80,7 +82,8 @@ HEADERS += \
     AGHConfig/ConfigTrigger.h \
     trigger_dialog.h \
     frame_dialog.h \
-    signal_dialog.h
+    signal_dialog.h \
+    AGHData/SingleCANErrorData.h
 
 FORMS += \
     downloaddatasd_dialog.ui \

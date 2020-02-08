@@ -13,9 +13,11 @@ private:
     void            writeHeaderRow();
 
     void            writeTimeAndId(const SingleCANFrameData* pCanFrame);
+    void            writeTimeAndId(const SingleCANErrorData* pCANError);
     void            writeTimeAndId(const SingleGPSFrameData* pGpsFrame);
 
     void            writeCANData(const SingleCANFrameData* pCanFrame);
+    void            writeCANError(const SingleCANErrorData* pCanError);
     void            writeGPSData(const SingleGPSFrameData* pGpsFrame);
 public:
                     CSVWriterFrameByFrame(char decimalSeparator, const Config* pConfig, WritingClass& writer);

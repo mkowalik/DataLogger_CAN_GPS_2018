@@ -11,50 +11,27 @@ void CSVWriterEventMode::writeToCSV(const DataFileClass& dataFileClass){
 
     this->writeHeaderRow();
 
-    vector<SingleCANFrameData*>::const_iterator canIt = dataFileClass.getCANData().cbegin();
-    vector<SingleGPSFrameData*>::const_iterator gpsIt = dataFileClass.getGPSData().cbegin();
-
-    vector<SingleCANFrameData*>::const_iterator nextCanIt = canIt;
-    vector<SingleGPSFrameData*>::const_iterator nextGpsIt = gpsIt;
-
     map<const ConfigFrame*, const SingleCANFrameData*> actualCANFramesValues;
-    SingleGPSFrameData* actualGPSValue = nullptr;
+    CANErrorCode actualCANError;
 
-    unsigned int actualMsTime = 0;
+    for (const DataFileClass::DataRow& row : dataFileClass.getDataRows()){
 
-    while (true){
+        if (std::holds_alternative<const SingleCANFrameData*>(row)) {
+            actualCANFramesValues[std::get<const SingleCANFrameData*>(row)->getFrameConfig()] = std::get<const SingleCANFrameData*>(row);
+            this->writeSingleRow(std::get<const SingleCANFrameData*>(row)->getMsTime(), actualCANFramesValues, actualCANError, nullptr);
 
-        if (canIt == dataFileClass.getCANData().cend() && gpsIt == dataFileClass.getGPSData().cend()){
-            break;
+        } else if (std::holds_alternative<const SingleCANErrorData*>(row)) {
+            actualCANError = std::get<const SingleCANErrorData*>(row)->getErrorCode();
+            this->writeSingleRow(std::get<const SingleCANErrorData*>(row)->getMsTime(), actualCANFramesValues, actualCANError, nullptr);
+
+        } else if (std::holds_alternative<const SingleGPSFrameData*>(row)) {
+            this->writeSingleRow(std::get<const SingleGPSFrameData*>(row)->getMsTime(), actualCANFramesValues, actualCANError, std::get<const SingleGPSFrameData*>(row));
         }
-
-        if (canIt != dataFileClass.getCANData().cend()) {
-            if ( (gpsIt == dataFileClass.getGPSData().cend()) || ((*canIt)->getMsTime() <= (*gpsIt)->getMsTime()) ) {
-                actualCANFramesValues[(*canIt)->getFrameConfig()] = *canIt;
-                actualMsTime = (*canIt)->getMsTime();
-                nextCanIt = canIt+1;
-            }
-        }
-
-        if (gpsIt != dataFileClass.getGPSData().cend()){
-            if ((canIt != dataFileClass.getCANData().cend() && ((*gpsIt)->getMsTime() <= (*canIt)->getMsTime())) ||
-                (canIt == dataFileClass.getCANData().cend()) ) {
-                actualGPSValue = *gpsIt;
-                actualMsTime = (*gpsIt)->getMsTime();
-                nextGpsIt = gpsIt+1;
-            }
-        }
-
-
-        this->writeSingleRow(actualMsTime, actualCANFramesValues, actualGPSValue);
-
-        canIt = nextCanIt;
-        gpsIt = nextGpsIt;
 
         if (this->writeValuesForChangedSignalsOnly){
             actualCANFramesValues.clear();
-            actualGPSValue = nullptr;
         }
+        actualCANError.clear();
     }
 }
 

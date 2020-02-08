@@ -42,12 +42,13 @@ private:
     static constexpr EnGPSFrequency DEFAULT_GPS_FREQUENCY   = EnGPSFrequency::freq_10_Hz;
     static constexpr unsigned int   DEFAULT_RTC_CONFIGURATION_FRAME_ID = 0x7FF;
 
-    static constexpr unsigned int   START_CONFIG_TRIGGERS_MAX_NUMBER    = 5;
-    static constexpr unsigned int   STOP_CONFIG_TRIGGERS_MAX_NUMBER     = 5;
+    static constexpr unsigned int   START_CONFIG_TRIGGERS_MAX_NUMBER    = 5U;
+    static constexpr unsigned int   STOP_CONFIG_TRIGGERS_MAX_NUMBER     = 5U;
 
-    static constexpr unsigned int   MAX_SIGNALS_NUMBER = 256;
+    static constexpr unsigned int   MAX_FRAMES_NUMBER = (14U * 4U);
+    static constexpr unsigned int   MAX_SIGNALS_NUMBER = 256U;
 
-    static constexpr unsigned int   CONFIG_NAME_LENGTH = 20;
+    static constexpr unsigned int   CONFIG_NAME_LENGTH = 20U;
 
     Config();
 
@@ -94,7 +95,7 @@ public:
 
     //<----- Access to frames definitions ----->/
 
-    int                     getNumOfFrames() const;
+    unsigned int            getFramesNumber() const;
     bool                    framesEmpty() const;
 
     bool                    hasFrameWithId(unsigned int frameID) const;

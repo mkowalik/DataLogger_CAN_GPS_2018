@@ -30,6 +30,9 @@ void Config::addFrame(ConfigFrame* pFrame){
     if (pFrame->getFrameID() == getRTCConfigurationFrameID()){
         throw std::invalid_argument("Frame ID and RTC configuration Frame ID must not be equal.");
     }
+    if (getFramesNumber() >= MAX_FRAMES_NUMBER){
+        throw std::invalid_argument("Max number of frames is reached.");
+    }
     framesVector.emplace(lowerBoundFrameConstIterator(pFrame->getFrameID()), pFrame);
 }
 
@@ -201,8 +204,8 @@ unsigned int Config::getRTCConfigurationFrameID() const {
 
 //<----- Access to frames definitions ----->/
 
-int Config::getNumOfFrames() const {
-    return static_cast<int>(framesVector.size());
+unsigned int Config::getFramesNumber() const {
+    return static_cast<unsigned int>(framesVector.size());
 }
 
 bool Config::framesEmpty() const {
@@ -453,7 +456,7 @@ void Config::writeToBin(WritingClass& writer){
     writer.write_uint8(static_cast<unsigned int>(getGPSFrequency()));
     writer.write_uint16(getRTCConfigurationFrameID());
 
-    writer.write_uint16(static_cast<unsigned int>(getNumOfFrames()));
+    writer.write_uint16(static_cast<unsigned int>(getFramesNumber()));
     for (auto& pFrame : framesVector){
         pFrame->writeToBin(writer);
     }

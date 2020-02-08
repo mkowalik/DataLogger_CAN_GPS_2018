@@ -1,9 +1,11 @@
-#include "DataFileClass.h"
-#include "AGHUtils/RawDataParser.h"
-#include "CSVWriter.h"
-#include "CSVWriterEventMode.h"
-#include "CsvWriterStaticFreq.h"
-#include "CSVWriterFrameByFrame.h"
+
+#include "AGHData/DataFileClass.h"
+
+#include "AGHData/CSVWriter.h"
+#include "AGHData/CSVWriterEventMode.h"
+#include "AGHData/CSVWriterStaticFreq.h"
+#include "AGHData/CSVWriterFrameByFrame.h"
+
 #include <cstring>
 
 using namespace std;
@@ -15,22 +17,17 @@ void DataFileClass::freeMemory(){
     delete (this->pConfig);
     this->pConfig = nullptr;
 
-    for (SingleCANFrameData* pElem : this->pCanDataVector){
-        delete pElem;
+    for (DataRow pElem : this->dataRows){
+        std::visit([](auto arg){delete arg;}, pElem);
     }
-    this->pCanDataVector.clear();
-    this->pCanDataVector.shrink_to_fit();
-
-    for (SingleGPSFrameData* pElem : this->pGpsDataVector){
-        delete pElem;
-    }
-    this->pGpsDataVector.clear();
-    this->pGpsDataVector.shrink_to_fit();
+    dataRows.clear();
+    dataRows.shrink_to_fit();
 }
 
 //<----- DataFileClass public methods ----->//
 
-DataFileClass::DataFileClass() : pConfig(nullptr), pCanDataVector(), pGpsDataVector() {
+DataFileClass::DataFileClass() : pConfig(nullptr), dataRows()
+{
     this->startTime.tm_min   = 0;
     this->startTime.tm_sec   = 0;
     this->startTime.tm_min   = 0;
@@ -68,13 +65,15 @@ void DataFileClass::readFromBin(ReadingClass& reader) {
         unsigned int msTime   = reader.reading_uint32();
         unsigned int frameID  = reader.reading_uint16();
         if (frameID == DataFileClass::GPS_DATA_ID){
-            SingleGPSFrameData* pDataRow = new SingleGPSFrameData(msTime, reader.get_dataParser());
-            pDataRow->readFromBin(reader);
-            this->pGpsDataVector.push_back(pDataRow);
+            SingleGPSFrameData* pGPSDataRow = new SingleGPSFrameData(msTime, reader);
+            dataRows.push_back(DataRow(pGPSDataRow));
+        } else if (frameID == DataFileClass::CAN_ERROR_ID){
+            SingleCANErrorData* pCanErrorRow = new SingleCANErrorData(msTime, reader);
+            dataRows.push_back(DataRow(pCanErrorRow));
         } else {
             ConfigFrame* pConfigFrame = pConfig->getFrameWithId(frameID);
-            SingleCANFrameData* pDataRow = new SingleCANFrameData(msTime, pConfigFrame, reader);
-            pCanDataVector.push_back(pDataRow);
+            SingleCANFrameData* pCANDataRow = new SingleCANFrameData(msTime, pConfigFrame, reader);
+            dataRows.push_back(DataRow(pCANDataRow));
         }
     }
 }
