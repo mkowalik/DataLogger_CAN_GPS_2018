@@ -167,6 +167,28 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartRec
 	return UartReceiverStartTerm_Status_OK;
 }
 
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_clear(volatile UartReceiverStartTerm_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return UartReceiverStartTerm_Status_NullPointerError;
+	}
+
+	if (pSelf->state == UartReceiverStartTerm_State_UnInitialized || pSelf->state == UartReceiverStartTerm_State_DuringInit){
+		return UartReceiverStartTerm_Status_UnInitializedErrror;
+	}
+
+	if (FIFOMultiread_clear(&(pSelf->rxFifo)) != FIFOMultiread_Status_OK){
+		return UartReceiverStartTerm_Status_FIFOError;
+	}
+
+	for (uint16_t i=0; i<UART_RECEIVER_START_TERM_MAX_READERS_NUMBER; i++){
+		pSelf->receivedStartSignsNumber[i]				= 0;
+		pSelf->receivedTerminationSignsNumber[i]		= 0;
+	}
+
+	return UartReceiverStartTerm_Status_OK;
+}
+
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(
 		volatile UartReceiverStartTerm_TypeDef* pSelf,
 		UartReceiverStartTerm_ReaderIterator_TypeDef readerIt,

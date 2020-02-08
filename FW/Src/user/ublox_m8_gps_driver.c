@@ -248,6 +248,9 @@ GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile Ublox8MGPSDriver_TypeDe
 	if (UartReceiverStartTerm_stop(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
 		return GPSDriver_Status_UartReceiverStartTermError;
 	}
+	if (UartReceiverStartTerm_clear(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
+		return GPSDriver_Status_UartReceiverStartTermError;
+	}
 	pSelf->state = GPSDriver_State_Initialized;
 
 	return GPSDriver_Status_OK;
@@ -329,7 +332,7 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile Ublox8MGPSDriver_TypeD
 					ABS_DIFF(pSelf->gpgsaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY &&
 					ABS_DIFF(pSelf->gpggaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp) < GPS_NMEA_MAX_SENTENCES_DELAY){
 
-				pSelf->partialGPSData.msTime		= MIN(pSelf->gpggaPartialSegmentTimestamp, MIN(pSelf->gpgsaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp));
+				pSelf->partialGPSData.msTimestamp		= MIN(pSelf->gpggaPartialSegmentTimestamp, MIN(pSelf->gpgsaPartialSegmentTimestamp, pSelf->gprmcPartialSegmentTimestamp));
 
 				*pRetGPSData 						= pSelf->partialGPSData;
 
@@ -374,7 +377,13 @@ GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSe
 		if (UartReceiverStartTerm_stop(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
 			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
 		}
+		if (UartReceiverStartTerm_clear(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
+			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
+		}
 		if (UartReceiverStartLength_stop(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
+			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
+		}
+		if (UartReceiverStartLength_clear(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
 			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
 		}
 	}
@@ -520,6 +529,9 @@ static GPSDriver_Status_TypeDef _GPSDriver_sendUBXCommandAndWaitForResponse(
 	}
 
 	if (UartReceiverStartLength_stop(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
+		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartLengthError : ret;
+	}
+	if (UartReceiverStartLength_clear(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
 		ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartLengthError : ret;
 	}
 

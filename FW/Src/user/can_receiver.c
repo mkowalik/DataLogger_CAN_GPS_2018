@@ -13,8 +13,8 @@
 CANReceiver_Status_TypeDef	CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
 void						CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf);
 
-CANReceiver_Status_TypeDef	CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANTransceiverDriver_ErrorCode_TypeDef errorcode);
-void						CANReceiver_ErrorCallbackWrapper(CANTransceiverDriver_ErrorCode_TypeDef errorcode, void* pVoidSelf);
+CANReceiver_Status_TypeDef	CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANErrorCode_TypeDef errorcode);
+void						CANReceiver_ErrorCallbackWrapper(CANErrorCode_TypeDef errorcode, void* pVoidSelf);
 
 //< ----- Public functions ----- >//
 
@@ -33,8 +33,16 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 		return CANReceiver_Status_FIFOError;
 	}
 
+	if (FIFOQueue_init(&(pSelf->canErrorsFIFO), pSelf->aReceiverCANErrorsQueueBuffer, sizeof(CANErrorData_TypeDef), CAN_ERROR_QUEUE_SIZE) != FIFO_Status_OK){
+		return CANReceiver_Status_FIFOError;
+	}
+
 	for (uint16_t i=0; i<CAN_MSG_QUEUE_SIZE; i++){
 		pSelf->aReceiverQueueBuffer[i] = (CANData_TypeDef){0};
+	}
+
+	for (uint16_t i=0; i<CAN_ERROR_QUEUE_SIZE; i++){
+		pSelf->aReceiverCANErrorsQueueBuffer[i] = (CANErrorData_TypeDef){0};
 	}
 
 	uint16_t aFilterIDsTab[pConfig->numOfFrames];
@@ -94,9 +102,7 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 		return CANReceiver_Status_NotRunningError;
 	}
 
-	FIFO_Status_TypeDef fifoStatus = FIFO_Status_OK;
-
-	fifoStatus = FIFOQueue_dequeue(&(pSelf->framesFIFO), pRetMsg);
+	FIFO_Status_TypeDef fifoStatus = FIFOQueue_dequeue(&(pSelf->framesFIFO), pRetMsg);
 
 	switch(fifoStatus){
 		case FIFO_Status_OK:
@@ -115,7 +121,36 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 	return CANReceiver_Status_OK;
 }
 
-CANReceiver_Status_TypeDef CANReceiver_reset(CANReceiver_TypeDef* pSelf){
+CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(CANReceiver_TypeDef* pSelf, CANErrorData_TypeDef* pRetErrorData){
+
+	if ((pSelf == NULL) || (pRetErrorData == NULL)){
+		return CANReceiver_Status_NullPointerError;
+	}
+
+	if (pSelf->state != CANReceiver_State_Running){
+		return CANReceiver_Status_NotRunningError;
+	}
+
+	FIFO_Status_TypeDef fifoStatus = FIFOQueue_dequeue(&(pSelf->canErrorsFIFO), pRetErrorData);
+
+	switch(fifoStatus){
+		case FIFO_Status_OK:
+			return CANReceiver_Status_OK;
+		case FIFO_Status_Empty:
+			return CANReceiver_Status_Empty;
+		case FIFO_Status_Full:
+			return CANReceiver_Status_FullFIFOError;
+		case FIFO_Status_DequeueInProgressError:
+		case FIFO_Status_UnInitializedError:
+		case FIFO_Status_Error:
+		default:
+			return CANReceiver_Status_FIFOError;
+	}
+
+	return CANReceiver_Status_OK;
+}
+
+CANReceiver_Status_TypeDef CANReceiver_clear(CANReceiver_TypeDef* pSelf){
 
 	if (pSelf == NULL){
 		return CANReceiver_Status_NullPointerError;
@@ -129,6 +164,10 @@ CANReceiver_Status_TypeDef CANReceiver_reset(CANReceiver_TypeDef* pSelf){
 		return CANReceiver_Status_FIFOError;
 	}
 
+	if (FIFOQueue_clear(&(pSelf->canErrorsFIFO)) != FIFO_Status_OK){
+		return CANReceiver_Status_FIFOError;
+	}
+
 	return CANReceiver_Status_OK;
 }
 
@@ -136,17 +175,18 @@ CANReceiver_Status_TypeDef CANReceiver_reset(CANReceiver_TypeDef* pSelf){
 
 CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData){
 
-	if (MSTimerDriver_getMSTime(pSelf->pMsTimerDriverHandler, &pData->msTime) != MSTimerDriver_Status_OK){ //TODO trzeba tu wykorzystac ten czas z CANa
+	if (MSTimerDriver_getMSTime(pSelf->pMsTimerDriverHandler, &pData->msTimestamp) != MSTimerDriver_Status_OK){ //TODO trzeba tu wykorzystac ten czas z CANa
 		return CANReceiver_Status_MSTimerError;
 	}
 
-	FIFO_Status_TypeDef fifoStatus;
-	if ((fifoStatus = FIFOQueue_enqueue(&(pSelf->framesFIFO), pData)) != FIFO_Status_OK){
+	FIFO_Status_TypeDef fifoStatus = FIFOQueue_enqueue(&(pSelf->framesFIFO), pData);
+	if (fifoStatus == FIFO_Status_OK){
+		return CANReceiver_Status_OK;
+	} else if (fifoStatus == FIFO_Status_Full){
+		return CANReceiver_Status_FullFIFOError;
+	} else {
 		return CANReceiver_Status_FIFOError;
 	}
-
-	return CANReceiver_Status_OK;
-
 }
 
 void CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf){
@@ -157,24 +197,31 @@ void CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf){
 
 }
 
-CANReceiver_Status_TypeDef CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANTransceiverDriver_ErrorCode_TypeDef errorcode){
+CANReceiver_Status_TypeDef CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANErrorCode_TypeDef errorcode){
 
-	uint32_t msTime;
-	if (MSTimerDriver_getMSTime(pSelf->pMsTimerDriverHandler, &msTime) != MSTimerDriver_Status_OK){ //TODO trzeba tu wykorzystac ten czas z CANa
-		return CANReceiver_Status_MSTimerError;
-	}
+	if (errorcode != CANErrorCode_None){
 
-	if (errorcode != CANTransceiverDriver_ErrorCode_None){
+		CANErrorData_TypeDef errData = {
+				.errorCode = errorcode
+		};
 
-		//TODO
+		if (MSTimerDriver_getMSTime(pSelf->pMsTimerDriverHandler, &(errData.msTimestamp)) != MSTimerDriver_Status_OK){ //TODO trzeba tu wykorzystac ten czas z CANa
+			return CANReceiver_Status_MSTimerError;
+		}
 
+		FIFO_Status_TypeDef fifoStatus = FIFOQueue_enqueue(&(pSelf->canErrorsFIFO), &errData);
+		if ((fifoStatus == FIFO_Status_OK) || (fifoStatus == FIFO_Status_Full)){ //< Ignoring FIFO_Status_Full error on purpose.
+			return CANReceiver_Status_OK;
+		} else {
+			return CANReceiver_Status_FIFOError;
+		}
 	}
 
 	return CANReceiver_Status_OK;
 
 }
 
-void CANReceiver_ErrorCallbackWrapper(CANTransceiverDriver_ErrorCode_TypeDef errorcode, void* pVoidSelf){
+void CANReceiver_ErrorCallbackWrapper(CANErrorCode_TypeDef errorcode, void* pVoidSelf){
 
 	if (CANReceiver_ErrorCallback((CANReceiver_TypeDef*) pVoidSelf, errorcode) != CANReceiver_Status_OK){
 		Error_Handler();

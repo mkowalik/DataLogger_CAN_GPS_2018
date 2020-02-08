@@ -16,18 +16,13 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_init(volatile FIFOMultiread_TypeDef* 
 		return FIFOMultiread_Status_Error;
 	}
 
-	if (pSelf->state != FIFOMultiread_State_UnInitialized){
-		return FIFOMultiread_Status_Error;
-	}
-
-	pSelf->pTabPtr						= pTabPtrArg;
-	pSelf->elementSize					= elementSize;
-	pSelf->queueLength					= queueSize;
-	pSelf->tailIndex					= 0;
-	pSelf->operationInProgressCounter	= 0;
+	pSelf->pTabPtr							= pTabPtrArg;
+	pSelf->elementSize						= elementSize;
+	pSelf->queueLength						= queueSize;
+	pSelf->tailIndex						= 0;
+	pSelf->notEnqueueOperationInProgress	= false;
 
 	for (uint8_t i = 0; i < FIFO_MULTIREAD_MAX_READERS; i++){
-//		pSelf->elementsNumber[i]	= 0;
 		pSelf->headIndex[i]			= 0;
 		pSelf->readerActive[i]		= false;
 	}
@@ -39,62 +34,89 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_init(volatile FIFOMultiread_TypeDef* 
 	return FIFOMultiread_Status_OK;
 }
 
-FIFOMultiread_Status_TypeDef FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReader_TypeDef* pReaderHandler){
+FIFOMultiread_Status_TypeDef FIFOMultiread_clear(volatile FIFOMultiread_TypeDef* pSelf){
 
-	if (pSelfFifo == NULL || pReaderHandler == NULL){
+	if (pSelf == NULL){
 		return FIFOMultiread_Status_Error;
 	}
 
-	if (pSelfFifo->state == FIFOMultiread_State_UnInitialized){
+	if (pSelf->state == FIFOMultiread_State_UnInitialized){
 		return FIFOMultiread_Status_UnInitializedError;
 	}
 
-	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
+	if (pSelf->notEnqueueOperationInProgress != false){
+		return FIFOMultiread_Status_OperationInProgressError;
+	}
 
-	++(pSelfFifo->operationInProgressCounter); //TODO make atomic
+	pSelf->tailIndex					= 0;
+	for (uint8_t i = 0; i < FIFO_MULTIREAD_MAX_READERS; i++){
+		pSelf->headIndex[i]			= 0;
+	}
+
+	return FIFOMultiread_Status_OK;
+}
+
+FIFOMultiread_Status_TypeDef FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelf, volatile FIFOMultireadReader_TypeDef* pReaderHandler){
+
+	if (pSelf == NULL || pReaderHandler == NULL){
+		return FIFOMultiread_Status_Error;
+	}
+
+	if (pSelf->state == FIFOMultiread_State_UnInitialized){
+		return FIFOMultiread_Status_UnInitializedError;
+	}
+
+	if (pSelf->notEnqueueOperationInProgress){
+		return FIFOMultiread_Status_OperationInProgressError;
+	}
+	pSelf->notEnqueueOperationInProgress = true; //TODO make atomic
+
+	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
 
 	pReaderHandler->readerId	= FIFO_MULTIREAD_MAX_READERS;
 	for (uint8_t i=0; i<FIFO_MULTIREAD_MAX_READERS; i++){
-		if (pSelfFifo->readerActive[i] == false){
-			pSelfFifo->headIndex[i]		= pSelfFifo->tailIndex;
-			pSelfFifo->readerActive[i]	= true;
-//			pSelfFifo->elementsNumber	= pSelfFifo->globalEnqueuedElementsNumber;
+		if (pSelf->readerActive[i] == false){
+			pSelf->headIndex[i]		= pSelf->tailIndex;
+			pSelf->readerActive[i]	= true;
 			pReaderHandler->readerId	= i;
 			break;
 		}
 	}
 
 	if (pReaderHandler->readerId != FIFO_MULTIREAD_MAX_READERS){
-		pReaderHandler->pFifoHandler	= pSelfFifo;
+		pReaderHandler->pFifoHandler	= pSelf;
 	} else {
 		ret = FIFOMultiread_Status_TooManyRegisteredReadedsError;
 	}
 
-	--(pSelfFifo->operationInProgressCounter); //TODO make atomic
+	pSelf->notEnqueueOperationInProgress = false; //TODO make atomic
 	return ret;
 }
 
-FIFOMultiread_Status_TypeDef FIFOMultiread_unregisterReader(volatile FIFOMultireadReader_TypeDef* pReaderHandler){
+FIFOMultiread_Status_TypeDef FIFOMultiread_unregisterReader(volatile FIFOMultireadReader_TypeDef* pSelfReader){
 
-	if (pReaderHandler == NULL){
+	if (pSelfReader == NULL){
 		return FIFOMultiread_Status_Error;
 	}
 
-	if (pReaderHandler->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
+	if (pSelfReader->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
 		return FIFOMultiread_Status_UnInitializedError;
 	}
 
 	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
 
-	++(pReaderHandler->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	if (pSelfReader->pFifoHandler->notEnqueueOperationInProgress){
+		return FIFOMultiread_Status_OperationInProgressError;
+	}
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = true; //TODO make atomic
 
-	if (pReaderHandler->pFifoHandler->readerActive[pReaderHandler->readerId] == false){
+	if (pSelfReader->pFifoHandler->readerActive[pSelfReader->readerId] == false){
 		ret = FIFOMultiread_Status_NotRegisteredReaderError;
 	}
 
-	pReaderHandler->pFifoHandler->readerActive[pReaderHandler->readerId] = false;
+	pSelfReader->pFifoHandler->readerActive[pSelfReader->readerId] = false;
 
-	--(pReaderHandler->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = false; //TODO make atomic
 	return ret;
 }
 
@@ -118,7 +140,7 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDe
 	}
 	pSelf->tailIndex++;
 
-	if (pSelf->operationInProgressCounter == 0 && pSelf->tailIndex > (pSelf->queueLength * FIFO_MULTIREAD_RESIZE_FACTOR)){
+	if ((pSelf->notEnqueueOperationInProgress == false) && (pSelf->tailIndex > (pSelf->queueLength * FIFO_MULTIREAD_RESIZE_FACTOR))){
 		for (uint8_t i = 0; i < FIFO_MULTIREAD_MAX_READERS; i++){
 			if (pSelf->readerActive[i]){
 				pSelf->headIndex[i] -= pSelf->queueLength;
@@ -128,7 +150,6 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDe
 	}
 
 	return FIFOMultiread_Status_OK;
-
 }
 
 bool FIFOMultiread_isFull(volatile FIFOMultiread_TypeDef* volatile pSelf){
@@ -141,8 +162,6 @@ bool FIFOMultiread_isFull(volatile FIFOMultiread_TypeDef* volatile pSelf){
 		return FIFOMultiread_Status_UnInitializedError;
 	}
 
-	++(pSelf->operationInProgressCounter); //TODO make atomic
-
 	bool ret = false;
 
 	for (uint8_t i = 0; i < FIFO_MULTIREAD_MAX_READERS; i++){
@@ -152,7 +171,6 @@ bool FIFOMultiread_isFull(volatile FIFOMultiread_TypeDef* volatile pSelf){
 		}
 	}
 
-	--(pSelf->operationInProgressCounter); //TODO make atomic
 	return ret;
 }
 
@@ -166,119 +184,124 @@ bool FIFOMultiread_isEmpty(volatile FIFOMultireadReader_TypeDef* volatile pSelf)
 		return true;
 	}
 
-	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
-
 	if (pSelf->pFifoHandler->readerActive[pSelf->readerId] == false){
 		return true;
 	}
 
 	bool ret = false;
-
 	if (pSelf->pFifoHandler->headIndex[pSelf->readerId] == pSelf->pFifoHandler->tailIndex){
 		ret = true;
 	} else {
 		ret = false;
 	}
 
-	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
 	return ret;
 }
 
-FIFOMultiread_Status_TypeDef FIFOMultiread_dequeue(volatile FIFOMultireadReader_TypeDef* volatile pSelf, volatile void* volatile pRetElement){
+FIFOMultiread_Status_TypeDef FIFOMultiread_dequeue(volatile FIFOMultireadReader_TypeDef* volatile pSelfReader, volatile void* volatile pRetElement){
 
 
-	if (pSelf == NULL || pRetElement == NULL){
+	if (pSelfReader == NULL || pRetElement == NULL){
 		return FIFOMultiread_Status_Error;
 	}
 
-	if (pSelf->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
+	if (pSelfReader->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
 		return FIFOMultiread_Status_UnInitializedError;
 	}
 
 	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
 
-	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	if (pSelfReader->pFifoHandler->notEnqueueOperationInProgress){
+		return FIFOMultiread_Status_OperationInProgressError;
+	}
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = true; //TODO make atomic
 
-	if (pSelf->pFifoHandler->readerActive[pSelf->readerId] == false){
+	if (pSelfReader->pFifoHandler->readerActive[pSelfReader->readerId] == false){
 		ret = FIFOMultiread_Status_NotRegisteredReaderError;
 	} else {
 
-		if (FIFOMultiread_isEmpty(pSelf)){
+		if (FIFOMultiread_isEmpty(pSelfReader)){
 			ret = FIFOMultiread_Status_Empty;
 		} else {
 
-			volatile void* pFrom = ((uint8_t*)pSelf->pFifoHandler->pTabPtr) + ((pSelf->pFifoHandler->headIndex[pSelf->readerId] % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
-			for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
+			volatile void* pFrom = ((uint8_t*)pSelfReader->pFifoHandler->pTabPtr) + ((pSelfReader->pFifoHandler->headIndex[pSelfReader->readerId] % pSelfReader->pFifoHandler->queueLength) * pSelfReader->pFifoHandler->elementSize);
+			for (uint16_t i=0; i<pSelfReader->pFifoHandler->elementSize; i++){
 				*(((uint8_t*)pRetElement) + i) = *(((uint8_t*)pFrom) + i);
 			}
 
-			pSelf->pFifoHandler->headIndex[pSelf->readerId]++;
+			pSelfReader->pFifoHandler->headIndex[pSelfReader->readerId]++;
 		}
 	}
 
-	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = false; //TODO make atomic
 	return ret;
 }
 
-FIFOMultiread_Status_TypeDef FIFOMultiread_lastElement(volatile FIFOMultireadReader_TypeDef* volatile pSelf, volatile void* volatile pRetElement){
+FIFOMultiread_Status_TypeDef FIFOMultiread_lastElement(volatile FIFOMultireadReader_TypeDef* volatile pSelfReader, volatile void* volatile pRetElement){
 
-	if (pSelf == NULL || pRetElement == NULL){
+	if (pSelfReader == NULL || pRetElement == NULL){
 		return FIFOMultiread_Status_Error;
 	}
 
-	if (pSelf->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
+	if (pSelfReader->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
 		return FIFOMultiread_Status_UnInitializedError;
 	}
 
-	if (pSelf->pFifoHandler->readerActive[pSelf->readerId] == false){
+	if (pSelfReader->pFifoHandler->readerActive[pSelfReader->readerId] == false){
 		return FIFOMultiread_Status_NotRegisteredReaderError;
 	}
 
 	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
 
-	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	if (pSelfReader->pFifoHandler->notEnqueueOperationInProgress){
+		return FIFOMultiread_Status_OperationInProgressError;
+	}
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = true; //TODO make atomic
 
-	if (FIFOMultiread_isEmpty(pSelf)){
+	if (FIFOMultiread_isEmpty(pSelfReader)){
 		ret = FIFOMultiread_Status_Empty;
 	} else {
-		volatile void* pFrom = ((uint8_t*)pSelf->pFifoHandler->pTabPtr) + ((pSelf->pFifoHandler->headIndex[pSelf->readerId] % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
-		for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
+		volatile void* pFrom = ((uint8_t*)pSelfReader->pFifoHandler->pTabPtr) + ((pSelfReader->pFifoHandler->headIndex[pSelfReader->readerId] % pSelfReader->pFifoHandler->queueLength) * pSelfReader->pFifoHandler->elementSize);
+		for (uint16_t i=0; i<pSelfReader->pFifoHandler->elementSize; i++){
 			*(((uint8_t*)pRetElement) + i) = *(((uint8_t*)pFrom) + i);
 		}
 	}
 
-	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = false; //TODO make atomic
 	return ret;
 }
 
-FIFOMultiread_Status_TypeDef FIFOMultiread_elementValOnPosition(volatile FIFOMultireadReader_TypeDef* volatile pSelf, uint16_t positionIndex, volatile void* volatile pRetElement){
+FIFOMultiread_Status_TypeDef FIFOMultiread_elementValOnPosition(volatile FIFOMultireadReader_TypeDef* volatile pSelfReader, uint16_t positionIndex, volatile void* volatile pRetElement){
 
-	if (pSelf == NULL || pRetElement == NULL){
+	if (pSelfReader == NULL || pRetElement == NULL){
 		return FIFOMultiread_Status_Error;
 	}
 
-	if (pSelf->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
+	if (pSelfReader->pFifoHandler->state == FIFOMultiread_State_UnInitialized){
 		return FIFOMultiread_Status_UnInitializedError;
 	}
 
 	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
 
 	uint16_t size = 0;
-	if ((ret = FIFOMultiread_elementsNumber(pSelf, &size)) != FIFOMultiread_Status_OK){
+	if ((ret = FIFOMultiread_elementsNumber(pSelfReader, &size)) != FIFOMultiread_Status_OK){
 		return ret;
 	}
 	if (positionIndex >= size){
 		return FIFOMultiread_Status_InvalidPositionArgumentError;
 	}
 
-	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	if (pSelfReader->pFifoHandler->notEnqueueOperationInProgress){
+		return FIFOMultiread_Status_OperationInProgressError;
+	}
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = true; //TODO make atomic
 
-	volatile void* pFrom = ((uint8_t*)pSelf->pFifoHandler->pTabPtr) + (((pSelf->pFifoHandler->headIndex[pSelf->readerId] + positionIndex) % pSelf->pFifoHandler->queueLength) * pSelf->pFifoHandler->elementSize);
-	for (uint16_t i=0; i<pSelf->pFifoHandler->elementSize; i++){
+	volatile void* pFrom = ((uint8_t*)pSelfReader->pFifoHandler->pTabPtr) + (((pSelfReader->pFifoHandler->headIndex[pSelfReader->readerId] + positionIndex) % pSelfReader->pFifoHandler->queueLength) * pSelfReader->pFifoHandler->elementSize);
+	for (uint16_t i=0; i<pSelfReader->pFifoHandler->elementSize; i++){
 		*(((uint8_t*)pRetElement) + i) = *(((uint8_t*)pFrom) + i);
 	}
 
-	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
+	pSelfReader->pFifoHandler->notEnqueueOperationInProgress = false; //TODO make atomic
 	return ret;
 }
 
@@ -294,13 +317,10 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_elementsNumber(volatile FIFOMultiread
 
 	FIFOMultiread_Status_TypeDef ret = FIFOMultiread_Status_OK;
 
-	++(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
-
 	if (pSelf->pFifoHandler->readerActive[pSelf->readerId] == false){
 		ret = FIFOMultiread_Status_NotRegisteredReaderError;
 	} else {
 		*retElementsNumber = pSelf->pFifoHandler->tailIndex - pSelf->pFifoHandler->headIndex[pSelf->readerId];
 	}
-	--(pSelf->pFifoHandler->operationInProgressCounter); //TODO make atomic
 	return ret;
 }

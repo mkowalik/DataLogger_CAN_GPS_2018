@@ -86,6 +86,10 @@ DataSaver_Status_TypeDef DataSaver_startAGHLogFile(DataSaver_TypeDef* pSelf, Dat
 
 DataSaver_Status_TypeDef DataSaver_endAGHLogFile(DataSaver_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return DataSaver_Status_NullPointerError;
+	}
+
 	if (pSelf->state != DataSaver_State_OpenedFile){
 		return DataSaver_Status_FileNotOpenedError;
 	}
@@ -104,16 +108,19 @@ DataSaver_Status_TypeDef DataSaver_endAGHLogFile(DataSaver_TypeDef* pSelf){
 	pSelf->state = DataSaver_State_Initialized;
 
 	return DataSaver_Status_OK;
-
 }
 
 DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData){
+
+	if ((pSelf == NULL) || (pData == NULL)){
+		return DataSaver_Status_NullPointerError;
+	}
 
 	if (pSelf->state != DataSaver_State_OpenedFile){
 		return DataSaver_Status_FileNotOpenedError;
 	}
 
-	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTime) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTimestamp) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pData->ID) != FileWritingBuffer_Status_OK){
@@ -136,13 +143,44 @@ DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANDat
 	return DataSaver_Status_OK;
 }
 
-DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData){
+DataSaver_Status_TypeDef DataSaver_writeCANError (DataSaver_TypeDef* pSelf, CANErrorData_TypeDef* pCANErrData){
+
+	if ((pSelf == NULL) || (pCANErrData == NULL)){
+		return DataSaver_Status_NullPointerError;
+	}
 
 	if (pSelf->state != DataSaver_State_OpenedFile){
 		return DataSaver_Status_FileNotOpenedError;
 	}
 
-	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTime) != FileWritingBuffer_Status_OK){
+	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pCANErrData->msTimestamp) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, CONFIG_CAN_ERROR_FRAME_ID) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, pCANErrData->errorCode) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	return DataSaver_Status_OK;
+}
+
+DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData){
+
+	if ((pSelf == NULL) || (pData == NULL)){
+		return DataSaver_Status_NullPointerError;
+	}
+
+	if (pSelf->state != DataSaver_State_OpenedFile){
+		return DataSaver_Status_FileNotOpenedError;
+	}
+
+	while (pData->msTimestamp == 0){}
+
+	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTimestamp) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}
 	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, CONFIG_GPS_FRAME_ID) != FileWritingBuffer_Status_OK){

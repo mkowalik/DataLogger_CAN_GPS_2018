@@ -210,14 +210,14 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_idleState(ActionScheduler
 
 		//< ----- CAN msg handling ----- >//
 		CANData_TypeDef msg;
-		CANReceiver_Status_TypeDef status = CANReceiver_pullLastFrame(pSelf->pCANReceiver, &msg);
+		CANReceiver_Status_TypeDef statusMsg = CANReceiver_pullLastFrame(pSelf->pCANReceiver, &msg);
 
-		if (status == CANReceiver_Status_OK){
+		if (statusMsg == CANReceiver_Status_OK){
 
 			ret =	_AcionScheduler_StartLogTrigger(pSelf, &msg);
 			if (ret == ActionScheduler_Status_OK){
 				pSelf->state = ActionScheduler_State_LogInit;
-				pSelf->logStartMsTime = msg.msTime;
+				pSelf->logStartMsTime = msg.msTimestamp;
 				return ActionScheduler_Status_OK;
 			} else if (ret != ActionScheduler_Status_NoTrigger){
 				return ret;
@@ -226,24 +226,26 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_idleState(ActionScheduler
 			if ((ret = _ActionScheduler_SetDateAndTimeFrameHandler(pSelf, &msg)) != ActionScheduler_Status_OK){
 				return ret;
 			}
-		} else if (status == CANReceiver_Status_Empty) {
+		} else if (statusMsg == CANReceiver_Status_Empty) {
 			break;
 		} else { //CANReceiver_Status_Error:
 			return ActionScheduler_Status_CANReceiverError;
 		}
-
-		ret = _ActionScheduler_checkFramesTimeout(pSelf, pSelf->pConfig->startLogTriggers, pSelf->startTriggerFrameTimeout, pSelf->pConfig->startLogTriggersNumber);
-		if (ret == ActionScheduler_Status_OK){
-			uint32_t msTime = 0;
-			if (MSTimerDriver_getMSTime(pSelf->pMSTimerDriver, &msTime) != MSTimerDriver_Status_OK){
-				return ActionScheduler_Status_MSTimerError;
-			}
-			pSelf->state = ActionScheduler_State_LogInit;
-			pSelf->logStartMsTime = msTime;
-		} else if (ret != ActionScheduler_Status_NoTrigger){
-			return ret;
-		}
 	}
+
+	ret = _ActionScheduler_checkFramesTimeout(pSelf, pSelf->pConfig->startLogTriggers, pSelf->startTriggerFrameTimeout, pSelf->pConfig->startLogTriggersNumber);
+	if (ret == ActionScheduler_Status_OK){
+		pSelf->state = ActionScheduler_State_LogInit;
+
+		uint32_t msTime = 0;
+		if (MSTimerDriver_getMSTime(pSelf->pMSTimerDriver, &msTime) != MSTimerDriver_Status_OK){
+			return ActionScheduler_Status_MSTimerError;
+		}
+		pSelf->logStartMsTime = msTime;
+	} else if (ret != ActionScheduler_Status_NoTrigger){
+		return ret;
+	}
+
 	return ActionScheduler_Status_OK;
 }
 
@@ -284,67 +286,113 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_loggingState(ActionSchedu
 
 	ActionScheduler_Status_TypeDef	ret 		= ActionScheduler_Status_OK;
 
-	bool							breakFlagCAN = false;
-	bool							breakFlagGPS = false;
+	#define	DATA_NOT_PRESENT	UINT32_MAX
 
-	while(breakFlagCAN == false || breakFlagGPS == false) {
+	uint32_t	canMsgTimestamp		= DATA_NOT_PRESENT;
+	uint32_t	canErrTimestamp		= DATA_NOT_PRESENT;
+	uint32_t	gpsDataTimestamp	= DATA_NOT_PRESENT;
+
+	CANReceiver_Status_TypeDef	canStatus		= CANReceiver_Status_OK;
+	CANReceiver_Status_TypeDef	canErrStatus	= CANReceiver_Status_OK;
+	GPSDriver_Status_TypeDef	gpsStatus		= GPSDriver_Status_OK;
+
+	CANData_TypeDef			canMsg = {0};
+	CANErrorData_TypeDef	canErr = {0};
+	GPSData_TypeDef			gpsData = {0};
+
+	while(true) {
 
 		//< ----- CAN msg handling ----- >//
-		CANData_TypeDef msg;
-		CANReceiver_Status_TypeDef canStatus = CANReceiver_pullLastFrame(pSelf->pCANReceiver, &msg);
+		if (canMsgTimestamp == DATA_NOT_PRESENT){
+			canStatus		= CANReceiver_pullLastFrame(pSelf->pCANReceiver, &canMsg);
+			if (canStatus == CANReceiver_Status_OK){
+				canMsgTimestamp	= canMsg.msTimestamp;
+			} else if (canStatus == CANReceiver_Status_Empty) {
+				canMsgTimestamp = DATA_NOT_PRESENT;
+			} else { //CANReceiver_Status_Error:
+				return ActionScheduler_Status_CANReceiverError;
+			}
+		}
+		//< ----- CAN Errors data handling ----- >//
+		if (canErrTimestamp == DATA_NOT_PRESENT){
+			canErrStatus	= CANReceiver_pullLastCANBusError(pSelf->pCANReceiver, &canErr);
+			if (canErrStatus == CANReceiver_Status_OK){
+				canErrTimestamp = canErr.msTimestamp;
+			} else if (canErrStatus == CANReceiver_Status_Empty){
+				canErrTimestamp = DATA_NOT_PRESENT;
+			} else {
+				return ActionScheduler_Status_Error;
+			}
+		}
+		//< ----- GPS data handling ----- >//
+		if ((pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF) && (gpsDataTimestamp == DATA_NOT_PRESENT)){
+			gpsStatus		= GPSDriver_pullLastFrame(pSelf->pGPSDriver, &gpsData);
+			if (gpsStatus == GPSDriver_Status_OK){
+				gpsDataTimestamp = gpsData.msTimestamp;
+			} else if (gpsStatus == GPSDriver_Status_Empty){
+				gpsDataTimestamp = DATA_NOT_PRESENT;
+			} else {
+				return ActionScheduler_Status_Error;
+			}
+		}
 
-		if (canStatus == CANReceiver_Status_OK){
+		//< ----- Loop stop condition ----- >//
+		if ((canMsgTimestamp == DATA_NOT_PRESENT) && (canErrTimestamp == DATA_NOT_PRESENT) && (gpsDataTimestamp == DATA_NOT_PRESENT)){
+			break;
+		}
 
-			ret =	_AcionScheduler_StopLogTrigger(pSelf, &msg);
+		//< ----- CAN msg saving ----- >//
+		if ((canMsgTimestamp <= canErrTimestamp) && (canMsgTimestamp <= gpsDataTimestamp)){
+
+			if ((ret = _ActionScheduler_SetDateAndTimeFrameHandler(pSelf, &canMsg)) != ActionScheduler_Status_OK){
+				return ret;
+			}
+
+			ret =	_AcionScheduler_StopLogTrigger(pSelf, &canMsg);
 			if (ret == ActionScheduler_Status_OK){
 				pSelf->state = ActionScheduler_State_LogClose;
-				breakFlagCAN = true;
 			} else if (ret != ActionScheduler_Status_NoTrigger){
 				return ret;
 			}
 
-			if (DataSaver_writeCANData(pSelf->pDataSaver, &msg) != DataSaver_Status_OK){
+			canMsg.msTimestamp -= pSelf->logStartMsTime;
+			if (DataSaver_writeCANData(pSelf->pDataSaver, &canMsg) != DataSaver_Status_OK){
 				return ActionScheduler_Status_DataSaverError;
 			}
 
-			if ((ret = _ActionScheduler_SetDateAndTimeFrameHandler(pSelf, &msg)) != ActionScheduler_Status_OK){
-				return ret;
+			canMsgTimestamp = DATA_NOT_PRESENT;
+			continue;
+		}
+
+		//< ----- CAN err saving ----- >//
+		if ((canErrTimestamp <= canMsgTimestamp) && (canErrTimestamp <= gpsDataTimestamp)){
+			canErr.msTimestamp -= pSelf->logStartMsTime;
+			if (DataSaver_writeCANError(pSelf->pDataSaver, &canErr) != DataSaver_Status_OK){
+				return ActionScheduler_Status_DataSaverError;
 			}
 
-		} else if (canStatus == CANReceiver_Status_Empty) {
-			breakFlagCAN = true;
-		} else { //CANReceiver_Status_Error:
-			return ActionScheduler_Status_CANReceiverError;
+			canErrTimestamp = DATA_NOT_PRESENT;
+			continue;
 		}
 
-		//< ----- Timeout on messages (trigger) handling ----- >//
-		ret = _ActionScheduler_checkFramesTimeout(pSelf, pSelf->pConfig->stopLogTriggers, pSelf->stopTriggerFrameTimeout, pSelf->pConfig->stopLogTriggersNumber);
-		if (ret == ActionScheduler_Status_OK){
-			pSelf->state = ActionScheduler_State_LogClose;
-			breakFlagCAN = true;
-		} else if (ret != ActionScheduler_Status_NoTrigger){
-			return ret;
-		}
-
-		//< ----- GPS data handling ----- >//
-		if (pSelf->pConfig->gpsFrequency != Config_GPSFrequency_OFF){
-
-			GPSData_TypeDef gpsData;
-			GPSDriver_Status_TypeDef gpsStatus = GPSDriver_pullLastFrame(pSelf->pGPSDriver, &gpsData);
-
-			if (gpsStatus == GPSDriver_Status_OK){
-				if (DataSaver_writeGPSData(pSelf->pDataSaver, &gpsData) != DataSaver_Status_OK){
-					return ActionScheduler_Status_DataSaverError;
-				}
-				breakFlagGPS = false;
-			} else if (gpsStatus == GPSDriver_Status_Empty){
-				breakFlagGPS = true;
-			} else {
-				return ActionScheduler_Status_Error;
+		//< ----- GPS data saving ----- >//
+		if ((gpsDataTimestamp <= canMsgTimestamp) && (gpsDataTimestamp <= canErrTimestamp)){
+			gpsData.msTimestamp -= pSelf->logStartMsTime;
+			if (DataSaver_writeGPSData(pSelf->pDataSaver, &gpsData) != DataSaver_Status_OK){
+				return ActionScheduler_Status_DataSaverError;
 			}
-		} else {
-			breakFlagGPS = true;
+
+			gpsDataTimestamp = DATA_NOT_PRESENT;
+			continue;
 		}
+	}
+
+	//< ----- Check timeout on messages (trigger) handling ----- >//
+	ret = _ActionScheduler_checkFramesTimeout(pSelf, pSelf->pConfig->stopLogTriggers, pSelf->stopTriggerFrameTimeout, pSelf->pConfig->stopLogTriggersNumber);
+	if (ret == ActionScheduler_Status_OK){
+		pSelf->state = ActionScheduler_State_LogClose;
+	} else if (ret != ActionScheduler_Status_NoTrigger){
+		return ret;
 	}
 
 	return ActionScheduler_Status_OK;
@@ -365,10 +413,9 @@ static ActionScheduler_Status_TypeDef _ActionScheduler_logCloseState(ActionSched
 		return ActionScheduler_Status_Error;
 	}
 
-	if (CANReceiver_reset(pSelf->pCANReceiver) != CANReceiver_Status_OK){
+	if (CANReceiver_clear(pSelf->pCANReceiver) != CANReceiver_Status_OK){
 		return ActionScheduler_Status_CANReceiverError;
 	}
-
 	pSelf->state = ActionScheduler_State_Idle;
 
 	return ActionScheduler_Status_OK;

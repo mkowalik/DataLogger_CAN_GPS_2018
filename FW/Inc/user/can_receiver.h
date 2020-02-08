@@ -14,7 +14,8 @@
 #ifndef CAN_RECEIVER_DRIVER_H_
 #define CAN_RECEIVER_DRIVER_H_
 
-#define CAN_MSG_QUEUE_SIZE	4096
+#define CAN_MSG_QUEUE_SIZE		4096
+#define CAN_ERROR_QUEUE_SIZE	512
 
 typedef enum {
 	CANReceiver_Status_OK = 0,
@@ -38,10 +39,12 @@ typedef enum {
 } CANReceiver_State_TypeDef;
 
 typedef struct {
-	CANData_TypeDef 				aReceiverQueueBuffer [CAN_MSG_QUEUE_SIZE];
-	FIFOQueue_TypeDef				framesFIFO;
+	volatile CANData_TypeDef 				aReceiverQueueBuffer [CAN_MSG_QUEUE_SIZE];
+	volatile FIFOQueue_TypeDef				framesFIFO;
+	volatile CANErrorData_TypeDef			aReceiverCANErrorsQueueBuffer [CAN_ERROR_QUEUE_SIZE];
+	volatile FIFOQueue_TypeDef				canErrorsFIFO;
 	CANTransceiverDriver_TypeDef*	pCanTransceiverHandler;
-	MSTimerDriver_TypeDef*			pMsTimerDriverHandler;
+	volatile MSTimerDriver_TypeDef* volatile			pMsTimerDriverHandler;
 	Config_TypeDef*					pConfig;
 	CANReceiver_State_TypeDef		state;
 } CANReceiver_TypeDef;
@@ -49,6 +52,7 @@ typedef struct {
 CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler);
 CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf);
 CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg);
-CANReceiver_Status_TypeDef CANReceiver_reset(CANReceiver_TypeDef* pSelf);
+CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(CANReceiver_TypeDef* pSelf, CANErrorData_TypeDef* pRetErrorData);
+CANReceiver_Status_TypeDef CANReceiver_clear(CANReceiver_TypeDef* pSelf);
 
 #endif /* CAN_RECEIVER_DRIVER_H_ */

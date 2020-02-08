@@ -64,6 +64,7 @@ typedef enum {
 typedef uint16_t UartReceiverStartTerm_ReaderIterator_TypeDef;
 
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_init(UartReceiverStartTerm_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver);
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_clear(volatile UartReceiverStartTerm_TypeDef* pSelf);
 
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_registerReader(volatile UartReceiverStartTerm_TypeDef* pSelf, volatile UartReceiverStartTerm_ReaderIterator_TypeDef* pRetReaderIterator,
 		uint8_t startSign, uint8_t terminationSign);

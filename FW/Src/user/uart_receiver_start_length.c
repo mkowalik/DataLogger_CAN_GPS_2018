@@ -33,11 +33,12 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiver
 	}
 
 	for (uint16_t i=0; i<UART_RECEIVER_START_LENGTH_MAX_READERS_NUMBER; i++){
-		pSelf->readerRegistered[i]		= false;
-		pSelf->startPatternLength[i]	= 0;
-		pSelf->sentenceLength[i]		= 0;
+		pSelf->readerRegistered[i]			= false;
+		pSelf->startPatternLength[i]		= 0;
+		pSelf->sentenceLength[i]			= 0;
 		memset((void*)&(pSelf->startPattern[i]), 0, sizeof(pSelf->startPattern[0][0]) * UART_RECEIVER_START_LENGTH_MAX_START_PATERN_LENGTH);
 		memset((void*)&(pSelf->startLengthFIFOReaders[i]), 0, sizeof(FIFOMultireadReader_TypeDef));
+		pSelf->receivedStartSignsNumber[i]	= 0;
 	}
 
 	if (UartDriver_setReceivedByteCallback(pSelf->pUartDriver, _UartReceiverStartLength_receivedByteCallback, (void*)pSelf, &pSelf->uartDriverCallbackIterator) != UartDriver_Status_OK){
@@ -45,6 +46,26 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiver
 	}
 
 	pSelf->state	= UartReceiverStartLength_State_Initialized;
+
+	return UartReceiverStartLength_Status_OK;
+}
+
+UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_clear(volatile UartReceiverStartLength_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return UartReceiverStartLength_Status_NullPointerError;
+	}
+
+	if (pSelf->state == UartReceiverStartLength_State_UnInitialized || pSelf->state == UartReceiverStartLength_State_DuringInit){
+		return UartReceiverStartLength_Status_UnInitializedError;
+	}
+
+	if (FIFOMultiread_clear(&(pSelf->rxFifo)) != FIFOMultiread_Status_OK){
+		return UartReceiverStartLength_Status_FIFOError;
+	}
+	for (uint16_t i=0; i<UART_RECEIVER_START_LENGTH_MAX_READERS_NUMBER; i++){
+		pSelf->receivedStartSignsNumber[i]	= 0;
+	}
 
 	return UartReceiverStartLength_Status_OK;
 }

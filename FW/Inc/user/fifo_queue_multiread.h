@@ -22,6 +22,7 @@ typedef enum {
 	FIFOMultiread_Status_UnInitializedError,
 	FIFOMultiread_Status_NotRegisteredReaderError,
 	FIFOMultiread_Status_InvalidPositionArgumentError,
+	FIFOMultiread_Status_OperationInProgressError,
 	FIFOMultiread_Status_Error
 } FIFOMultiread_Status_TypeDef;
 
@@ -35,12 +36,10 @@ typedef struct {
 	volatile uint8_t						elementSize;
 	volatile uint32_t						queueLength;
 	volatile FIFOMultiread_State_TypeDef	state;
-//	volatile uint16_t						elementsNumber[FIFO_MULTIREAD_MAX_READERS];
 	volatile uint32_t						headIndex[FIFO_MULTIREAD_MAX_READERS];
 	volatile uint32_t						tailIndex;
-//	volatile uint16_t						tailIndex;
 	volatile bool							readerActive[FIFO_MULTIREAD_MAX_READERS];
-	volatile uint16_t						operationInProgressCounter;
+	volatile bool							notEnqueueOperationInProgress;
 } FIFOMultiread_TypeDef;
 
 typedef struct {
@@ -49,6 +48,7 @@ typedef struct {
 } FIFOMultireadReader_TypeDef;
 
 FIFOMultiread_Status_TypeDef	FIFOMultiread_init(volatile FIFOMultiread_TypeDef* pSelf, volatile void* pTabPtrArg, uint8_t elementSize, uint16_t queueSize);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_clear(volatile FIFOMultiread_TypeDef* pSelf);
 FIFOMultiread_Status_TypeDef	FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReader_TypeDef* pReaderHandler);
 FIFOMultiread_Status_TypeDef	FIFOMultiread_unregisterReader(volatile FIFOMultireadReader_TypeDef* pReaderHandler);
 

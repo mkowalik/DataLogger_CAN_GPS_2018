@@ -69,8 +69,6 @@ CANData_Status_TypeDef CANData_GetValueRawOfSignal(const CANData_TypeDef* pData,
 	return CANData_Status_OK;
 }
 
-//TODO przetestowac powyzsza funkcje
-
 #ifdef  USE_FULL_ASSERT
 
 #include <stdbool.h>

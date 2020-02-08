@@ -220,10 +220,7 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (MSTimerDriver_startCounting(&msTimerDriver) != MSTimerDriver_Status_OK){
+  if (MSTimerDriver_init(&msTimerDriver, true) != MSTimerDriver_Status_OK){
 	  Error_Handler();
   }
 
@@ -422,7 +419,7 @@ static void MX_NVIC_Init(void)
 /* USER CODE BEGIN 4 */
 
 void Warning_Handler(char* description){
-
+	UNUSED(description);
 }
 
 static uint16_t errorInCounter = 0;
@@ -444,10 +441,10 @@ void Error_Handler(void)
   while(1)
   {
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
 	  HAL_Delay(75);
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
 	  HAL_Delay(75);
   }
   /* USER CODE END Error_Handler_Debug */

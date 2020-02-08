@@ -25,7 +25,7 @@ static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_H
 	pHcan->Init.TimeSeg1 = timeSeg1;
 	pHcan->Init.TimeSeg2 = timeSeg2;
 	pHcan->Init.TimeTriggeredMode = DISABLE;
-	pHcan->Init.AutoBusOff = DISABLE;
+	pHcan->Init.AutoBusOff = ENABLE;
 	pHcan->Init.AutoWakeUp = ENABLE;
 	pHcan->Init.AutoRetransmission = DISABLE;
 	pHcan->Init.ReceiveFifoLocked = DISABLE;
@@ -137,7 +137,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHand
 	canData.DLC = DLC;
 	canData.ID = ID;
 	memcpy(canData.Data, aData, 8);
-	canData.msTime = timestamp; //TODO !!!!! to jest zle, ale niech bedzie na razie
+	canData.msTimestamp = timestamp; //TODO timestamp powinien byc wziety z kontrolera CAN
 
 	for (uint16_t i=0; i<CAN_MAX_CALLBACK_NUMBER; i++){
 
@@ -174,7 +174,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerReceiveCallback
 
 }
 
-static void checkErrorcode(uint32_t errorcodeHAL, uint32_t errorMask, CANTransceiverDriver_ErrorCode_TypeDef* errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_TypeDef errorTracsceiverMaskOut){
+static void checkHALErrorcode(uint32_t errorcodeHAL, uint32_t errorMask, CANErrorCode_TypeDef* errorcodeTransceiverOut, CANErrorCode_TypeDef errorTracsceiverMaskOut){
 
 	if ((errorcodeHAL & errorMask) != 0){
 		*errorcodeTransceiverOut |= errorTracsceiverMaskOut;
@@ -185,33 +185,32 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CA
 
 	uint32_t errorcodeHAL = HAL_CAN_GetError(pSelf->pHcan);
 
-	CANTransceiverDriver_ErrorCode_TypeDef	errorcodeTransceiverOut = CANTransceiverDriver_ErrorCode_None;
+	CANErrorCode_TypeDef	errorcodeOut = CANErrorCode_None;
 
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_EWG, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_ProtocolErrWarn);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_EPV, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_ErrPassive);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_BOF, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_BusOff);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_STF, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_BitStuffingError);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_FOR, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_FormError);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_ACK, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_ACKError);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_BR,  &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_BitRecessiveError);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_BD,  &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_BitDominantError);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_CRC, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_CRCError);
-	checkErrorcode(errorcodeHAL,
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_EWG, &errorcodeOut, CANErrorCode_ProtocolErrWarn);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_EPV, &errorcodeOut, CANErrorCode_ErrPassive);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_BOF, &errorcodeOut, CANErrorCode_BusOff);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_STF, &errorcodeOut, CANErrorCode_BitStuffingError);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_FOR, &errorcodeOut, CANErrorCode_FormError);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_ACK, &errorcodeOut, CANErrorCode_ACKError);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_BR,  &errorcodeOut, CANErrorCode_BitRecessiveError);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_BD,  &errorcodeOut, CANErrorCode_BitDominantError);
+	checkHALErrorcode(errorcodeHAL, HAL_CAN_ERROR_CRC, &errorcodeOut, CANErrorCode_CRCError);
+	checkHALErrorcode(errorcodeHAL,
 			HAL_CAN_ERROR_RX_FOV0 |
-			HAL_CAN_ERROR_RX_FOV1, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_RxFIFOError);
-	checkErrorcode(errorcodeHAL,
+			HAL_CAN_ERROR_RX_FOV1 |
 			HAL_CAN_ERROR_TX_ALST0 |
 			HAL_CAN_ERROR_TX_TERR0 |
 			HAL_CAN_ERROR_TX_ALST1 |
 			HAL_CAN_ERROR_TX_TERR1 |
 			HAL_CAN_ERROR_TX_ALST2 |
-			HAL_CAN_ERROR_TX_TERR2, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_TxMailboxError);
-	checkErrorcode(errorcodeHAL, HAL_CAN_ERROR_TIMEOUT, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_TimeoutError);
-	checkErrorcode(errorcodeHAL,
 			HAL_CAN_ERROR_NOT_INITIALIZED |
 			HAL_CAN_ERROR_NOT_READY |
 			HAL_CAN_ERROR_NOT_STARTED |
-			HAL_CAN_ERROR_PARAM, &errorcodeTransceiverOut, CANTransceiverDriver_ErrorCode_OtherError);
+			HAL_CAN_ERROR_TX_TERR2, &errorcodeOut, CANErrorCode_TransceiverError);
+	checkHALErrorcode(errorcodeHAL,
+			HAL_CAN_ERROR_TIMEOUT |
+			HAL_CAN_ERROR_PARAM, &errorcodeOut, CANErrorCode_OtherError);
 
 	for (uint16_t i=0; i<CAN_MAX_CALLBACK_NUMBER; i++){
 
@@ -219,7 +218,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CA
 			break;
 		}
 
-		pSelf->pErrorCallbackFunctions[i](errorcodeTransceiverOut, pSelf->pErrorCallbackArguemnts[i]);
+		pSelf->pErrorCallbackFunctions[i](errorcodeOut, pSelf->pErrorCallbackArguemnts[i]);
 	}
 
 	if (HAL_CAN_ResetError(pSelf->pHcan) != HAL_OK){
@@ -230,7 +229,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CA
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerErrorCallbackToCall(CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (uint16_t errorcode, void* arg), void* pArgument){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerErrorCallbackToCall(CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANErrorCode_TypeDef errorcode, void* arg), void* pArgument){
 
 	uint16_t i;
 
