@@ -124,6 +124,10 @@ ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_Ty
 
 ActionScheduler_Status_TypeDef ActionScheduler_thread(ActionScheduler_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return ActionScheduler_Status_NullPointerError;
+	}
+
 	ActionScheduler_Status_TypeDef ret = ActionScheduler_Status_OK;
 	switch (pSelf->state){
 	case ActionScheduler_State_UnInitialized:

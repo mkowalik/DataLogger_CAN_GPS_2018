@@ -8,7 +8,7 @@
 #include "user/can_receiver.h"
 #include "main.h"
 
-//< ----- Private functions prototypes ----- >//
+//< ----- Private functions/IRQ Callbacks prototypes ----- >//
 
 CANReceiver_Status_TypeDef	CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
 void						CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf);

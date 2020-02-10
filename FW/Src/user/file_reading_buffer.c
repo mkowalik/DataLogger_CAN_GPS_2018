@@ -7,7 +7,6 @@
 
 #include "user/file_reading_buffer.h"
 
-
 /**
  * pFile - should be opened
  */

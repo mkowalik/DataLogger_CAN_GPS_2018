@@ -10,14 +10,14 @@
 #include "user/do_driver.h"
 
 
-DODriver_Status_TypeDef DODriver_init(volatile DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* port, DODriver_Pin_TypeDef* pin, bool invertLogic){
+DODriver_Status_TypeDef DODriver_init(volatile DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* pPort, DODriver_Pin_TypeDef* pPin, bool invertLogic){
 
-	if (pSelf==NULL || port == NULL || pin == NULL){
+	if ((pSelf==NULL) || (pPort == NULL) || (pPin == NULL)){
 		return DODriver_Status_NullPointerError;
 	}
 
-	pSelf->port			= port;
-	pSelf->pin			= pin;
+	pSelf->port			= pPort;
+	pSelf->pin			= pPin;
 	pSelf->invertLogic	= invertLogic;
 
 	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_RESET);

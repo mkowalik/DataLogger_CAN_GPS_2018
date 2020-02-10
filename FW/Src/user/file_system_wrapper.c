@@ -39,7 +39,7 @@ static FileSystemWrapper_Status_TypeDef remapResult(FRESULT res){
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_init(FileSystemWrapper_TypeDef* pSelf){
 
 	if (pSelf == NULL){
-		return FileSystemWrapper_Status_Error;
+		return FileSystemWrapper_Status_NullPointerError;
 	}
 
 	FRESULT res = f_mount( (FATFS*) &(pSelf->sFatFS), "", FILESYSTEM_MOUNT_IMMEDIATELY);
@@ -53,8 +53,8 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_init(FileSystemWrapper_TypeDe
 
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile, char* pFilename){
 
-	if (pSelf == NULL || pFile == NULL || pFilename == NULL){
-		return FileSystemWrapper_Status_Error;
+	if ((pSelf == NULL) || (pFile == NULL) || (pFilename == NULL)){
+		return FileSystemWrapper_Status_NullPointerError;
 	}
 	if (pSelf->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
@@ -68,9 +68,10 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDe
 
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_writeBinaryData(FileSystemWrapper_File_TypeDef* pFile, const void* pBuffer, uint32_t uiBytesToWrite, uint32_t* pBytesWritten){
 
-	if (pFile == NULL || pBuffer == NULL){
-		return FileSystemWrapper_Status_Error;
+	if ((pFile == NULL) || (pBuffer == NULL)){
+		return FileSystemWrapper_Status_NullPointerError;
 	}
+
 	if (pFile->pFileSystem->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
@@ -79,24 +80,26 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_writeBinaryData(FileSystemWra
 	return remapResult(res);
 }
 
-FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, void* pBuffer, uint32_t uiBytesToRead, uint32_t* pBytesRead){
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, void* pBuffer, uint32_t uiBytesToRead, uint32_t* pRetBytesRead){
 
-	if (pFile == NULL || pBuffer == NULL){
-		return FileSystemWrapper_Status_Error;
+	if ((pFile == NULL) || (pBuffer == NULL) || (pRetBytesRead == NULL)){
+		return FileSystemWrapper_Status_NullPointerError;
 	}
+
 	if (pFile->pFileSystem->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
 
-	FRESULT res = f_read( (FIL*) &(pFile->sFile), pBuffer, uiBytesToRead, (UINT*) pBytesRead);
+	FRESULT res = f_read( (FIL*) &(pFile->sFile), pBuffer, uiBytesToRead, (UINT*) pRetBytesRead);
 	return remapResult(res);
 }
 
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_putString(FileSystemWrapper_File_TypeDef* pFile, const char* pBuffer){
 
-	if (pFile == NULL || pBuffer == NULL){
-		return FileSystemWrapper_Status_Error;
+	if ((pFile == NULL) || (pBuffer == NULL)){
+		return FileSystemWrapper_Status_NullPointerError;
 	}
+
 	if (pFile->pFileSystem->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
@@ -110,8 +113,9 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_putString(FileSystemWrapper_F
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_close(FileSystemWrapper_File_TypeDef* pFile){
 
 	if (pFile == NULL){
-		return FileSystemWrapper_Status_Error;
+		return FileSystemWrapper_Status_NullPointerError;
 	}
+
 	if (pFile->pFileSystem->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
@@ -123,8 +127,9 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_close(FileSystemWrapper_File_
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_sync(FileSystemWrapper_File_TypeDef* pFile){
 
 	if (pFile == NULL){
-		return FileSystemWrapper_Status_Error;
+		return FileSystemWrapper_Status_NullPointerError;
 	}
+
 	if (pFile->pFileSystem->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}

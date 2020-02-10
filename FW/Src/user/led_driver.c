@@ -7,18 +7,23 @@
 
 #include "user/led_driver.h"
 
-LedDriver_Status_TypeDef LedDriver_init(LedDriver_TypeDef* pSelf, LedDriver_Port_TypeDef* port, LedDriver_Pin_TypeDef* pin){
+LedDriver_Status_TypeDef LedDriver_init(LedDriver_TypeDef* pSelf, LedDriver_Port_TypeDef* pPort, LedDriver_Pin_TypeDef* pPin){
+
+	if ((pSelf == NULL) || (pPort == NULL) || (pPin == NULL)){
+		return LedDriver_Status_NullPointerErrror;
+	}
+
 	if (pSelf->state != LedDriver_State_UnInitialized){
 		return LedDriver_Status_Errror;
 	}
 
-	pSelf->port				= port;
-	pSelf->pin				= pin;
+	pSelf->pPort			= pPort;
+	pSelf->pPin				= pPin;
 	pSelf->onTimeMs			= 0;
 	pSelf->offTimeMs		= 0;
 	pSelf->onOffTimeCounter	= 0;
 
-	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(pSelf->pPort, *pSelf->pPin, GPIO_PIN_SET);
 
 	pSelf->state = LedDriver_State_Off;
 
@@ -27,11 +32,16 @@ LedDriver_Status_TypeDef LedDriver_init(LedDriver_TypeDef* pSelf, LedDriver_Port
 }
 
 LedDriver_Status_TypeDef LedDriver_OnLed(LedDriver_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return LedDriver_Status_NullPointerErrror;
+	}
+
 	if (pSelf->state == LedDriver_State_UnInitialized){
 		return LedDriver_Status_UnInitializedErrror;
 	}
 
-	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(pSelf->pPort, *pSelf->pPin, GPIO_PIN_RESET);
 
 	pSelf->state = LedDriver_State_OnStady;
 
@@ -40,11 +50,16 @@ LedDriver_Status_TypeDef LedDriver_OnLed(LedDriver_TypeDef* pSelf){
 }
 
 LedDriver_Status_TypeDef LedDriver_OffLed(LedDriver_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return LedDriver_Status_NullPointerErrror;
+	}
+
 	if (pSelf->state == LedDriver_State_UnInitialized){
 		return LedDriver_Status_UnInitializedErrror;
 	}
 
-	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(pSelf->pPort, *pSelf->pPin, GPIO_PIN_SET);
 
 	pSelf->state = LedDriver_State_Off;
 
@@ -52,6 +67,11 @@ LedDriver_Status_TypeDef LedDriver_OffLed(LedDriver_TypeDef* pSelf){
 }
 
 LedDriver_Status_TypeDef LedDriver_BlinkingLed(LedDriver_TypeDef* pSelf, uint32_t onTimeMs, uint32_t offTimeMs){
+
+	if (pSelf == NULL){
+		return LedDriver_Status_NullPointerErrror;
+	}
+
 	if (pSelf->state == LedDriver_State_UnInitialized){
 		return LedDriver_Status_UnInitializedErrror;
 	}
@@ -61,7 +81,7 @@ LedDriver_Status_TypeDef LedDriver_BlinkingLed(LedDriver_TypeDef* pSelf, uint32_
 	pSelf->onOffTimeCounter	= 0;
 
 
-	HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(pSelf->pPort, *pSelf->pPin, GPIO_PIN_RESET);
 
 	pSelf->state			= LedDriver_State_OnBlinking;
 
@@ -71,6 +91,10 @@ LedDriver_Status_TypeDef LedDriver_BlinkingLed(LedDriver_TypeDef* pSelf, uint32_
 
 LedDriver_Status_TypeDef LedDriver_1msElapsedCallbackHandler(LedDriver_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return LedDriver_Status_NullPointerErrror;
+	}
+
 	if (pSelf->state != LedDriver_State_OnBlinking){
 		return LedDriver_Status_OK;
 	}
@@ -79,15 +103,13 @@ LedDriver_Status_TypeDef LedDriver_1msElapsedCallbackHandler(LedDriver_TypeDef* 
 
 	if (pSelf->onOffTimeCounter == pSelf->onTimeMs){
 
-		HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(pSelf->pPort, *pSelf->pPin, GPIO_PIN_SET);
 
 	} else if (pSelf->onOffTimeCounter == pSelf->onTimeMs + pSelf->offTimeMs){
 
-		HAL_GPIO_WritePin(pSelf->port, *pSelf->pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(pSelf->pPort, *pSelf->pPin, GPIO_PIN_RESET);
 		pSelf->onOffTimeCounter = 0;
-
 	}
 
 	return LedDriver_Status_OK;
-
 }

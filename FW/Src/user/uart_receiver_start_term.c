@@ -8,7 +8,7 @@
 #include <string.h>
 #include <user/uart_receiver_start_term.h>
 
-//< ----- Private functions definitions ----- >//
+//< ----- Private functions/IRQ Callbacks definitions ----- >//
 
 static void UartReceiverStartTerm_receivedByteCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs);
 
@@ -16,7 +16,7 @@ static void UartReceiverStartTerm_receivedByteCallback(uint8_t dataByte, uint32_
 
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_init(UartReceiverStartTerm_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver){
 
-	if (pSelf == NULL || pUartDriver == NULL){
+	if ((pSelf == NULL) || (pUartDriver == NULL)) {
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 
@@ -51,7 +51,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_registerReader(
 		uint8_t startSign,
 		uint8_t terminationSign){
 
-	if (pSelf == NULL || pRetReaderIterator == NULL){
+	if ((pSelf == NULL) || (pRetReaderIterator == NULL)) {
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 
@@ -207,7 +207,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(
 	volatile FIFOMultiread_Status_TypeDef			fifoStatus	= FIFOMultiread_Status_OK;
 	UartReceiverStartTerm_Status_TypeDef			ret			= UartReceiverStartTerm_Status_OK;
 
-	if (pSelf == NULL || pRetSentenceBuffer == NULL || pRetLength == NULL){
+	if ((pSelf == NULL) || (pRetSentenceBuffer == NULL) || (pRetLength == NULL)) {
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 

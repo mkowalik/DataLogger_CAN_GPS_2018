@@ -10,15 +10,15 @@
 #include "user/string_operations.h"
 #include <string.h>
 
-StringOperations_Status_TypeDef findChar(uint8_t* buffer, uint8_t charToFind, uint16_t bufferSize, uint16_t* pRetIndex){
+StringOperations_Status_TypeDef findChar(const uint8_t* aBuffer, uint8_t charToFind, uint16_t bufferSize, uint16_t* pRetIndex){
 
-	if (buffer == NULL || pRetIndex == NULL){
+	if ((aBuffer == NULL) || (pRetIndex == NULL)){
 		return StringOperations_Status_OK;
 	}
 
 	for (uint16_t i=0; i<bufferSize; i++){
 
-		if (buffer[i] == charToFind){
+		if (aBuffer[i] == charToFind){
 			*pRetIndex = i;
 			return StringOperations_Status_OK;
 		}
@@ -28,14 +28,14 @@ StringOperations_Status_TypeDef findChar(uint8_t* buffer, uint8_t charToFind, ui
 	return StringOperations_Status_CharNotFoundError;
 }
 
-StringOperations_Status_TypeDef stringEqual(uint8_t* stringA, uint8_t* stringB, uint16_t length){
+StringOperations_Status_TypeDef stringEqual(const uint8_t* aStringA, const uint8_t* aStringB, uint16_t length){
 
-	if (stringA == NULL || stringB == NULL){
+	if ((aStringA == NULL) || (aStringB == NULL)){
 		return StringOperations_Status_OK;
 	}
 
 	for (uint16_t i=0; i<length; i++){
-		if (stringA[i] != stringB[i]){
+		if (aStringA[i] != aStringB[i]){
 			return StringOperations_Status_NotEqual;
 		}
 	}
@@ -43,16 +43,16 @@ StringOperations_Status_TypeDef stringEqual(uint8_t* stringA, uint8_t* stringB, 
 	return StringOperations_Status_OK;
 }
 
-StringOperations_Status_TypeDef stringToFixedPoint(uint8_t* sentence, uint16_t length, uint8_t decimalSeparator, uint8_t fractionalBits, FixedPoint* pRetFixedPoint){
+StringOperations_Status_TypeDef stringToFixedPoint(const uint8_t* aSentence, uint16_t length, uint8_t decimalSeparator, uint8_t fractionalBits, FixedPoint* pRetFixedPoint){
 
-	if (sentence == NULL || pRetFixedPoint == NULL){
+	if ((aSentence == NULL) || (pRetFixedPoint == NULL)){
 		return StringOperations_Status_NullPointerError;
 	}
 
 	StringOperations_Status_TypeDef ret;
 	uint16_t dotPosition;
 
-	if ((ret = findChar(sentence, decimalSeparator, length, &dotPosition)) != StringOperations_Status_OK){
+	if ((ret = findChar(aSentence, decimalSeparator, length, &dotPosition)) != StringOperations_Status_OK){
 		return ret;
 	}
 
@@ -64,10 +64,10 @@ StringOperations_Status_TypeDef stringToFixedPoint(uint8_t* sentence, uint16_t l
 	uint32_t	fractionalNumerator;
 	uint32_t	fractionalDenominator = 1;
 
-	if ((ret = string2UInt32(sentence, dotPosition, &decimalPart)) != StringOperations_Status_OK){
+	if ((ret = string2UInt32(aSentence, dotPosition, &decimalPart)) != StringOperations_Status_OK){
 		return ret;
 	}
-	if ((ret = string2UInt32(sentence + dotPosition + sizeof(decimalSeparator), length - dotPosition - sizeof(decimalSeparator), &fractionalNumerator)) != StringOperations_Status_OK){
+	if ((ret = string2UInt32(aSentence + dotPosition + sizeof(decimalSeparator), length - dotPosition - sizeof(decimalSeparator), &fractionalNumerator)) != StringOperations_Status_OK){
 		return ret;
 	}
 
@@ -93,9 +93,9 @@ StringOperations_Status_TypeDef decChar2Uint8(uint8_t c, uint8_t* pRetInt){
 }
 
 
-StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint16_t length, uint32_t* pRetInt){
+StringOperations_Status_TypeDef string2UInt32(const uint8_t* aSentence, uint16_t length, uint32_t* pRetInt){
 
-	if (sentence == NULL || pRetInt == NULL){
+	if ((aSentence == NULL) || (pRetInt == NULL)){
 		return StringOperations_Status_NullPointerError;
 	}
 
@@ -105,7 +105,7 @@ StringOperations_Status_TypeDef string2UInt32(uint8_t* sentence, uint16_t length
 
 	for (int16_t i = length-1; i >= 0; i--){
 		uint8_t tmp;
-		if ((ret = decChar2Uint8(*(sentence + i), &tmp)) != StringOperations_Status_OK){
+		if ((ret = decChar2Uint8(*(aSentence + i), &tmp)) != StringOperations_Status_OK){
 			return ret;
 		}
 		*pRetInt	+= (tmp * multiplier);
@@ -146,6 +146,7 @@ StringOperations_Status_TypeDef	uInt8ToString(uint8_t* pRetBuffer, uint8_t val){
 }
 
 StringOperations_Status_TypeDef appendUInt8ToString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize){
+
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
@@ -156,6 +157,7 @@ StringOperations_Status_TypeDef appendUInt8ToString(uint8_t* pRetBuffer, uint8_t
 }
 
 StringOperations_Status_TypeDef uInt8ToHexString(uint8_t* pRetBuffer, uint8_t val, bool upperCase){
+
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
@@ -164,6 +166,7 @@ StringOperations_Status_TypeDef uInt8ToHexString(uint8_t* pRetBuffer, uint8_t va
 }
 
 StringOperations_Status_TypeDef uInt8ToHexStringMinDigits(uint8_t* pRetBuffer, uint8_t val, bool upperCase, uint8_t minDigitsNumber){
+
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
@@ -177,6 +180,7 @@ StringOperations_Status_TypeDef uInt8ToHexStringMinDigits(uint8_t* pRetBuffer, u
 }
 
 StringOperations_Status_TypeDef appendUint8ToHexString(uint8_t* pRetBuffer, uint8_t val, uint16_t bufferSize, bool upperCase){
+
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
@@ -189,6 +193,7 @@ StringOperations_Status_TypeDef appendUint8ToHexString(uint8_t* pRetBuffer, uint
 }
 
 StringOperations_Status_TypeDef	uInt32ToString(uint32_t val, uint8_t* pRetBuffer){
+
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
@@ -198,6 +203,7 @@ StringOperations_Status_TypeDef	uInt32ToString(uint32_t val, uint8_t* pRetBuffer
 }
 
 StringOperations_Status_TypeDef appendUInt32ToString(uint8_t* pRetBuffer, uint32_t val, uint16_t bufferSize){
+
 	if (pRetBuffer == NULL){
 		return StringOperations_Status_NullPointerError;
 	}
@@ -209,6 +215,7 @@ StringOperations_Status_TypeDef appendUInt32ToString(uint8_t* pRetBuffer, uint32
 }
 
 bool isDecimalChar(uint8_t c){
+
 	if (c >= '0' && c <= '9'){
 		return true;
 	}
@@ -216,6 +223,11 @@ bool isDecimalChar(uint8_t c){
 }
 
 uint8_t* strCharCat(uint8_t* str, uint8_t c){
+
+	if (str == NULL){
+		return str;
+	}
+
 	uint8_t str2[2] = {c, 0};
 	return (uint8_t*)strcat((char*)str, (char*)str2);
 }

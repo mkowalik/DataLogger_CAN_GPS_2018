@@ -10,7 +10,7 @@
 
 FIFO_Status_TypeDef FIFOQueue_init(volatile FIFOQueue_TypeDef* pSelf, volatile void* pTabPtrArg, uint8_t elementSize, uint16_t queueSize){
 
-	if (pSelf == NULL || pTabPtrArg == NULL){
+	if ((pSelf == NULL) || (pTabPtrArg == NULL)){
 		return FIFO_Status_Error;
 	}
 
@@ -31,7 +31,7 @@ FIFO_Status_TypeDef FIFOQueue_init(volatile FIFOQueue_TypeDef* pSelf, volatile v
 
 FIFO_Status_TypeDef FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatile void* pElement){
 
-	if (pSelf == NULL || pElement == NULL){
+	if ((pSelf == NULL) || (pElement == NULL)) {
 		return FIFO_Status_Error;
 	}
 
@@ -60,7 +60,7 @@ FIFO_Status_TypeDef FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatil
 
 FIFO_Status_TypeDef FIFOQueue_dequeue(volatile FIFOQueue_TypeDef* pSelf, volatile void* pRetElement){
 
-	if (pSelf == NULL || pRetElement == NULL){
+	if ((pSelf == NULL) || (pRetElement == NULL)) {
 		return FIFO_Status_Error;
 	}
 
@@ -85,7 +85,7 @@ FIFO_Status_TypeDef FIFOQueue_dequeue(volatile FIFOQueue_TypeDef* pSelf, volatil
 
 FIFO_Status_TypeDef FIFOQueue_lastElement(volatile FIFOQueue_TypeDef* pSelf, volatile void* pRetElement){
 
-	if (pSelf == NULL || pRetElement == NULL){
+	if ((pSelf == NULL) || (pRetElement == NULL)) {
 		return FIFO_Status_Error;
 	}
 
@@ -104,7 +104,7 @@ FIFO_Status_TypeDef FIFOQueue_lastElement(volatile FIFOQueue_TypeDef* pSelf, vol
 
 FIFO_Status_TypeDef FIFOQueue_elementsNumber(volatile FIFOQueue_TypeDef* pSelf, volatile uint16_t* pRetElementsNumber){
 
-	if (pSelf == NULL || pRetElementsNumber == NULL){
+	if ((pSelf == NULL) || (pRetElementsNumber == NULL)) {
 		return FIFO_Status_Error;
 	}
 

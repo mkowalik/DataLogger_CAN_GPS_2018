@@ -90,7 +90,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_T
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime){
 
-	if (pSelf == NULL || pRetTime == NULL){
+	if ((pSelf == NULL) || (pRetTime == NULL)){
 		return MSTimerDriver_Status_NullPointerError;
 	}
 

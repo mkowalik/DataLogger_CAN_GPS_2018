@@ -121,12 +121,13 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 		UartReceiverStartLength_TypeDef* pUartUBXReceiverHandler,
 		MSTimerDriver_TypeDef* pMSTimer,
 		DODriver_TypeDef* pDOResetDriver,
-		Config_GPSFrequency_TypeDef frequency) {
+		Config_GPSFrequency_TypeDef frequency)
+{
 
-	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
-	if (pSelf == NULL || pUartDriverHandler == NULL || pUartNMEAReceiverHandler == NULL || pUartUBXReceiverHandler == NULL || pMSTimer == NULL || pDOResetDriver == NULL){
+	if ((pSelf == NULL) || (pUartDriverHandler == NULL) || (pUartNMEAReceiverHandler == NULL) || (pUartUBXReceiverHandler == NULL) || (pMSTimer == NULL) || (pDOResetDriver == NULL)) {
 		return GPSDriver_Status_NullPointerError;
 	}
+	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 
 	pSelf->state						= GPSDriver_State_DuringInit;
 	pSelf->pUartDriverHandler			= pUartDriverHandler;
@@ -270,7 +271,7 @@ GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile Ublox8MGPSDriver_TypeDe
 
 GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData) {
 
-	if (pSelf == NULL || pRetGPSData == NULL){
+	if ((pSelf == NULL) || (pRetGPSData == NULL)) {
 		return GPSDriver_Status_NullPointerError;
 	}
 
@@ -359,7 +360,8 @@ GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile Ublox8MGPSDriver_TypeD
 }
 
 GPSDriver_Status_TypeDef GPSDriver_getState(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSDriver_State_TypeDef* pRetState){
-	if (pSelf == NULL || pRetState == NULL){
+
+	if ((pSelf == NULL) || (pRetState == NULL)){
 		return GPSDriver_Status_NullPointerError;
 	}
 
@@ -369,10 +371,10 @@ GPSDriver_Status_TypeDef GPSDriver_getState(volatile Ublox8MGPSDriver_TypeDef* p
 
 GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSelf){
 
-	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 	if (pSelf == NULL){
 		return GPSDriver_Status_NullPointerError;
 	}
+	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
 
 	if (pSelf->state == GPSDriver_State_Running){
 		ret = GPSDriver_stopReceiver(pSelf);

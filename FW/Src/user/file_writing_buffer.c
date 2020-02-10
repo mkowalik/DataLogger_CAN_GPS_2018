@@ -9,7 +9,13 @@
 #include "user/file_writing_buffer.h"
 #include "string.h"
 
-static FileWritingBuffer_Status_TypeDef FileWritingBuffer_checkIfFull(FileWritingBuffer_TypeDef* pSelf){
+//< ----- Static functions prototypes ----- >//
+
+static FileWritingBuffer_Status_TypeDef _FileWritingBuffer_checkIfFull(FileWritingBuffer_TypeDef* pSelf);
+
+//< ----- Static functions implementations ----- >//
+
+static FileWritingBuffer_Status_TypeDef _FileWritingBuffer_checkIfFull(FileWritingBuffer_TypeDef* pSelf){
 
 	if (pSelf->bytesLeft == 0){
 
@@ -22,10 +28,12 @@ static FileWritingBuffer_Status_TypeDef FileWritingBuffer_checkIfFull(FileWritin
 	return FileWritingBuffer_Status_OK;
 }
 
+//< ----- Public functions ----- >//
+
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_init(FileWritingBuffer_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile){
 
 	if ((pSelf == NULL) || (pFile == NULL)) {
-		return FileWritingBuffer_Status_Error;
+		return FileWritingBuffer_Status_NullPointerError;
 	}
 
 	pSelf->pFile			= pFile;
@@ -38,6 +46,10 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_init(FileWritingBuffer_TypeDe
 }
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_deInit(FileWritingBuffer_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
@@ -53,6 +65,10 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_deInit(FileWritingBuffer_Type
 }
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_resetBuffer(FileWritingBuffer_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
@@ -65,12 +81,16 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_resetBuffer(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt8(FileWritingBuffer_TypeDef* pSelf, uint8_t value){
 
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
 	FileWritingBuffer_Status_TypeDef status;
-	if ((status = FileWritingBuffer_checkIfFull(pSelf)) != FileWritingBuffer_Status_OK){
+	if ((status = _FileWritingBuffer_checkIfFull(pSelf)) != FileWritingBuffer_Status_OK){
 		return status;
 	}
 
@@ -82,6 +102,10 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt8(FileWritingBuffer_
 }
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer_TypeDef* pSelf, uint16_t value){
+
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
@@ -100,6 +124,10 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer_TypeDef* pSelf, uint32_t value){
 
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
@@ -116,6 +144,10 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer
 }
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt64(FileWritingBuffer_TypeDef* pSelf, uint64_t value){
+
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
@@ -134,12 +166,16 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt64(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeInt8(FileWritingBuffer_TypeDef* pSelf, int8_t value){
 
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
 	}
 
 	FileWritingBuffer_Status_TypeDef status;
-	if ((status = FileWritingBuffer_checkIfFull(pSelf)) != FileWritingBuffer_Status_OK){
+	if ((status = _FileWritingBuffer_checkIfFull(pSelf)) != FileWritingBuffer_Status_OK){
 		return status;
 	}
 
@@ -150,8 +186,11 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeInt8(FileWritingBuffer_T
 	return FileWritingBuffer_Status_OK;
 }
 
-
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value){
+
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
@@ -165,7 +204,11 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_T
 	return FileWritingBuffer_Status_OK;
 }
 
-FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, char* string, uint16_t length){
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, const char* pStringToWrite, uint16_t stringLength){
+
+	if ((pSelf == NULL) || (pStringToWrite == NULL)){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
@@ -173,9 +216,9 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer
 
 	FileWritingBuffer_Status_TypeDef status;
 
-	for(uint32_t i = 0; i < length; i++){
+	for(uint32_t i = 0; i < stringLength; i++){
 
-		if ((status = FileWritingBuffer_writeChar(pSelf, string[i])) != FileWritingBuffer_Status_OK){
+		if ((status = FileWritingBuffer_writeChar(pSelf, pStringToWrite[i])) != FileWritingBuffer_Status_OK){
 			return status;
 		}
 	}
@@ -185,10 +228,18 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWritingBuffer_TypeDef* pSelf, FixedPoint value){
 
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
+
 	return FileWritingBuffer_writeUInt32(pSelf, value.integer);
 }
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeToFileSystem(FileWritingBuffer_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
 		return FileWritingBuffer_Status_UnInitializedError;
@@ -212,7 +263,11 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeToFileSystem(FileWriting
 	return FileWritingBuffer_Status_OK;
 }
 
-FileWritingBuffer_Status_TypeDef FileWritingBuffer_flushingThread(FileWritingBuffer_TypeDef* pSelf) {
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeDef* pSelf) {
+
+	if (pSelf == NULL){
+		return FileWritingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state == FileWritingBuffer_State_UnInitialized) {
 		return FileWritingBuffer_Status_OK;

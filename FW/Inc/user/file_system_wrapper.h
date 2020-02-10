@@ -35,6 +35,7 @@ typedef enum {
 	FileSystemWrapper_Status_TOO_MANY_OPEN_FILES,	/* (18) Number of open files > _FS_SHARE */
 	FileSystemWrapper_Status_INVALID_PARAMETER,		/* (19) Given parameter is invalid */
 	FileSystemWrapper_Status_NotInitializedError,
+	FileSystemWrapper_Status_NullPointerError,
 	FileSystemWrapper_Status_Error
 } FileSystemWrapper_Status_TypeDef;
 

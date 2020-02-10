@@ -10,11 +10,48 @@
 #include "stdio.h"
 #include "string.h"
 
-static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
+//< ----- Private methods prototypes ----- >//
+
+static DataSaver_Status_TypeDef _DataSaver_saveHeader(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
+
+//< ----- Private methods implementetations ----- >//
+
+static DataSaver_Status_TypeDef _DataSaver_saveHeader(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime){
+
+	if (ConfigDataManager_writeConfig(pSelf->pConfigManager, &(pSelf->sWritingBuffer)) != ConfigDataManager_Status_OK){
+		return DataSaver_Status_ConfigError;
+	}
+
+	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, dateTime.year) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.month) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.day) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.hour) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.minute) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.second) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+	if (FileWritingBuffer_writeToFileSystem(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
+		return DataSaver_Status_Error;
+	}
+
+	return DataSaver_Status_OK;
+}
+
+//< ----- Public methods ----- >//
 
 DataSaver_Status_TypeDef DataSaver_init(DataSaver_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, FileSystemWrapper_TypeDef* pFileSystemHandler){
 
-	if (pSelf == NULL || pConfigManager == NULL || pFileSystemHandler == NULL){
+	if ((pSelf == NULL) || (pConfigManager == NULL) || (pFileSystemHandler == NULL)){
 		return DataSaver_Status_NullPointerError;
 	}
 
@@ -74,14 +111,13 @@ DataSaver_Status_TypeDef DataSaver_startAGHLogFile(DataSaver_TypeDef* pSelf, Dat
 
 	DataSaver_Status_TypeDef status;
 
-	if((status = DataSaver_saveHeader(pSelf, dateTime)) != DataSaver_Status_OK){
+	if((status = _DataSaver_saveHeader(pSelf, dateTime)) != DataSaver_Status_OK){
 		return status;
 	}
 
 	pSelf->state = DataSaver_State_OpenedFile;
 
 	return DataSaver_Status_OK;
-
 }
 
 DataSaver_Status_TypeDef DataSaver_endAGHLogFile(DataSaver_TypeDef* pSelf){
@@ -237,36 +273,4 @@ DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSDat
 	}
 
 	return DataSaver_Status_OK;
-}
-
-static DataSaver_Status_TypeDef DataSaver_saveHeader(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime){
-
-	if (ConfigDataManager_writeConfig(pSelf->pConfigManager, &(pSelf->sWritingBuffer)) != ConfigDataManager_Status_OK){
-		return DataSaver_Status_ConfigError;
-	}
-
-	if (FileWritingBuffer_writeUInt16(&pSelf->sWritingBuffer, dateTime.year) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.month) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.day) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.hour) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.minute) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeUInt8(&pSelf->sWritingBuffer, dateTime.second) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-	if (FileWritingBuffer_writeToFileSystem(&pSelf->sWritingBuffer) != FileWritingBuffer_Status_OK){
-		return DataSaver_Status_Error;
-	}
-
-	return DataSaver_Status_OK;
-
 }

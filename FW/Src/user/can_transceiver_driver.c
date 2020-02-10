@@ -15,6 +15,12 @@
 
 #define	CAN_SYNC_JUMP_WIDTH		CAN_SJW_3TQ
 
+//< ----- Private funtions prototypes ----- //>
+
+static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_HandleTypeDef* pHcan, uint32_t prescalerValue, CAN_TypeDef* pCANInstance, uint32_t timeSeg1, uint32_t timeSeg2);
+static void checkHALErrorcode(uint32_t errorcodeHAL, uint32_t errorMask, CANErrorCode_TypeDef* pEerrorcodeTransceiverOut, CANErrorCode_TypeDef errorTracsceiverMaskOut);
+
+//< ----- Private funtions implementations ----- //>
 
 static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_HandleTypeDef* pHcan, uint32_t prescalerValue, CAN_TypeDef* pCANInstance, uint32_t timeSeg1, uint32_t timeSeg2){
 
@@ -39,10 +45,19 @@ static CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_HALCANInit(CAN_H
 
 }
 
+static void checkHALErrorcode(uint32_t errorcodeHAL, uint32_t errorMask, CANErrorCode_TypeDef* pEerrorcodeTransceiverOut, CANErrorCode_TypeDef errorTracsceiverMaskOut){
+
+	if ((errorcodeHAL & errorMask) != 0){
+		*pEerrorcodeTransceiverOut |= errorTracsceiverMaskOut;
+	}
+}
+
+//< ----- Public funtions ----- //>
+
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, Config_TypeDef* pConfig, CAN_HandleTypeDef* pHcan, CAN_TypeDef* pCANInstance){
 
-	if (pHcan == NULL){
-		return CANTransceiverDriver_Status_Error;
+	if ((pSelf == NULL) || (pConfig == NULL) || (pHcan == NULL) || (pCANInstance == NULL)){
+		return CANTransceiverDriver_Status_NullPointerError;
 	}
 	CANTransceiverDriver_Status_TypeDef ret = CANTransceiverDriver_Status_OK;
 
@@ -101,6 +116,10 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTransceiverDriver_TypeDef* pSelf, uint16_t* pFilters, uint16_t filtersNumber){
 
+	if ((pSelf == NULL) || (pFilters == NULL)){
+		return CANTransceiverDriver_Status_NullPointerError;
+	}
+
 	CAN_FilterTypeDef filterConfig;
 
 	filterConfig.FilterMode 			= CAN_FILTERMODE_IDLIST;
@@ -133,6 +152,10 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTran
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHandler(CANTransceiverDriver_TypeDef* pSelf, uint16_t ID, uint8_t DLC, uint8_t aData[8], uint16_t timestamp){
 
+	if ((pSelf == NULL) || (aData == NULL)){
+		return CANTransceiverDriver_Status_NullPointerError;
+	}
+
 	CANData_TypeDef canData;
 	canData.DLC = DLC;
 	canData.ID = ID;
@@ -154,6 +177,10 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHand
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerReceiveCallbackToCall(CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANData_TypeDef* pData, void* arg), void* pArgument){
 
+	if ((pSelf == NULL) || (pCallbackFunction == NULL) || (pArgument == NULL)){
+		return CANTransceiverDriver_Status_NullPointerError;
+	}
+
 	uint16_t i;
 
 	for (i=0; i<CAN_MAX_CALLBACK_NUMBER; i++){
@@ -174,14 +201,11 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerReceiveCallback
 
 }
 
-static void checkHALErrorcode(uint32_t errorcodeHAL, uint32_t errorMask, CANErrorCode_TypeDef* errorcodeTransceiverOut, CANErrorCode_TypeDef errorTracsceiverMaskOut){
-
-	if ((errorcodeHAL & errorMask) != 0){
-		*errorcodeTransceiverOut |= errorTracsceiverMaskOut;
-	}
-}
-
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CANTransceiverDriver_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return CANTransceiverDriver_Status_NullPointerError;
+	}
 
 	uint32_t errorcodeHAL = HAL_CAN_GetError(pSelf->pHcan);
 
@@ -230,6 +254,10 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CA
 }
 
 CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerErrorCallbackToCall(CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANErrorCode_TypeDef errorcode, void* arg), void* pArgument){
+
+	if ((pSelf == NULL) || (pCallbackFunction == NULL) || (pArgument == NULL)){
+		return CANTransceiverDriver_Status_NullPointerError;
+	}
 
 	uint16_t i;
 

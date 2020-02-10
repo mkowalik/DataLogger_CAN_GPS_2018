@@ -42,7 +42,7 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeTriggersDefiniti
 
 ConfigDataManager_Status_TypeDef ConfigDataManager_init(ConfigDataManager_TypeDef* pSelf, FileSystemWrapper_TypeDef* pFileSystem){
 
-	if (pSelf == NULL || pFileSystem == NULL){
+	if ((pSelf == NULL) || (pFileSystem == NULL)){
 		return ConfigDataManager_Status_NullPointerError;
 	}
 
@@ -210,6 +210,10 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_findSignal(ConfigDataManager_
 ConfigDataManager_Status_TypeDef ConfigDataManager_writeConfig(ConfigDataManager_TypeDef* pSelf, FileWritingBuffer_TypeDef* pWritingBuffer){
 	ConfigDataManager_Status_TypeDef ret = ConfigDataManager_Status_OK;
 
+	if (pSelf == NULL || pWritingBuffer == NULL){
+		return ConfigDataManager_Status_NullPointerError;
+	}
+
 	if ((ret = _ConfigDataManager_writeConfigFilePreambule(pSelf, pWritingBuffer)) != ConfigDataManager_Status_OK){
 		return ret;
 	}
@@ -228,7 +232,6 @@ ConfigDataManager_Status_TypeDef ConfigDataManager_writeConfig(ConfigDataManager
 }
 
 //< ----- Private functions ----- >//
-
 
 static ConfigDataManager_Status_TypeDef _ConfigDataManager_openConfigFile(ConfigDataManager_TypeDef* pSelf){
 

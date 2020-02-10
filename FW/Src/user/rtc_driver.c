@@ -13,7 +13,7 @@
 static RTCDriver_Status_TypeDef _RTCDriver_validateDate(const DateTime_TypeDef* pDateTime);
 static RTCDriver_Status_TypeDef _RTCDriver_HALInit(RTCDriver_TypeDef* pSelf);
 static RTCDriver_Status_TypeDef _RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDef* pSelf);
-static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, RTC_TimeTypeDef* pTime, RTC_DateTypeDef* pDate);
+static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, const DateTime_TypeDef* pDateTime);
 
 static RTCDriver_Status_TypeDef _RTCDriver_DateToSecondsFrom2000(const DateTime_TypeDef* pDateTime, uint32_t* pRetSconds);
 static RTCDriver_Status_TypeDef _RTCDriver_SecondsFrom2000ToDate(uint32_t seconds, DateTime_TypeDef* pRetDateTime);
@@ -21,10 +21,6 @@ static RTCDriver_Status_TypeDef _RTCDriver_SecondsFrom2000ToDate(uint32_t second
 //< ----- private functions implementations ----- >//
 
 static RTCDriver_Status_TypeDef _RTCDriver_validateDate(const DateTime_TypeDef* pDateTime){
-
-	if (pDateTime == NULL){
-		return RTCDriver_Status_NullPointerError;
-	}
 
 	if ((pDateTime->year > RTC_DRIVER_YEAR_MAX_VALUE) || (pDateTime->year < RTC_DRIVER_YEAR_MIN_VALUE) ||
 			(pDateTime->month > RTC_DRIVER_MONTH_MAX_VALUE) || (pDateTime->month < RTC_DRIVER_MONTH_MIN_VALUE) ||
@@ -82,13 +78,23 @@ static RTCDriver_Status_TypeDef _RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeD
 	return RTCDriver_Status_OK;
 }
 
-static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, RTC_TimeTypeDef* pTime, RTC_DateTypeDef* pDate){
+static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, const DateTime_TypeDef* pDateTime){
 
-	if (HAL_RTC_SetTime(pSelf->pRTCHandler, pTime, RTC_FORMAT_BIN) != HAL_OK) {
+	RTC_DateTypeDef date = {0};
+	RTC_TimeTypeDef time = {0};
+
+	date.Year =		(pDateTime->year - RTC_DRIVER_YEAR_MIN_VALUE);
+	date.Month =	pDateTime->month;
+	date.Date =		pDateTime->day;
+	time.Hours = 	pDateTime->hour;
+	time.Minutes =	pDateTime->minute;
+	time.Seconds =	pDateTime->second;
+
+	if (HAL_RTC_SetTime(pSelf->pRTCHandler, &time, RTC_FORMAT_BIN) != HAL_OK) {
 		return RTCDriver_Status_Error;
 	}
 
-	if (HAL_RTC_SetDate(pSelf->pRTCHandler, pDate, RTC_FORMAT_BIN) != HAL_OK) {
+	if (HAL_RTC_SetDate(pSelf->pRTCHandler, &date, RTC_FORMAT_BIN) != HAL_OK) {
 		return RTCDriver_Status_Error;
 	}
 
@@ -102,10 +108,6 @@ static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* 
 }
 
 static RTCDriver_Status_TypeDef _RTCDriver_DateToSecondsFrom2000(const DateTime_TypeDef* pDateTime, uint32_t* pRetSconds){
-
-	if ((pDateTime == NULL) || (pRetSconds == NULL)){
-		return RTCDriver_Status_NullPointerError;
-	}
 
 	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
 	if ((ret = _RTCDriver_validateDate(pDateTime)) != RTCDriver_Status_OK){
@@ -166,10 +168,6 @@ static RTCDriver_Status_TypeDef _RTCDriver_DateToSecondsFrom2000(const DateTime_
 
 
 static RTCDriver_Status_TypeDef _RTCDriver_SecondsFrom2000ToDate(uint32_t seconds, DateTime_TypeDef* pRetDateTime){
-
-	if (pRetDateTime == NULL){
-		return RTCDriver_Status_NullPointerError;
-	}
 
 	pRetDateTime->year = 0;
 	while (true){
@@ -257,20 +255,16 @@ RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleType
 	}
 	if (ret == RTCDriver_Status_TimeAndDateNotRestoredError){
 
-		RTC_TimeTypeDef sTime = {0};
-		RTC_DateTypeDef sDate = {0};
+		DateTime_TypeDef dateTime = {0};
+		dateTime.year			= RTC_DRIVER_YEAR_MIN_VALUE;
+		dateTime.month			= 1;
+		dateTime.day			= 1;
+		dateTime.hour			= 0;
+		dateTime.minute			= 0;
+		dateTime.second			= 0;
+		dateTime.miliseconds	= 0;
 
-		sTime.Hours				= 0;
-		sTime.Minutes			= 0;
-		sTime.Seconds			= 0;
-		sTime.DayLightSaving	= RTC_DAYLIGHTSAVING_NONE;
-		sTime.StoreOperation	= RTC_STOREOPERATION_RESET;
-		sDate.WeekDay			= RTC_WEEKDAY_MONDAY;
-		sDate.Month				= RTC_MONTH_JANUARY;
-		sDate.Date				= 0;
-		sDate.Year				= 0;
-
-		if ((ret = _RTCDriver_HALSetTimeAndDate(pSelf, &sTime, &sDate)) != RTCDriver_Status_OK){
+		if ((ret = _RTCDriver_HALSetTimeAndDate(pSelf, &dateTime)) != RTCDriver_Status_OK){
 			return ret;
 		}
 	}
@@ -325,17 +319,7 @@ RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, Date
 		return ret;
 	}
 
-	RTC_DateTypeDef date = {0};
-	RTC_TimeTypeDef time = {0};
-
-	date.Year =		(dateTime.year - RTC_DRIVER_YEAR_MIN_VALUE);
-	date.Month =	dateTime.month;
-	date.Date =		dateTime.day;
-	time.Hours = 	dateTime.hour;
-	time.Minutes =	dateTime.minute;
-	time.Seconds =	dateTime.second;
-
-	return _RTCDriver_HALSetTimeAndDate(pSelf, &time, &date);
+	return _RTCDriver_HALSetTimeAndDate(pSelf, &dateTime);
 }
 
 RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds){

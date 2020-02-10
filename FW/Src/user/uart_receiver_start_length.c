@@ -10,7 +10,7 @@
 
 #include "user/uart_receiver_start_length.h"
 
-//< ----- Private functions definitions ----- >//
+//< ----- Private functions/IRQ Callbacks definitions ----- >//
 
 static void 									_UartReceiverStartLength_receivedByteCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs);
 static UartReceiverStartLength_Status_TypeDef	_UartReceiverStartLength_removeNotStartCharsFromQueueFront(volatile UartReceiverStartLength_TypeDef* pSelf, UartReceiverStartLength_ReaderIterator_TypeDef readerIt);
@@ -19,7 +19,7 @@ static UartReceiverStartLength_Status_TypeDef	_UartReceiverStartLength_removeNot
 
 UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver){
 
-	if (pSelf == NULL || pUartDriver == NULL){
+	if ((pSelf == NULL) || (pUartDriver == NULL)) {
 		return UartReceiverStartLength_Status_NullPointerError;
 	}
 
@@ -77,7 +77,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 		const uint8_t* startPattern,
 		uint16_t sentenceLength){
 
-	if (pSelf == NULL || pRetReaderIterator == NULL || startPattern == NULL){
+	if ((pSelf == NULL) || (pRetReaderIterator == NULL) || (startPattern == NULL)){
 		return UartReceiverStartLength_Status_NullPointerError;
 	}
 
@@ -190,7 +190,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_pullLastSentence(
 	volatile FIFOMultiread_Status_TypeDef				fifoStatus;
 	UartReceiverStartLength_Status_TypeDef				ret;
 
-	if (pSelf == NULL || pRetSentence == NULL || pRetTimestamp == NULL){
+	if ((pSelf == NULL) || (pRetSentence == NULL) || (pRetTimestamp == NULL)){
 		return UartReceiverStartLength_Status_NullPointerError;
 	}
 
