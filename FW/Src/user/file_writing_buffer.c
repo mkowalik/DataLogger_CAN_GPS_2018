@@ -132,6 +132,24 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt64(FileWritingBuffer
 	return FileWritingBuffer_Status_OK;
 }
 
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeInt8(FileWritingBuffer_TypeDef* pSelf, int8_t value){
+
+	if (pSelf->state == FileWritingBuffer_State_UnInitialized){
+		return FileWritingBuffer_Status_UnInitializedError;
+	}
+
+	FileWritingBuffer_Status_TypeDef status;
+	if ((status = FileWritingBuffer_checkIfFull(pSelf)) != FileWritingBuffer_Status_OK){
+		return status;
+	}
+
+	pSelf->buffer[pSelf->bytesBuffered] = *((uint8_t*)&value); //< reinterpret_cast like
+	pSelf->bytesLeft--;
+	pSelf->bytesBuffered++;
+
+	return FileWritingBuffer_Status_OK;
+}
+
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value){
 

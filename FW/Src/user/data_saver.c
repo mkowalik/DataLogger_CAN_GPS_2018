@@ -178,8 +178,6 @@ DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSDat
 		return DataSaver_Status_FileNotOpenedError;
 	}
 
-	while (pData->msTimestamp == 0){}
-
 	if (FileWritingBuffer_writeUInt32(&pSelf->sWritingBuffer, pData->msTimestamp) != FileWritingBuffer_Status_OK){
 		return DataSaver_Status_Error;
 	}

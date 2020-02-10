@@ -162,6 +162,11 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartRec
 		return UartReceiverStartTerm_Status_ReceiverNotReceivingStateError;
 	}
 
+	UartReceiverStartTerm_Status_TypeDef ret = UartReceiverStartTerm_Status_OK;
+	if (UartReceiverStartTerm_clear(pSelf) != UartReceiverStartTerm_Status_OK){
+		return ret;
+	}
+
 	pSelf->state	= UartReceiverStartTerm_State_Initialized;
 
 	return UartReceiverStartTerm_Status_OK;

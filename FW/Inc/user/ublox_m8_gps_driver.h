@@ -81,19 +81,6 @@ typedef enum {
 	_GPSDriver_ResponseState_ResponseReceived
 } _GPSDriver_ResponseState;
 
-typedef enum {
-	_GPSFixTypeParser_State_WaitingFor$ = 0,
-	_GPSFixTypeParser_State_WaitingFor1stG,
-	_GPSFixTypeParser_State_WaitingForN,
-	_GPSFixTypeParser_State_WaitingFor2ndG,
-	_GPSFixTypeParser_State_WaitingForS,
-	_GPSFixTypeParser_State_WaitingForA,
-	_GPSFixTypeParser_State_WaitingFor1stComma,
-	_GPSFixTypeParser_State_WaitingForAutoManualFixSelectionSign,
-	_GPSFixTypeParser_State_WaitingFor2ndComma,
-	_GPSFixTypeParser_State_WaitingForFixTypeSign
-} _GPSFixTypeParser_State_TypeDef;
-
 typedef struct {
 	uint32_t	timestamp;
 	uint16_t	sentenceLength;
@@ -120,10 +107,6 @@ typedef struct {
 	volatile uint32_t										gpgsaPartialSegmentTimestamp;
 	volatile uint32_t										gprmcPartialSegmentTimestamp;
 	volatile GPSData_TypeDef								partialGPSData;
-
-	volatile GPSFixType										fixType;
-	volatile _GPSFixTypeParser_State_TypeDef				fixTypeParserState;
-	UartDriver_ByteReceivedCallbackIterator_TypeDef			fixTypeRawUARTCharHandlerCallbackIt;
 } Ublox8MGPSDriver_TypeDef;
 
 typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
@@ -137,6 +120,7 @@ GPSDriver_Status_TypeDef GPSDriver_init (
 		DODriver_TypeDef*					pDOResetDriver,
 		Config_GPSFrequency_TypeDef			frequency
 	);
+GPSDriver_Status_TypeDef GPSDriver_clear(volatile Ublox8MGPSDriver_TypeDef*	pSelf);
 
 GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile Ublox8MGPSDriver_TypeDef* pSelf);
 GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile Ublox8MGPSDriver_TypeDef* pSelf);
@@ -144,9 +128,9 @@ GPSDriver_Status_TypeDef GPSDriver_stopReceiver(volatile Ublox8MGPSDriver_TypeDe
 GPSDriver_Status_TypeDef GPSDriver_pullLastFrame(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSData_TypeDef* pRetGPSData);
 
 GPSDriver_Status_TypeDef GPSDriver_getState(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSDriver_State_TypeDef* pRetState);
-GPSDriver_Status_TypeDef GPSDriver_getFixType(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSFixType* pRetFixType);
 
 GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSelf);
+
 
 //< ----- Unit-test-like functions ----- >//
 

@@ -105,7 +105,7 @@ static void MX_NVIC_Init(void);
 void FIFOTest(){
 
 	volatile FIFOMultiread_TypeDef						rxFifo = {0};
-	volatile UartReceiverStartTerm_FIFOElem_TypeDef				receiveBuffer[128];
+	volatile UartReceiverStartTerm_FIFOElem_TypeDef		receiveBuffer[128];
 
 	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiverStartTerm_FIFOElem_TypeDef), 128);
 	FIFOMultireadReader_TypeDef id;
@@ -440,11 +440,11 @@ void Error_Handler(void)
 
   while(1)
   {
-	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
-	  HAL_Delay(75);
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
 	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
+	  HAL_Delay(75);
+	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
 	  HAL_Delay(75);
   }
   /* USER CODE END Error_Handler_Debug */

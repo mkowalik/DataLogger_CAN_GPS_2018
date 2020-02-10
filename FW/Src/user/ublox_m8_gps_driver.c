@@ -37,6 +37,8 @@
 
 #define GPS_NMEA_CHECKSUM_LENGTH				2
 
+#define GPS_NMEA_BASE_CONST_YEAR				2000
+
 #define GPS_NMEA_SUFIX_LENGTH					(GPS_NMEA_CHECKSUM_SEPARATOR_SIGN_LENGTH+GPS_NMEA_CHECKSUM_LENGTH+GPS_NMEA_PRE_TERMINATION_SIGN_LENGTH+GPS_NMEA_TERMINATION_SIGN_LENGTH)
 
 #define GPS_KNOT_TO_KPH_FACTOR					FixedPoint_constrDecimalFrac(1U, 852U, 1000U, GPS_NMEA_FIXED_POINT_FRACTIONAL_BITS)
@@ -110,8 +112,6 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNGGASentence(volatile Ublox8MG
 static GPSDriver_Status_TypeDef _GPSDriver_handleGNGSASentence(volatile Ublox8MGPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
 static GPSDriver_Status_TypeDef _GPSDriver_handleGNRMCSentence(volatile Ublox8MGPSDriver_TypeDef* pSelf, _GPSDriver_NMEASentenceString* pNmeaSentenceString);
 
-static void _GPSDriver_FixTypeRawUARTCharHandler(uint8_t dataByte, uint32_t timestamp, void* pArgs);
-
 //< ----- Public functions ----- >//
 
 GPSDriver_Status_TypeDef GPSDriver_init(
@@ -142,7 +142,6 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 	pSelf->gpggaPartialSegmentTimestamp	= 0;
 	pSelf->gpgsaPartialSegmentTimestamp = 0;
 	pSelf->gprmcPartialSegmentTimestamp	= 0;
-	pSelf->fixType						= GPSFixType_NoFix;
 	memset((void*)&pSelf->partialGPSData, 0, sizeof(GPSData_TypeDef));
 	if (frequency == Config_GPSFrequency_OFF){
 		pSelf->state = GPSDriver_State_OFF;
@@ -177,18 +176,30 @@ GPSDriver_Status_TypeDef GPSDriver_init(
 		pSelf->state = GPSDriver_State_Initialized;
 	}
 
-	if (ret == GPSDriver_Status_OK){
-		if ( UartDriver_setReceivedByteCallback(
-				pSelf->pUartDriverHandler,
-				_GPSDriver_FixTypeRawUARTCharHandler,
-				(void*)pSelf,
-				&(pSelf->fixTypeRawUARTCharHandlerCallbackIt) ) != UartDriver_Status_OK)
-		{
-			ret = GPSDriver_Status_UartDriverError;
-		}
+	return ret;
+}
+
+GPSDriver_Status_TypeDef GPSDriver_clear(volatile Ublox8MGPSDriver_TypeDef*	pSelf){
+
+	if (pSelf == NULL){
+		return GPSDriver_Status_NullPointerError;
 	}
 
-	return ret;
+	if (pSelf->state == GPSDriver_State_OFF){
+		return GPSDriver_Status_OK;
+	}
+
+	if (pSelf->state == GPSDriver_State_UnInitialized || pSelf->state == GPSDriver_State_DuringInit){
+		return GPSDriver_Status_UnInitializedError;
+	}
+
+	if (UartReceiverStartTerm_clear(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
+		return GPSDriver_Status_UartReceiverStartTermError;
+	}
+	if (UartReceiverStartLength_clear(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
+		return GPSDriver_Status_UartReceiverStartLengthError;
+	}
+	return GPSDriver_Status_OK;
 }
 
 GPSDriver_Status_TypeDef GPSDriver_startReceiver(volatile Ublox8MGPSDriver_TypeDef* pSelf) {
@@ -356,16 +367,6 @@ GPSDriver_Status_TypeDef GPSDriver_getState(volatile Ublox8MGPSDriver_TypeDef* p
 	return GPSDriver_Status_OK;
 }
 
-GPSDriver_Status_TypeDef GPSDriver_getFixType(volatile Ublox8MGPSDriver_TypeDef* pSelf, GPSFixType* pRetFixType){
-	if (pSelf == NULL || pRetFixType == NULL){
-		return GPSDriver_Status_NullPointerError;
-	}
-
-	(*pRetFixType) = pSelf->fixType;
-
-	return GPSDriver_Status_OK;
-}
-
 GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSelf){
 
 	GPSDriver_Status_TypeDef ret = GPSDriver_Status_OK;
@@ -374,17 +375,12 @@ GPSDriver_Status_TypeDef GPSDriver_setOFF(volatile Ublox8MGPSDriver_TypeDef* pSe
 	}
 
 	if (pSelf->state == GPSDriver_State_Running){
-		if (UartReceiverStartTerm_stop(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
-			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
-		}
-		if (UartReceiverStartTerm_clear(pSelf->pUartNMEAReceiverHandler) != UartReceiverStartTerm_Status_OK){
-			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
-		}
+		ret = GPSDriver_stopReceiver(pSelf);
 		if (UartReceiverStartLength_stop(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
 			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
 		}
 		if (UartReceiverStartLength_clear(pSelf->pUartUBXReceiverHandler) != UartReceiverStartLength_Status_OK){
-			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartTermError : ret;
+			ret = (ret == GPSDriver_Status_OK) ? GPSDriver_Status_UartReceiverStartLengthError : ret;
 		}
 	}
 
@@ -785,6 +781,7 @@ static GPSDriver_Status_TypeDef _GPSDriver_parseDate(uint8_t* pSentence, uint16_
 		return GPSDriver_Status_NMEASentenceError;
 	}
 	pRetDateTime->year	+= tmp;
+	pRetDateTime->year	+= GPS_NMEA_BASE_CONST_YEAR;
 
 	return GPSDriver_Status_OK;
 }
@@ -1135,85 +1132,6 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNRMCSentence(volatile Ublox8MG
 	return ret;
 }
 
-static void _GPSDriver_FixTypeRawUARTCharHandler(uint8_t dataByte, uint32_t timestamp, void* pArgs){
-	UNUSED(timestamp);
-
-	Ublox8MGPSDriver_TypeDef* pSelf = (Ublox8MGPSDriver_TypeDef*) pArgs;
-
-	switch (pSelf->fixTypeParserState){
-	case _GPSFixTypeParser_State_WaitingFor$:
-		if (dataByte == ((uint8_t)'$')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor1stG;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingFor1stG:
-		if (dataByte == ((uint8_t)'G')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingForN;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingForN:
-		if (dataByte == ((uint8_t)'N')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor2ndG;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingFor2ndG:
-		if (dataByte == ((uint8_t)'G')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingForS;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingForS:
-		if (dataByte == ((uint8_t)'S')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingForA;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingForA:
-		if (dataByte == ((uint8_t)'A')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor1stComma;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingFor1stComma:
-		if (dataByte == ((uint8_t)',')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingForAutoManualFixSelectionSign;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingForAutoManualFixSelectionSign:
-		if ((dataByte == ((uint8_t)'A')) || (dataByte == ((uint8_t)'M'))){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor2ndComma;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingFor2ndComma:
-		if (dataByte == ((uint8_t)',')){
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingForFixTypeSign;
-		} else {
-			pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		}
-		return;
-	case _GPSFixTypeParser_State_WaitingForFixTypeSign:
-		if (_GPSDriver_parseGPSFixType(&dataByte, 1, &(pSelf->fixType)) != GPSDriver_Status_OK){
-			Warning_Handler("_GPSDriver_parseGPSFixType returned error");
-		}
-		pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-		return;
-	default:
-		pSelf->fixTypeParserState = _GPSFixTypeParser_State_WaitingFor$;
-	}
-}
 //< ----- test functions ----- >//
 
 #ifdef  USE_FULL_ASSERT

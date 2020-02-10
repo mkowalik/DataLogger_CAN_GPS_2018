@@ -8,9 +8,36 @@
 #include "user/rtc_driver.h"
 #include "rtc.h"
 
+//< ----- private functions prototypes ----- >//
 
+static RTCDriver_Status_TypeDef _RTCDriver_validateDate(const DateTime_TypeDef* pDateTime);
+static RTCDriver_Status_TypeDef _RTCDriver_HALInit(RTCDriver_TypeDef* pSelf);
+static RTCDriver_Status_TypeDef _RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDef* pSelf);
+static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, RTC_TimeTypeDef* pTime, RTC_DateTypeDef* pDate);
 
-static RTCDriver_Status_TypeDef RTCDriver_HALInit(RTCDriver_TypeDef* pSelf){
+static RTCDriver_Status_TypeDef _RTCDriver_DateToSecondsFrom2000(const DateTime_TypeDef* pDateTime, uint32_t* pRetSconds);
+static RTCDriver_Status_TypeDef _RTCDriver_SecondsFrom2000ToDate(uint32_t seconds, DateTime_TypeDef* pRetDateTime);
+
+//< ----- private functions implementations ----- >//
+
+static RTCDriver_Status_TypeDef _RTCDriver_validateDate(const DateTime_TypeDef* pDateTime){
+
+	if (pDateTime == NULL){
+		return RTCDriver_Status_NullPointerError;
+	}
+
+	if ((pDateTime->year > RTC_DRIVER_YEAR_MAX_VALUE) || (pDateTime->year < RTC_DRIVER_YEAR_MIN_VALUE) ||
+			(pDateTime->month > RTC_DRIVER_MONTH_MAX_VALUE) || (pDateTime->month < RTC_DRIVER_MONTH_MIN_VALUE) ||
+			(pDateTime->day > RTC_DRIVER_DAY_MAX_VALUE) || (pDateTime->day < RTC_DRIVER_DAY_MIN_VALUE)) {
+		return RTCDriver_Status_WrongDateFormatError;
+	} else if ((pDateTime->hour > RTC_DRIVER_HOUR_MAX_VALUE) || (pDateTime->minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (pDateTime->second > RTC_DRIVER_SECOND_MAX_VALUE) ) {
+		return RTCDriver_Status_WrongTimeFormatError;
+	}
+
+	return RTCDriver_Status_OK;
+}
+
+static RTCDriver_Status_TypeDef _RTCDriver_HALInit(RTCDriver_TypeDef* pSelf){
 
 	if (pSelf->pRTCHandler->State != HAL_RTC_STATE_RESET){
 		return RTCDriver_Status_Error;
@@ -30,7 +57,7 @@ static RTCDriver_Status_TypeDef RTCDriver_HALInit(RTCDriver_TypeDef* pSelf){
 	return RTCDriver_Status_OK;
 }
 
-static RTCDriver_Status_TypeDef RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDef* pSelf ){
+static RTCDriver_Status_TypeDef _RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDef* pSelf){
 
 	if (pSelf->pRTCHandler->State != HAL_RTC_STATE_READY){
 		return RTCDriver_Status_NotInitialisedError;
@@ -55,8 +82,7 @@ static RTCDriver_Status_TypeDef RTCDriver_HALRestoreTimeAndDate(RTCDriver_TypeDe
 	return RTCDriver_Status_OK;
 }
 
-static RTCDriver_Status_TypeDef RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, RTC_TimeTypeDef* pTime, RTC_DateTypeDef* pDate){
-
+static RTCDriver_Status_TypeDef _RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* pSelf, RTC_TimeTypeDef* pTime, RTC_DateTypeDef* pDate){
 
 	if (HAL_RTC_SetTime(pSelf->pRTCHandler, pTime, RTC_FORMAT_BIN) != HAL_OK) {
 		return RTCDriver_Status_Error;
@@ -75,44 +101,176 @@ static RTCDriver_Status_TypeDef RTCDriver_HALSetTimeAndDate(RTCDriver_TypeDef* p
 	return RTCDriver_Status_OK;
 }
 
+static RTCDriver_Status_TypeDef _RTCDriver_DateToSecondsFrom2000(const DateTime_TypeDef* pDateTime, uint32_t* pRetSconds){
+
+	if ((pDateTime == NULL) || (pRetSconds == NULL)){
+		return RTCDriver_Status_NullPointerError;
+	}
+
+	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
+	if ((ret = _RTCDriver_validateDate(pDateTime)) != RTCDriver_Status_OK){
+		return ret;
+	}
+
+	(*pRetSconds) = 0;
+
+	uint16_t year = (pDateTime->year - RTC_DRIVER_YEAR_MIN_VALUE);
+	while (year > 0){
+		if (year % 4 == 0){
+			(*pRetSconds) += (366 * 24 * 60 * 60);
+		} else {
+			(*pRetSconds) += (365 * 24 * 60 * 60);
+		}
+		year--;
+	}
+
+	uint16_t month = pDateTime->month -1;
+
+	while (month > 0){
+		switch (month){
+			case 1:
+			case 3:
+			case 5:
+			case 7:
+			case 8:
+			case 10:
+			case 12:
+				(*pRetSconds) += (31 * 24 * 60 * 60);
+				break;
+			case 4:
+			case 6:
+			case 9:
+			case 11:
+				(*pRetSconds) += (30 * 24 * 60 * 60);
+				break;
+			case 2:
+				if (pDateTime->year % 4 == 0){
+					(*pRetSconds) += (29 * 24 * 60 * 60);
+				} else {
+					(*pRetSconds) += (28 * 24 * 60 * 60);
+				}
+				break;
+			default:
+				return RTCDriver_Status_Error;
+		}
+		month--;
+	}
+
+	(*pRetSconds) += (((uint32_t)pDateTime->day - 1) * 24 * 60 * 60); //< minus 1 because counting days from 1, not from 0
+	(*pRetSconds) += (((uint32_t)pDateTime->hour) * 60 * 60);
+	(*pRetSconds) += (((uint32_t)pDateTime->minute) * 60);
+	(*pRetSconds) += ((uint32_t)pDateTime->second);
+
+	return RTCDriver_Status_OK;
+}
+
+
+static RTCDriver_Status_TypeDef _RTCDriver_SecondsFrom2000ToDate(uint32_t seconds, DateTime_TypeDef* pRetDateTime){
+
+	if (pRetDateTime == NULL){
+		return RTCDriver_Status_NullPointerError;
+	}
+
+	pRetDateTime->year = 0;
+	while (true){
+		uint32_t secsToSubstr = 0;
+		if ((pRetDateTime->year) % 4 == 0){
+			secsToSubstr = (366 * 24 * 60 * 60);
+		} else {
+			secsToSubstr = (365 * 24 * 60 * 60);
+		}
+		if (secsToSubstr <= seconds){
+			seconds -= secsToSubstr;
+			(pRetDateTime->year)++;
+		} else {
+			break;
+		}
+	}
+	pRetDateTime->year += RTC_DRIVER_YEAR_MIN_VALUE;
+
+	pRetDateTime->month = 1;
+	while (true){
+		uint32_t secsToSubstr = 0;
+		switch (pRetDateTime->month){
+			case 1:
+			case 3:
+			case 5:
+			case 7:
+			case 8:
+			case 10:
+			case 12:
+				secsToSubstr = (31 * 24 * 60 * 60);
+				break;
+			case 4:
+			case 6:
+			case 9:
+			case 11:
+				secsToSubstr = (30 * 24 * 60 * 60);
+				break;
+			case 2:
+				if (((pRetDateTime->year) % 4) == 0){
+					secsToSubstr = (29 * 24 * 60 * 60);
+				} else {
+					secsToSubstr = (28 * 24 * 60 * 60);
+				}
+				break;
+			default:
+				return RTCDriver_Status_Error;
+		}
+		if (secsToSubstr <= seconds){
+			seconds -= secsToSubstr;
+			(pRetDateTime->month)++;
+		} else {
+			break;
+		}
+	}
+
+	pRetDateTime->day		= (seconds / (24 * 60 * 60)) + 1; //< plus 1 because counting days from 1, not from 0
+	seconds					%= (24 * 60 * 60);
+	pRetDateTime->hour		= (seconds / (60 * 60));
+	seconds					%= (60 * 60);
+	pRetDateTime->minute	= (seconds / 60);
+	seconds					%= 60;
+	pRetDateTime->second	= seconds;
+
+	return RTCDriver_Status_OK;
+}
+
+//< ----- Public functions ----- >//
 
 RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleTypeDef* pRTCHandler){
 
-	if (pSelf->state != RTCDriver_State_UnInitialized){
-		return RTCDriver_Status_Error;
-	}
-
-	if (pRTCHandler == NULL){
-		return RTCDriver_Status_Error;
+	if ((pSelf == NULL) || (pRTCHandler == NULL)){
+		return RTCDriver_Status_NullPointerError;
 	}
 
 	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
 	pSelf->pRTCHandler = pRTCHandler;
 
-	if ((ret = RTCDriver_HALInit(pSelf)) != RTCDriver_Status_OK){
+	if ((ret = _RTCDriver_HALInit(pSelf)) != RTCDriver_Status_OK){
 		return ret;
 	}
 
-	ret = RTCDriver_HALRestoreTimeAndDate(pSelf);
+	ret = _RTCDriver_HALRestoreTimeAndDate(pSelf);
 	if (ret != RTCDriver_Status_OK && ret != RTCDriver_Status_TimeAndDateNotRestoredError){
 		return ret;
 	}
 	if (ret == RTCDriver_Status_TimeAndDateNotRestoredError){
 
-		RTC_TimeTypeDef sTime;
-		RTC_DateTypeDef sDate;
+		RTC_TimeTypeDef sTime = {0};
+		RTC_DateTypeDef sDate = {0};
 
-		sTime.Hours = 23;
-		sTime.Minutes = 56;
-		sTime.Seconds = 0;
-		sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-		sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-		sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-		sDate.Month = RTC_MONTH_APRIL;
-		sDate.Date = 17;
-		sDate.Year = (2019-RTC_DRIVER_YEAR_MIN_VALUE);
+		sTime.Hours				= 0;
+		sTime.Minutes			= 0;
+		sTime.Seconds			= 0;
+		sTime.DayLightSaving	= RTC_DAYLIGHTSAVING_NONE;
+		sTime.StoreOperation	= RTC_STOREOPERATION_RESET;
+		sDate.WeekDay			= RTC_WEEKDAY_MONDAY;
+		sDate.Month				= RTC_MONTH_JANUARY;
+		sDate.Date				= 0;
+		sDate.Year				= 0;
 
-		if ((ret = RTCDriver_HALSetTimeAndDate(pSelf, &sTime, &sDate)) != RTCDriver_Status_OK){
+		if ((ret = _RTCDriver_HALSetTimeAndDate(pSelf, &sTime, &sDate)) != RTCDriver_Status_OK){
 			return ret;
 		}
 	}
@@ -124,50 +282,51 @@ RTCDriver_Status_TypeDef RTCDriver_init(RTCDriver_TypeDef* pSelf, RTC_HandleType
 
 RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef* pRetDateTime){
 
+	if ((pSelf == NULL) || (pRetDateTime == NULL)){
+		return RTCDriver_Status_NullPointerError;
+	}
+
 	if (pSelf->state == RTCDriver_State_UnInitialized){
 		return RTCDriver_Status_NotInitialisedError;
 	}
 
-	RTC_DateTypeDef date;
-	RTC_TimeTypeDef time;
+	RTC_TimeTypeDef sTime = {0};
+	RTC_DateTypeDef sDate = {0};
 
-	if (HAL_RTC_WaitForSynchro(pSelf->pRTCHandler) != HAL_OK){
+	if (HAL_RTC_GetTime(pSelf->pRTCHandler, &sTime, RTC_FORMAT_BIN) != HAL_OK){
 		return RTCDriver_Status_Error;
 	}
-	if (HAL_RTC_GetTime(pSelf->pRTCHandler, &time, RTC_FORMAT_BIN) != HAL_OK){
-		return RTCDriver_Status_Error;
-	}
-	if (HAL_RTC_GetDate(pSelf->pRTCHandler, &date, RTC_FORMAT_BIN) != HAL_OK){
+	if (HAL_RTC_GetDate(pSelf->pRTCHandler, &sDate, RTC_FORMAT_BIN) != HAL_OK){
 		return RTCDriver_Status_Error;
 	}
 
-	pRetDateTime->year = 	(uint16_t)(date.Year + RTC_DRIVER_YEAR_MIN_VALUE);
-	pRetDateTime->month = 	date.Month;
-	pRetDateTime->day = 	date.Date;
-	pRetDateTime->hour = 	time.Hours;
-	pRetDateTime->minute = 	time.Minutes;
-	pRetDateTime->second = 	time.Seconds;
+	pRetDateTime->year =	(uint16_t)(sDate.Year + RTC_DRIVER_YEAR_MIN_VALUE);
+	pRetDateTime->month =	sDate.Month;
+	pRetDateTime->day =		sDate.Date;
+	pRetDateTime->hour = 	sTime.Hours;
+	pRetDateTime->minute =	sTime.Minutes;
+	pRetDateTime->second =	sTime.Seconds;
 
 	return RTCDriver_Status_OK;
-
 }
 
 RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef dateTime){
 
+	if (pSelf == NULL){
+		return RTCDriver_Status_NullPointerError;
+	}
+
 	if (pSelf->state == RTCDriver_State_UnInitialized){
 		return RTCDriver_Status_NotInitialisedError;
 	}
 
-	if ((dateTime.year > RTC_DRIVER_YEAR_MAX_VALUE) || (dateTime.year < RTC_DRIVER_YEAR_MIN_VALUE) ||
-			(dateTime.month > RTC_DRIVER_MONTH_MAX_VALUE) || (dateTime.month < RTC_DRIVER_MONTH_MIN_VALUE) ||
-			(dateTime.day > RTC_DRIVER_DAY_MAX_VALUE) || (dateTime.day < RTC_DRIVER_DAY_MIN_VALUE)) {
-		return RTCDriver_Status_WrongDateFormatError;
-	} else if ((dateTime.hour > RTC_DRIVER_HOUR_MAX_VALUE) || (dateTime.minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (dateTime.second > RTC_DRIVER_SECOND_MAX_VALUE) ) {
-		return RTCDriver_Status_WrongTimeFormatError;
+	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
+	if ((ret = _RTCDriver_validateDate(&dateTime)) != RTCDriver_Status_OK){
+		return ret;
 	}
 
-	RTC_DateTypeDef date;
-	RTC_TimeTypeDef time;
+	RTC_DateTypeDef date = {0};
+	RTC_TimeTypeDef time = {0};
 
 	date.Year =		(dateTime.year - RTC_DRIVER_YEAR_MIN_VALUE);
 	date.Month =	dateTime.month;
@@ -176,7 +335,7 @@ RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, Date
 	time.Minutes =	dateTime.minute;
 	time.Seconds =	dateTime.second;
 
-	return RTCDriver_HALSetTimeAndDate(pSelf, &time, &date);
+	return _RTCDriver_HALSetTimeAndDate(pSelf, &time, &date);
 }
 
 RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds){
@@ -185,55 +344,34 @@ RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint3
 		return RTCDriver_Status_Error;
 	}
 
-	if ((pDateTime->year > RTC_DRIVER_YEAR_MAX_VALUE) || (pDateTime->year < RTC_DRIVER_YEAR_MIN_VALUE) ||
-			(pDateTime->month > RTC_DRIVER_MONTH_MAX_VALUE) || (pDateTime->month < RTC_DRIVER_MONTH_MIN_VALUE) ||
-			(pDateTime->day > RTC_DRIVER_DAY_MAX_VALUE) || (pDateTime->day < RTC_DRIVER_DAY_MIN_VALUE)) {
-		return RTCDriver_Status_WrongDateFormatError;
-	} else if ((pDateTime->hour > RTC_DRIVER_HOUR_MAX_VALUE) || (pDateTime->minute > RTC_DRIVER_MINUTE_MAX_VALUE) || (pDateTime->second > RTC_DRIVER_SECOND_MAX_VALUE) ) {
-		return RTCDriver_Status_WrongTimeFormatError;
+	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
+	uint32_t secondsDate = 0;
+	if ((ret = _RTCDriver_DateToSecondsFrom2000(pDateTime, &secondsDate)) != RTCDriver_Status_OK){
+		return ret;
 	}
 
-	pDateTime->second += (seconds % 60);
-	seconds /= 60; //< minutes in the variable 'seconds'
-
-	pDateTime->minute += (seconds % 60);
-	seconds /= 60; //< hours in the variable 'seconds'
-
-	pDateTime->hour += (seconds % 24);
-	seconds /= 24;
-
-	switch (pDateTime->month){
-		case 1:
-		case 3:
-		case 5:
-		case 7:
-		case 8:
-		case 10:
-		case 12:
-			pDateTime->month += (seconds % 31);
-			seconds /= 31;
-		case 4:
-		case 6:
-		case 9:
-		case 11:
-			pDateTime->month += (seconds % 30);
-			seconds /= 30;
-		case 2:
-			if (pDateTime->year % 4 == 0){
-				pDateTime->month += (seconds % 29);
-				seconds /= 29;
-			} else {
-				pDateTime->month += (seconds % 28);
-				seconds /= 28;
-			}
-		default:
-			return RTCDriver_Status_Error;
-	}
-
-	pDateTime->year += (seconds % 12);
-
-	return RTCDriver_Status_OK;
+	return _RTCDriver_SecondsFrom2000ToDate(secondsDate + seconds, pDateTime);
 }
+
+RTCDriver_Status_TypeDef RTCDriver_substractSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds){
+
+	if (pDateTime == NULL){
+		return RTCDriver_Status_Error;
+	}
+
+	RTCDriver_Status_TypeDef ret = RTCDriver_Status_OK;
+	uint32_t secondsDate = 0;
+	if ((ret = _RTCDriver_DateToSecondsFrom2000(pDateTime, &secondsDate)) != RTCDriver_Status_OK){
+		return ret;
+	}
+
+	if (seconds > secondsDate){
+		return RTCDriver_Status_SecondsValueTooHighError;
+	}
+
+	return _RTCDriver_SecondsFrom2000ToDate(secondsDate - seconds, pDateTime);
+}
+
 
 bool RTCDriver_isAfter(DateTime_TypeDef dateTimeExpectedBefore, DateTime_TypeDef dateTimeExpectedAfter){
 
@@ -243,7 +381,6 @@ bool RTCDriver_isAfter(DateTime_TypeDef dateTimeExpectedBefore, DateTime_TypeDef
 	if (dateTimeExpectedAfter.month > dateTimeExpectedBefore.month) {
 		return true;
 	}
-
 
 	if (dateTimeExpectedAfter.day < dateTimeExpectedBefore.day) {
 		return false;

@@ -100,6 +100,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_Type
 
 	switch (pSelf->state){
 	case MSTimerDriver_State_Idle:
+	case MSTimerDriver_State_NotInitialised:
 		*pRetTime = 0;
 		break;
 	case MSTimerDriver_State_Suspended:

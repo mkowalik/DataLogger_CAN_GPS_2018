@@ -8,6 +8,8 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#include <stdbool.h>
+
 #include "user/file_system_wrapper.h"
 #include "user/file_reading_buffer.h"
 #include "user/file_writing_buffer.h"
@@ -117,6 +119,8 @@ typedef struct {
 	Config_CANBitrate_TypeDef		canBitrate;
 	Config_GPSFrequency_TypeDef		gpsFrequency;
 	uint16_t						rtcConfigurationFrameID;
+	bool							useDateAndTimeFromGPS;
+	int8_t							timeZoneShift_30minsUnit;
 
 	uint16_t 						numOfFrames;
 	ConfigFrame_TypeDef 			canFrames[CONFIG_MAX_FRAMES_NUMBER];

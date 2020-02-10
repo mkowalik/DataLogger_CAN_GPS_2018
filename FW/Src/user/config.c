@@ -428,6 +428,16 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_readConfigFilePreambu
 		return ret;
 	}
 
+	uint8_t tmp = 0;
+	if (FileReadingBuffer_readUInt8(&(pSelf->sReadingBuffer), &tmp) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileReadingBufferError;
+	}
+	pSelf->sConfig.useDateAndTimeFromGPS = (tmp == 0) ? false : true;
+
+	if (FileReadingBuffer_readInt8(&(pSelf->sReadingBuffer), &(pSelf->sConfig.timeZoneShift_30minsUnit)) != FileReadingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileReadingBufferError;
+	}
+
 	if (FileReadingBuffer_readUInt16(&pSelf->sReadingBuffer, &pSelf->sConfig.numOfFrames) != FileReadingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileReadingBufferError;
 	}
@@ -621,6 +631,13 @@ static ConfigDataManager_Status_TypeDef _ConfigDataManager_writeConfigFilePreamb
 	}
 
 	if (FileWritingBuffer_writeUInt16(pWritingBuffer, pSelf->sConfig.rtcConfigurationFrameID) != FileWritingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileWritingBufferError;
+	}
+
+	if (FileWritingBuffer_writeUInt8(pWritingBuffer, (pSelf->sConfig.useDateAndTimeFromGPS) ? 1U : 0U) != FileWritingBuffer_Status_OK){
+		return ConfigDataManager_Status_FileWritingBufferError;
+	}
+	if (FileWritingBuffer_writeInt8(pWritingBuffer, pSelf->sConfig.timeZoneShift_30minsUnit) != FileWritingBuffer_Status_OK){
 		return ConfigDataManager_Status_FileWritingBufferError;
 	}
 

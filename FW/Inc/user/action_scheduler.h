@@ -25,6 +25,7 @@ typedef enum {
 	ActionScheduler_Status_CANReceiverError,
 	ActionScheduler_Status_GPSDriverError,
 	ActionScheduler_Status_DataSaverError,
+	ActionScheduler_Status_RTCDriverError,
 	ActionScheduler_Status_Error
 } ActionScheduler_Status_TypeDef;
 
@@ -68,8 +69,9 @@ typedef struct _ActionScheduler_TypeDef {
 	RTCDriver_TypeDef*				pRTCDriver;
 	LedDriver_TypeDef*				pStatusLedDriver;
 	LedDriver_TypeDef*				pGPSLedDriver;
-	GPSFixType						prevDisplayedGPSFixType;
 	uint32_t						logStartMsTime;
+	GPSFixType						lastGpsFixType;
+	bool							dateAndTimeUpdated;
 	CompareOperatorFunction			startTriggersCompareOperatorFunctions[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];
 	uint32_t						startTriggerFrameTimeout[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];
 	CompareOperatorFunction			stopTriggersCompareOperatorFunctions[CONFIG_MAX_START_LOG_TRIGGER_NUMBER];

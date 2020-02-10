@@ -13,8 +13,8 @@
 #include "rtc.h"
 #include "date_time_data.h"
 
-#define RTC_DRIVER_YEAR_MIN_VALUE	1980
-#define RTC_DRIVER_YEAR_MAX_VALUE	2079 //< Difference betweend Year max and min no bigger than 100
+#define RTC_DRIVER_YEAR_MIN_VALUE	2000
+#define RTC_DRIVER_YEAR_MAX_VALUE	2099 //< Difference betweend Year max and min no bigger than 100
 #define RTC_DRIVER_MONTH_MIN_VALUE	1
 #define RTC_DRIVER_MONTH_MAX_VALUE	12
 #define RTC_DRIVER_DAY_MIN_VALUE	1
@@ -26,9 +26,11 @@
 typedef enum {
 	RTCDriver_Status_OK = 0,
 	RTCDriver_Status_NotInitialisedError,
+	RTCDriver_Status_NullPointerError,
 	RTCDriver_Status_TimeAndDateNotRestoredError,
 	RTCDriver_Status_WrongDateFormatError,
 	RTCDriver_Status_WrongTimeFormatError,
+	RTCDriver_Status_SecondsValueTooHighError,
 	RTCDriver_Status_Error
 } RTCDriver_Status_TypeDef;
 
@@ -52,6 +54,7 @@ RTCDriver_Status_TypeDef RTCDriver_getDateAndTime(RTCDriver_TypeDef* pSelf, Date
 RTCDriver_Status_TypeDef RTCDriver_setDateAndTime(RTCDriver_TypeDef* pSelf, DateTime_TypeDef dateTime);
 
 RTCDriver_Status_TypeDef RTCDriver_addSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds);
+RTCDriver_Status_TypeDef RTCDriver_substractSeconds(DateTime_TypeDef* pDateTime, uint32_t seconds);
 
 bool RTCDriver_isAfter(DateTime_TypeDef dateTimeExpectedBefore, DateTime_TypeDef dateTimeExpectedAfter);
 
