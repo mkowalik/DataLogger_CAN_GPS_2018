@@ -36,7 +36,7 @@ typedef struct {
 } FIFOQueue_TypeDef;
 
 FIFO_Status_TypeDef	FIFOQueue_init(volatile FIFOQueue_TypeDef* pSelf, volatile void* pTabPtrArg, uint8_t elementSize, uint16_t size);
-FIFO_Status_TypeDef	FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatile void* pElement);
+FIFO_Status_TypeDef	FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, const volatile void* pElement);
 FIFO_Status_TypeDef	FIFOQueue_dequeue(volatile FIFOQueue_TypeDef* pSelf, volatile void* pRetElement);
 FIFO_Status_TypeDef	FIFOQueue_lastElement(volatile FIFOQueue_TypeDef* pSelf, volatile void* pLastElement);
 FIFO_Status_TypeDef	FIFOQueue_elementsNumber(volatile FIFOQueue_TypeDef* pSelf, volatile uint16_t* pRetElementsNumber);

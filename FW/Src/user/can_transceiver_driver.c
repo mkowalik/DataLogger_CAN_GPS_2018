@@ -114,7 +114,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTransceiverDriver_TypeDef* pSelf, uint16_t* pFilters, uint16_t filtersNumber){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTransceiverDriver_TypeDef* pSelf, const uint16_t* pFilters, uint16_t filtersNumber){
 
 	if ((pSelf == NULL) || (pFilters == NULL)){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -299,7 +299,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_start(CANTransceiverDri
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTransceiverDriver_TypeDef* pSelf, CANData_TypeDef* pData){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTransceiverDriver_TypeDef* pSelf, const CANData_TypeDef* pData){
 	//TODO
 	UNUSED(pSelf);
 	UNUSED(pData);

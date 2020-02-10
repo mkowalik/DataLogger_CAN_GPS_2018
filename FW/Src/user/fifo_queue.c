@@ -29,7 +29,7 @@ FIFO_Status_TypeDef FIFOQueue_init(volatile FIFOQueue_TypeDef* pSelf, volatile v
 	return FIFO_Status_OK;
 }
 
-FIFO_Status_TypeDef FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, volatile void* pElement){
+FIFO_Status_TypeDef FIFOQueue_enqueue(volatile FIFOQueue_TypeDef* pSelf, const volatile void* pElement){
 
 	if ((pSelf == NULL) || (pElement == NULL)) {
 		return FIFO_Status_Error;

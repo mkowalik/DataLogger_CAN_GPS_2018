@@ -146,7 +146,7 @@ DataSaver_Status_TypeDef DataSaver_endAGHLogFile(DataSaver_TypeDef* pSelf){
 	return DataSaver_Status_OK;
 }
 
-DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData){
+DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, const CANData_TypeDef* pData){
 
 	if ((pSelf == NULL) || (pData == NULL)){
 		return DataSaver_Status_NullPointerError;
@@ -179,7 +179,7 @@ DataSaver_Status_TypeDef DataSaver_writeCANData(DataSaver_TypeDef* pSelf, CANDat
 	return DataSaver_Status_OK;
 }
 
-DataSaver_Status_TypeDef DataSaver_writeCANError (DataSaver_TypeDef* pSelf, CANErrorData_TypeDef* pCANErrData){
+DataSaver_Status_TypeDef DataSaver_writeCANError (DataSaver_TypeDef* pSelf, const CANErrorData_TypeDef* pCANErrData){
 
 	if ((pSelf == NULL) || (pCANErrData == NULL)){
 		return DataSaver_Status_NullPointerError;
@@ -204,7 +204,7 @@ DataSaver_Status_TypeDef DataSaver_writeCANError (DataSaver_TypeDef* pSelf, CANE
 	return DataSaver_Status_OK;
 }
 
-DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData){
+DataSaver_Status_TypeDef DataSaver_writeGPSData(DataSaver_TypeDef* pSelf, const GPSData_TypeDef* pData){
 
 	if ((pSelf == NULL) || (pData == NULL)){
 		return DataSaver_Status_NullPointerError;

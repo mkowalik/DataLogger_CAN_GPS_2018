@@ -83,15 +83,15 @@ UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UA
 UartDriver_Status_TypeDef UartDriver_getBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t* pRetBaudRate);
 UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate);
 
-UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t length, uint32_t timeout);
+UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, const uint8_t* pBuffer, uint16_t length, uint32_t timeout);
 
 UartDriver_Status_TypeDef UartDriver_receiveBytesTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pReceiveBuffer,
 		uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout);
 UartDriver_Status_TypeDef UartDriver_receiveNBytes(volatile UartDriver_TypeDef* pSelf, volatile uint8_t* pReceiveBuffer, uint16_t bytesToRead, uint32_t timeout);
 
-UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer,
+UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, const uint8_t* pSendBuffer,
 		uint16_t bytesToSend, uint8_t* pReceiveBuffer, uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout);
-UartDriver_Status_TypeDef UartDriver_sendAndReceiveNBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer,
+UartDriver_Status_TypeDef UartDriver_sendAndReceiveNBytes(volatile UartDriver_TypeDef* pSelf, const uint8_t* pSendBuffer,
 		uint16_t bytesToSend, uint8_t* pReceiveBuffer, uint16_t bytesToRead, uint32_t timeout);
 
 UartDriver_Status_TypeDef UartDriver_setReceivedByteCallback(

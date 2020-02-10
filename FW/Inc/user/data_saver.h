@@ -57,8 +57,8 @@ typedef enum {
 DataSaver_Status_TypeDef DataSaver_init				(DataSaver_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, FileSystemWrapper_TypeDef* pFileSystemHandler);
 DataSaver_Status_TypeDef DataSaver_startAGHLogFile	(DataSaver_TypeDef* pSelf, DateTime_TypeDef dateTime);
 DataSaver_Status_TypeDef DataSaver_endAGHLogFile	(DataSaver_TypeDef* pSelf);
-DataSaver_Status_TypeDef DataSaver_writeCANData		(DataSaver_TypeDef* pSelf, CANData_TypeDef* pData);
-DataSaver_Status_TypeDef DataSaver_writeCANError	(DataSaver_TypeDef* pSelf, CANErrorData_TypeDef* pCANErrData);
-DataSaver_Status_TypeDef DataSaver_writeGPSData		(DataSaver_TypeDef* pSelf, GPSData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_writeCANData		(DataSaver_TypeDef* pSelf, const CANData_TypeDef* pData);
+DataSaver_Status_TypeDef DataSaver_writeCANError	(DataSaver_TypeDef* pSelf, const CANErrorData_TypeDef* pCANErrData);
+DataSaver_Status_TypeDef DataSaver_writeGPSData		(DataSaver_TypeDef* pSelf, const GPSData_TypeDef* pData);
 
 #endif /* DATA_SAVER_H_ */

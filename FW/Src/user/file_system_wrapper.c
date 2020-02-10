@@ -51,18 +51,18 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_init(FileSystemWrapper_TypeDe
 	return remapResult(res);
 }
 
-FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile, char* pFilename){
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pRetFile, const char* pFilename){
 
-	if ((pSelf == NULL) || (pFile == NULL) || (pFilename == NULL)){
+	if ((pSelf == NULL) || (pRetFile == NULL) || (pFilename == NULL)){
 		return FileSystemWrapper_Status_NullPointerError;
 	}
 	if (pSelf->state == FileSystemWrapper_State_NotInitialized){
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
 
-	pFile->pFileSystem = pSelf;
+	pRetFile->pFileSystem = pSelf;
 
-	FRESULT res = f_open( (FIL*) &(pFile->sFile), pFilename, FA_READ | FA_WRITE | FA_OPEN_ALWAYS);
+	FRESULT res = f_open( (FIL*) &(pRetFile->sFile), (char*)pFilename, FA_READ | FA_WRITE | FA_OPEN_ALWAYS);
 	return remapResult(res);
 }
 
@@ -80,7 +80,7 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_writeBinaryData(FileSystemWra
 	return remapResult(res);
 }
 
-FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, void* pBuffer, uint32_t uiBytesToRead, uint32_t* pRetBytesRead){
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, const void* pBuffer, uint32_t uiBytesToRead, uint32_t* pRetBytesRead){
 
 	if ((pFile == NULL) || (pBuffer == NULL) || (pRetBytesRead == NULL)){
 		return FileSystemWrapper_Status_NullPointerError;
@@ -90,7 +90,7 @@ FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_Fi
 		return FileSystemWrapper_Status_NotInitializedError;
 	}
 
-	FRESULT res = f_read( (FIL*) &(pFile->sFile), pBuffer, uiBytesToRead, (UINT*) pRetBytesRead);
+	FRESULT res = f_read( (FIL*) &(pFile->sFile), (void*)pBuffer, uiBytesToRead, (UINT*) pRetBytesRead);
 	return remapResult(res);
 }
 

@@ -52,7 +52,7 @@ FIFOMultiread_Status_TypeDef	FIFOMultiread_clear(volatile FIFOMultiread_TypeDef*
 FIFOMultiread_Status_TypeDef	FIFOMultiread_registerReader(volatile FIFOMultiread_TypeDef* pSelfFifo, volatile FIFOMultireadReader_TypeDef* pReaderHandler);
 FIFOMultiread_Status_TypeDef	FIFOMultiread_unregisterReader(volatile FIFOMultireadReader_TypeDef* pReaderHandler);
 
-FIFOMultiread_Status_TypeDef	FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, volatile void* volatile pElement);
+FIFOMultiread_Status_TypeDef	FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, const volatile void* volatile pElement);
 bool							FIFOMultiread_isFull(volatile FIFOMultiread_TypeDef* volatile pSelf);
 bool							FIFOMultiread_isEmpty(volatile FIFOMultireadReader_TypeDef* volatile pSelf);
 

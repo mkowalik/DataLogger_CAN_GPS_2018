@@ -115,7 +115,7 @@ UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pS
 	return UartDriver_Status_OK;
 }
 
-UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t length, uint32_t timeout){
+UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, const uint8_t* pBuffer, uint16_t length, uint32_t timeout){
 
 	if ((pSelf == NULL) || (pBuffer == NULL)){
 		return UartDriver_Status_NullPointerError;
@@ -281,7 +281,7 @@ UartDriver_Status_TypeDef UartDriver_receiveBytesTerminationSign(volatile UartDr
 	return ret;
 }
 
-UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer, uint16_t bytesToSend, \
+UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, const uint8_t* pSendBuffer, uint16_t bytesToSend, \
 		uint8_t* pReceiveBuffer, uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout){
 
 	if ((pSelf == NULL) || (pSendBuffer == NULL) || (pReceiveBuffer == NULL)){
@@ -316,7 +316,7 @@ UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile Uart
 	return UartDriver_receiveBytesTerminationSign(pSelf, pReceiveBuffer, bufferSize, terminationSign, timeout);
 }
 
-UartDriver_Status_TypeDef UartDriver_sendAndReceiveNBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer, uint16_t bytesToSend, \
+UartDriver_Status_TypeDef UartDriver_sendAndReceiveNBytes(volatile UartDriver_TypeDef* pSelf, const uint8_t* pSendBuffer, uint16_t bytesToSend, \
 		uint8_t* pReceiveBuffer, uint16_t bytesToRead, uint32_t timeout){
 
 	if ((pSelf == NULL) || (pSendBuffer == NULL) || (pReceiveBuffer == NULL)){

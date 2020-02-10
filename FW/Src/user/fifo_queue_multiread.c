@@ -120,7 +120,7 @@ FIFOMultiread_Status_TypeDef FIFOMultiread_unregisterReader(volatile FIFOMultire
 	return ret;
 }
 
-FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, volatile void* volatile pElement){
+FIFOMultiread_Status_TypeDef FIFOMultiread_enqueue(volatile FIFOMultiread_TypeDef* volatile pSelf, const volatile void* volatile pElement){
 
 	if ((pSelf == NULL) || (pElement == NULL)){
 		return FIFOMultiread_Status_Error;
