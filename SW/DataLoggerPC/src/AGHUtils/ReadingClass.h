@@ -21,6 +21,7 @@ public:
     unsigned int            reading_uint16();
     unsigned int            reading_uint32();
     unsigned long long      reading_uint64();
+    int                     reading_int8();
     int                     reading_int16();
 
     unsigned int            reading_uint16(RawDataParser::EndianessMode endianessMode);

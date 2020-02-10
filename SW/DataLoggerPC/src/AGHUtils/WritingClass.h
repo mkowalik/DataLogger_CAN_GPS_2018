@@ -21,6 +21,7 @@ public:
     void            write_uint16(unsigned int aValue);
     void            write_uint32(unsigned int aValue);
     void            write_uint64(unsigned long long aValue);
+    void            write_int8(int _value);
     void            write_int16(int aValue);
 
     void            write_uint16(unsigned int aValue, RawDataParser::EndianessMode endianessMode);

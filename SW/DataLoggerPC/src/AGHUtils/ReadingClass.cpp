@@ -43,6 +43,14 @@ unsigned long long ReadingClass::reading_uint64()
     return reading_uint64(dataParser.getDefaultEndianessMode());
 }
 
+int ReadingClass::reading_int8(){
+    if (bytes_left() < 1){
+        throw out_of_range("Less than 1 byte left while reading int8.");
+    }
+    data.read(reinterpret_cast<char*>(buffer), 1);
+    return dataParser.interpret_signed_int(buffer, 1, RawDataParser::LittleEndian);
+}
+
 int ReadingClass::reading_int16()
 {
     return reading_int16(dataParser.getDefaultEndianessMode());

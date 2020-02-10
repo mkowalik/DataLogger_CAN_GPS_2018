@@ -36,7 +36,9 @@ ConfigureLoggerSDDialog::ConfigureLoggerSDDialog(RawDataParser& rawDataParser, Q
     this->pConfig = new Config(ui->logFilename_lineEdit->text().toStdString(),
                                stringToCANBitrate(ui->canBitrateComboBox->currentText().toStdString()),
                                stringToGPSFrequency(ui->gpsFreqComboBox->currentText().toStdString()),
-                               static_cast<unsigned int>(ui->rtcConfigFrameID_spinBox->value())
+                               static_cast<unsigned int>(ui->rtcConfigFrameID_spinBox->value()),
+                               (ui->useDateFromGPS_checkBox->checkState() == Qt::Checked) ? true : false,
+                               (ui->timeZone_SpinBox->value())
                                );
 
     reloadConfigView();
@@ -80,6 +82,16 @@ void ConfigureLoggerSDDialog::reloadRTCConfigurationFrameIDWidget()
     ui->rtcConfigFrameID_spinBox->setValue(static_cast<int>(pConfig->getRTCConfigurationFrameID()));
 }
 
+void ConfigureLoggerSDDialog::reloadUseGPSDateWidget()
+{
+    ui->useDateFromGPS_checkBox->setCheckState(pConfig->getUseDateAndTimeFromGPS() ? Qt::Checked : Qt::Unchecked);
+}
+
+void ConfigureLoggerSDDialog::reloadTimeZoneWidget()
+{
+    ui->timeZone_SpinBox->setValue(static_cast<double>(pConfig->getTimeZoneShift_30mins()) / 2.0);
+}
+
 void ConfigureLoggerSDDialog::realodLogFilenameWidget()
 {
     ui->logFilename_lineEdit->setText(QString::fromStdString(pConfig->getLogFileName()));
@@ -104,6 +116,8 @@ void ConfigureLoggerSDDialog::reloadConfigView(){
     reloadCANBusBitrateWidget();
     reloadGPSFrequencyWidget();
     reloadRTCConfigurationFrameIDWidget();
+    reloadUseGPSDateWidget();
+    reloadTimeZoneWidget();
     realodLogFilenameWidget();
     reloadStartTriggersWidget();
     reloadStopTriggersWidget();
@@ -925,4 +939,18 @@ void ConfigureLoggerSDDialog::on_logFilename_lineEdit_textChanged(const QString 
     } catch (const std::exception& e){
         QMessageBox::warning(this, "Error", QString("Unkonwn error occured: ") + QString(e.what()));
     }
+}
+
+void ConfigureLoggerSDDialog::on_useDateFromGPS_checkBox_stateChanged(int state)
+{
+    if (state == Qt::Checked){
+        pConfig->setUseDateAndTimeFromGPS(true);
+    } else if (state == Qt::Unchecked){
+        pConfig->setUseDateAndTimeFromGPS(false);
+    }
+}
+
+void ConfigureLoggerSDDialog::on_timeZone_SpinBox_valueChanged(double val)
+{
+    pConfig->setTimeZoneShift(val);
 }

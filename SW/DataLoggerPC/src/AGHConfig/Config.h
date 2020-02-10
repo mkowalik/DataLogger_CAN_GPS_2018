@@ -48,6 +48,8 @@ private:
     static constexpr unsigned int   MAX_FRAMES_NUMBER = (14U * 4U);
     static constexpr unsigned int   MAX_SIGNALS_NUMBER = 256U;
 
+    static constexpr int            MIN_MAX_TIME_ZONE_SHIFT_30_MINS_UNIT = (14 * 2);
+
     static constexpr unsigned int   CONFIG_NAME_LENGTH = 20U;
 
     Config();
@@ -66,6 +68,8 @@ private:
     EnCANBitrate                canBitrate;
     EnGPSFrequency              gpsFrequency;
     unsigned int                rtcConfigurationFrameID;
+    bool                        useDateAndTimeFromGPS;
+    int                         timeZoneShift_30minsUnit;
 
     std::vector <ConfigFrame*>  framesVector;
 
@@ -74,8 +78,14 @@ private:
 
 public:
 
-    Config(std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID);
-    Config(unsigned int version, unsigned int subVersion, std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID);
+    Config(
+        std::string logFileName,
+        EnCANBitrate canBitrate,
+        EnGPSFrequency gpsFrequency,
+        unsigned int rtcConfigurationFrameID,
+        bool _useDateAndTimeFromGPS,
+        double _timeZoneShift
+    );
     Config(ReadingClass& reader);
 
     //<----- Access to preambule data ----->/
@@ -85,6 +95,10 @@ public:
     void                    setCANBitrate(EnCANBitrate bitrate);
     void                    setGPSFrequency(EnGPSFrequency frequency);
     void                    setRTCConfigurationFrameID(unsigned int frameID);
+    void                    setUseDateAndTimeFromGPS(bool _useDateAndTimeFromGPS);
+    void                    setUseDateAndTimeFromGPS(unsigned int _useDateAndTimeFromGPS);
+    void                    setTimeZoneShift_30mins(int _timeZoneShift_30minsUnit);
+    void                    setTimeZoneShift(double _timeZoneShift);
 
     unsigned int            getVersion() const;
     unsigned int            getSubVersion() const;
@@ -92,6 +106,8 @@ public:
     EnCANBitrate            getCANBitrate() const;
     EnGPSFrequency          getGPSFrequency() const;
     unsigned int            getRTCConfigurationFrameID() const;
+    bool                    getUseDateAndTimeFromGPS() const;
+    int                     getTimeZoneShift_30mins() const;
 
     //<----- Access to frames definitions ----->/
 

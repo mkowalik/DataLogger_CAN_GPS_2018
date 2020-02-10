@@ -32,9 +32,12 @@ private:
     void                   reloadCANBusBitrateWidget();
     void                   reloadGPSFrequencyWidget();
     void                   reloadRTCConfigurationFrameIDWidget();
+    void                   reloadUseGPSDateWidget();
+    void                   reloadTimeZoneWidget();
     void                   realodLogFilenameWidget();
     void                   reloadStartTriggersWidget();
     void                   reloadStopTriggersWidget();
+
     void                   reloadConfigView();
 
     void                   editFrameRow(QTreeWidgetItem *pClickedRow, ConfigFrame* pFrame);
@@ -84,7 +87,8 @@ private slots:
     void on_stopTrigger_listWidget_itemDoubleClicked(QListWidgetItem *item);
     void on_actionAddSignalToClickedFrame_triggered();
     void on_logFilename_lineEdit_textChanged(const QString &arg1);
-
+    void on_useDateFromGPS_checkBox_stateChanged(int arg1);
+    void on_timeZone_SpinBox_valueChanged(double arg1);
 
 private:
     Ui::ConfigureLoggerSDDialog *ui;

@@ -34,6 +34,13 @@ void WritingClass::write_uint64(unsigned long long aValue)
     write_uint64(aValue, dataParser.getDefaultEndianessMode());
 }
 
+void WritingClass::write_int8(int _value)
+{
+    clear_buffer(4);
+    dataParser.write_signed_int(_value, reinterpret_cast<unsigned char*>(buffer), 1);
+    fileStream.write(buffer, 1);
+}
+
 void WritingClass::write_int16(int aValue)
 {
     write_int16(aValue, dataParser.getDefaultEndianessMode());

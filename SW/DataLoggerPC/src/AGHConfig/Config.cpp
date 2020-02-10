@@ -17,6 +17,8 @@ Config::Config()
       canBitrate(DEFAULT_CAN_BITRATE),
       gpsFrequency(DEFAULT_GPS_FREQUENCY),
       rtcConfigurationFrameID(DEFAULT_RTC_CONFIGURATION_FRAME_ID),
+      useDateAndTimeFromGPS(true),
+      timeZoneShift_30minsUnit(0),
       framesVector(),
       startConfigTriggers(),
       stopConfigTriggers()
@@ -92,22 +94,21 @@ bool Config::isMaxSignalsNumber() const
 //<----- Public methods ----->//
 //<-------------------------->//
 
-Config::Config(std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID)
-    : Config() {
+Config::Config(
+        string logFileName,
+        Config::EnCANBitrate canBitrate,
+        Config::EnGPSFrequency gpsFrequency,
+        unsigned int rtcConfigurationFrameID,
+        bool _useDateAndTimeFromGPS,
+        double _timeZoneShift)
+    : Config()
+{
     setLogFileName(logFileName);
     setCANBitrate(canBitrate);
     setGPSFrequency(gpsFrequency);
     setRTCConfigurationFrameID(rtcConfigurationFrameID);
-}
-
-Config::Config(unsigned int version, unsigned int subVersion, std::string logFileName, EnCANBitrate canBitrate, EnGPSFrequency gpsFrequency, unsigned int rtcConfigurationFrameID)
-    : Config() {
-    setVersion(version);
-    setSubVersion(subVersion);
-    setLogFileName(logFileName);
-    setCANBitrate(canBitrate);
-    setGPSFrequency(gpsFrequency);
-    setRTCConfigurationFrameID(rtcConfigurationFrameID);
+    setUseDateAndTimeFromGPS(_useDateAndTimeFromGPS);
+    setTimeZoneShift(_timeZoneShift);
 }
 
 Config::Config(ReadingClass& reader) : Config() {
@@ -177,6 +178,43 @@ void Config::setRTCConfigurationFrameID(unsigned int frameID)
     this->rtcConfigurationFrameID = frameID;
 }
 
+void Config::setUseDateAndTimeFromGPS(bool _useDateAndTimeFromGPS)
+{
+    useDateAndTimeFromGPS = _useDateAndTimeFromGPS;
+}
+
+void Config::setUseDateAndTimeFromGPS(unsigned int _useDateAndTimeFromGPS)
+{
+    if (_useDateAndTimeFromGPS == 0){
+        useDateAndTimeFromGPS = false;
+    } else {
+        useDateAndTimeFromGPS = true;
+    }
+}
+
+void Config::setTimeZoneShift_30mins(int _timeZoneShift_30minsUnit)
+{
+    if (_timeZoneShift_30minsUnit > MIN_MAX_TIME_ZONE_SHIFT_30_MINS_UNIT) {
+        throw std::logic_error("Max time zone shift may not exceed " + std::to_string(MIN_MAX_TIME_ZONE_SHIFT_30_MINS_UNIT / 2) + " hours.");
+    }
+    if (_timeZoneShift_30minsUnit < -MIN_MAX_TIME_ZONE_SHIFT_30_MINS_UNIT) {
+        throw std::logic_error("Max time zone shift may not be lower than -" + std::to_string(MIN_MAX_TIME_ZONE_SHIFT_30_MINS_UNIT / 2) + " hours.");
+    }
+    timeZoneShift_30minsUnit = _timeZoneShift_30minsUnit;
+}
+
+
+void Config::setTimeZoneShift(double _timeZoneShift)
+{
+    int timeZoneShift_30minsUnit = 0;
+    if (_timeZoneShift > 0.1){
+        timeZoneShift_30minsUnit = static_cast<unsigned int>(_timeZoneShift + 0.25) * 2;
+    } else if (_timeZoneShift < -0.1){
+        timeZoneShift_30minsUnit = static_cast<unsigned int>(_timeZoneShift - 0.25) * 2;
+    }
+    setTimeZoneShift_30mins(timeZoneShift_30minsUnit);
+}
+
 unsigned int Config::getVersion() const {
 	return version;
 }
@@ -200,6 +238,16 @@ Config::EnGPSFrequency Config::getGPSFrequency() const {
 
 unsigned int Config::getRTCConfigurationFrameID() const {
     return rtcConfigurationFrameID;
+}
+
+bool Config::getUseDateAndTimeFromGPS() const
+{
+    return useDateAndTimeFromGPS;
+}
+
+int Config::getTimeZoneShift_30mins() const
+{
+    return timeZoneShift_30minsUnit;
 }
 
 //<----- Access to frames definitions ----->/
@@ -455,6 +503,8 @@ void Config::writeToBin(WritingClass& writer){
     writer.write_uint16(static_cast<unsigned int>(getCANBitrate()));
     writer.write_uint8(static_cast<unsigned int>(getGPSFrequency()));
     writer.write_uint16(getRTCConfigurationFrameID());
+    writer.write_uint8(getUseDateAndTimeFromGPS() ? 1 : 0);
+    writer.write_int8(getTimeZoneShift_30mins());
 
     writer.write_uint16(static_cast<unsigned int>(getFramesNumber()));
     for (auto& pFrame : framesVector){
@@ -498,6 +548,8 @@ void Config::readFromBin(ReadingClass& reader){
     setCANBitrate(static_cast<EnCANBitrate>(reader.reading_uint16()));
     setGPSFrequency(static_cast<EnGPSFrequency>(reader.reading_uint8()));
     setRTCConfigurationFrameID(reader.reading_uint16());
+    setUseDateAndTimeFromGPS(reader.reading_uint8());
+    setTimeZoneShift_30mins(reader.reading_int8());
 
     unsigned int framesNumber = reader.reading_uint16();
     for(unsigned int i=0; i<framesNumber; i++){
