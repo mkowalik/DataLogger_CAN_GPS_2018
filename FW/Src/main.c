@@ -69,27 +69,27 @@
 
 /* USER CODE BEGIN PV */
 
-ConfigDataManager_TypeDef		configDataManager;
-DataSaver_TypeDef				dataSaver;
+ConfigDataManager_TypeDef				configDataManager;
+DataSaver_TypeDef						dataSaver;
 
-CANReceiver_TypeDef				canReceiver;
-RTCDriver_TypeDef				rtcDriver;
-GPSDriver_TypeDef				gpsDriver;
+RTCDriver_TypeDef						rtcDriver;
+GPSDriver_TypeDef						gpsDriver;
+volatile CANTransceiverDriver_TypeDef	canTransceiverDriver;
+volatile MSTimerDriver_TypeDef			msTimerDriver;
+DODriver_TypeDef						gpsResetDriver;
+volatile UartDriver_TypeDef				uartGpsDriver;
 
-ActionScheduler_TypeDef			actionScheduler;
+volatile CANReceiver_TypeDef			canReceiver;
 
-FileSystemWrapper_TypeDef		fileSystem;
+FileSystemWrapper_TypeDef				fileSystem;
 
-CANTransceiverDriver_TypeDef	canTransceiverDriver;
-MSTimerDriver_TypeDef			msTimerDriver;
+LedDriver_TypeDef						ledDebug1Driver;
+LedDriver_TypeDef						ledDebug2Driver;
 
-LedDriver_TypeDef				ledDebug1Driver;
-LedDriver_TypeDef				ledDebug2Driver;
+UartReceiverStartTerm_TypeDef			uartGpsNMEAReceiverTerm;
+UartReceiverStartLength_TypeDef			uartGpsUBXReceiverTerm;
 
-UartDriver_TypeDef				uartGpsDriver;
-UartReceiverStartTerm_TypeDef	uartGpsNMEAReceiverTerm;
-UartReceiverStartLength_TypeDef	uartGpsUBXReceiverTerm;
-DODriver_TypeDef				gpsResetDriver;
+ActionScheduler_TypeDef					actionScheduler;
 
 LedDriver_Pin_TypeDef ledDebug1Pin	= my_LED_DEBUG1_Pin;
 LedDriver_Pin_TypeDef ledDebug2Pin	= my_LED_DEBUG2_Pin;

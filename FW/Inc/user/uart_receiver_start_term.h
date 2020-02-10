@@ -17,7 +17,8 @@ typedef enum {
 	UartReceiverStartTerm_State_UnInitialized = 0,
 	UartReceiverStartTerm_State_DuringInit,
 	UartReceiverStartTerm_State_Initialized,
-	UartReceiverStartTerm_State_Receiving
+	UartReceiverStartTerm_State_Receiving,
+	UartReceiverStartTerm_State_ToBeCleared
 } UartReceiverStartTerm_State_TypeDef;
 
 typedef struct {
@@ -27,8 +28,9 @@ typedef struct {
 
 typedef struct {
 
-	volatile UartDriver_TypeDef*						pUartDriver;
+	volatile UartDriver_TypeDef* volatile				pUartDriver;
 	volatile UartReceiverStartTerm_State_TypeDef		state;
+	volatile UartReceiverStartTerm_State_TypeDef		stateAfterClear;
 
 	UartDriver_ByteReceivedCallbackIterator_TypeDef		uartDriverCallbackIterator;
 
@@ -63,7 +65,7 @@ typedef enum {
 
 typedef uint16_t UartReceiverStartTerm_ReaderIterator_TypeDef;
 
-UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_init(UartReceiverStartTerm_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver);
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_init(UartReceiverStartTerm_TypeDef* pSelf, volatile UartDriver_TypeDef* pUartDriver);
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_clear(volatile UartReceiverStartTerm_TypeDef* pSelf);
 
 UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_registerReader(volatile UartReceiverStartTerm_TypeDef* pSelf, volatile UartReceiverStartTerm_ReaderIterator_TypeDef* pRetReaderIterator,

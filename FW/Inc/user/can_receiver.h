@@ -39,20 +39,20 @@ typedef enum {
 } CANReceiver_State_TypeDef;
 
 typedef struct {
-	volatile CANData_TypeDef 				aReceiverQueueBuffer [CAN_MSG_QUEUE_SIZE];
-	volatile FIFOQueue_TypeDef				framesFIFO;
-	volatile CANErrorData_TypeDef			aReceiverCANErrorsQueueBuffer [CAN_ERROR_QUEUE_SIZE];
-	volatile FIFOQueue_TypeDef				canErrorsFIFO;
-	CANTransceiverDriver_TypeDef*	pCanTransceiverHandler;
-	volatile MSTimerDriver_TypeDef* volatile			pMsTimerDriverHandler;
-	Config_TypeDef*					pConfig;
-	CANReceiver_State_TypeDef		state;
+	volatile CANData_TypeDef 					aReceiverQueueBuffer [CAN_MSG_QUEUE_SIZE];
+	volatile FIFOQueue_TypeDef					framesFIFO;
+	volatile CANErrorData_TypeDef				aReceiverCANErrorsQueueBuffer [CAN_ERROR_QUEUE_SIZE];
+	volatile FIFOQueue_TypeDef					canErrorsFIFO;
+	volatile CANTransceiverDriver_TypeDef*		pCanTransceiverHandler;
+	volatile MSTimerDriver_TypeDef* volatile	pMsTimerDriverHandler;
+	Config_TypeDef*								pConfig;
+	CANReceiver_State_TypeDef					state;
 } CANReceiver_TypeDef;
 
-CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler);
-CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf);
-CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg);
-CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(CANReceiver_TypeDef* pSelf, CANErrorData_TypeDef* pRetErrorData);
-CANReceiver_Status_TypeDef CANReceiver_clear(CANReceiver_TypeDef* pSelf);
+CANReceiver_Status_TypeDef CANReceiver_init(volatile CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, volatile CANTransceiverDriver_TypeDef* pCanTransceiverHandler, volatile MSTimerDriver_TypeDef* pMsTimerDriverHandler);
+CANReceiver_Status_TypeDef CANReceiver_start(volatile CANReceiver_TypeDef* pSelf);
+CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(volatile CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg);
+CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(volatile CANReceiver_TypeDef* pSelf, CANErrorData_TypeDef* pRetErrorData);
+CANReceiver_Status_TypeDef CANReceiver_clear(volatile CANReceiver_TypeDef* pSelf);
 
 #endif /* CAN_RECEIVER_DRIVER_H_ */

@@ -17,7 +17,7 @@ static UartDriver_Status_TypeDef	_UartDriver_initHAL(volatile UartDriver_TypeDef
 
 //<----- Public functions implementation ----->//
 
-UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate){
+UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, volatile MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate){
 
 	if ((pSelf == NULL) || (pUartHandler == NULL) || (pMsTimerHandler == NULL)) {
 		return UartDriver_Status_NullPointerError;
@@ -140,7 +140,7 @@ UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* p
 	}
 
 	pSelf->transmitInProgress = true;
-	if (HAL_UART_Transmit_DMA(pSelf->pUartHandler, pBuffer, length) != HAL_OK){
+	if (HAL_UART_Transmit_DMA(pSelf->pUartHandler, (uint8_t*)pBuffer, length) != HAL_OK){
 		return UartDriver_Status_Error;
 	}
 

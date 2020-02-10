@@ -41,8 +41,8 @@ static bool _ActionScheduler_compareOperator_FRAME_TIMEOUT_MS(ActionScheduler_Ty
 
 //< ----- Public functions ----- >//
 
-ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver,
-		GPSDriver_TypeDef* pGPSDriver, MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver, LedDriver_TypeDef* pGPSLedDriver) {
+ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, DataSaver_TypeDef* pDataSaver, volatile CANReceiver_TypeDef* pCANReceiver,
+		GPSDriver_TypeDef* pGPSDriver, volatile MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver, LedDriver_TypeDef* pGPSLedDriver) {
 
 	if (pSelf == NULL || pConfigManager == NULL || pDataSaver == NULL || pCANReceiver == NULL || pGPSDriver == NULL || pMSTimerDriver == NULL || pRTCDriver == NULL || pStatusLedDriver == NULL || pGPSLedDriver == NULL){
 		return ActionScheduler_Status_NullPointerError;

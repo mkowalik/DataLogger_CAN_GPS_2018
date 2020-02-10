@@ -48,7 +48,7 @@ typedef struct {
 	volatile UartDriver_State_TypeDef					state;
 	UART_HandleTypeDef* volatile						pUartHandler;
 	USART_TypeDef* volatile								pUartInstance;
-	MSTimerDriver_TypeDef* volatile						pMsTimerHandler;
+	volatile MSTimerDriver_TypeDef* volatile			pMsTimerHandler;
 
 	volatile bool										errorOccuredFlag;
 
@@ -78,7 +78,7 @@ typedef enum {
 
 typedef uint16_t UartDriver_ByteReceivedCallbackIterator_TypeDef;
 
-UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate);
+UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, volatile MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate);
 
 UartDriver_Status_TypeDef UartDriver_getBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t* pRetBaudRate);
 UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate);

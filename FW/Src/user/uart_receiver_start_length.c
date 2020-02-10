@@ -17,7 +17,7 @@ static UartReceiverStartLength_Status_TypeDef	_UartReceiverStartLength_removeNot
 
 //< ----- Public functions implementations ----- >//
 
-UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver){
+UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, volatile UartDriver_TypeDef* pUartDriver){
 
 	if ((pSelf == NULL) || (pUartDriver == NULL)) {
 		return UartReceiverStartLength_Status_NullPointerError;

@@ -63,9 +63,9 @@ typedef struct _ActionScheduler_TypeDef {
 	ActionScheduler_State_TypeDef	state;
 	Config_TypeDef*					pConfig;
 	DataSaver_TypeDef*				pDataSaver;
-	CANReceiver_TypeDef*			pCANReceiver;
+	volatile CANReceiver_TypeDef*	pCANReceiver;
 	GPSDriver_TypeDef*				pGPSDriver;
-	MSTimerDriver_TypeDef*			pMSTimerDriver;
+	volatile MSTimerDriver_TypeDef*	pMSTimerDriver;
 	RTCDriver_TypeDef*				pRTCDriver;
 	LedDriver_TypeDef*				pStatusLedDriver;
 	LedDriver_TypeDef*				pGPSLedDriver;
@@ -79,8 +79,8 @@ typedef struct _ActionScheduler_TypeDef {
 } ActionScheduler_TypeDef;
 
 
-ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, DataSaver_TypeDef* pDataSaver, CANReceiver_TypeDef* pCANReceiver,
-		GPSDriver_TypeDef* pGPSDriver, MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver, LedDriver_TypeDef* pGPSLedDriver);
+ActionScheduler_Status_TypeDef ActionScheduler_init(ActionScheduler_TypeDef* pSelf, ConfigDataManager_TypeDef* pConfigManager, DataSaver_TypeDef* pDataSaver, volatile CANReceiver_TypeDef* pCANReceiver,
+		GPSDriver_TypeDef* pGPSDriver, volatile MSTimerDriver_TypeDef* pMSTimerDriver, RTCDriver_TypeDef* pRTCDriver, LedDriver_TypeDef* pStatusLedDriver, LedDriver_TypeDef* pGPSLedDriver);
 ActionScheduler_Status_TypeDef ActionScheduler_startScheduler(ActionScheduler_TypeDef* pSelf);
 ActionScheduler_Status_TypeDef ActionScheduler_thread(ActionScheduler_TypeDef* pSelf);
 

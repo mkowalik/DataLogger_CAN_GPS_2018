@@ -10,15 +10,15 @@
 
 //< ----- Private functions/IRQ Callbacks prototypes ----- >//
 
-CANReceiver_Status_TypeDef	CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
+CANReceiver_Status_TypeDef	CANReceiver_RxCallback(volatile CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData);
 void						CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf);
 
-CANReceiver_Status_TypeDef	CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANErrorCode_TypeDef errorcode);
+CANReceiver_Status_TypeDef	CANReceiver_ErrorCallback(volatile CANReceiver_TypeDef* pSelf, CANErrorCode_TypeDef errorcode);
 void						CANReceiver_ErrorCallbackWrapper(CANErrorCode_TypeDef errorcode, void* pVoidSelf);
 
 //< ----- Public functions ----- >//
 
-CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, CANTransceiverDriver_TypeDef* pCanTransceiverHandler, MSTimerDriver_TypeDef* pMsTimerDriverHandler){
+CANReceiver_Status_TypeDef CANReceiver_init(volatile CANReceiver_TypeDef* pSelf, Config_TypeDef* pConfig, volatile CANTransceiverDriver_TypeDef* pCanTransceiverHandler, volatile MSTimerDriver_TypeDef* pMsTimerDriverHandler){
 
 	if ((pSelf == NULL) || (pConfig == NULL) || (pCanTransceiverHandler == NULL) || (pMsTimerDriverHandler == NULL)){
 		return CANReceiver_Status_NullPointerError;
@@ -69,7 +69,7 @@ CANReceiver_Status_TypeDef CANReceiver_init(CANReceiver_TypeDef* pSelf, Config_T
 
 }
 
-CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
+CANReceiver_Status_TypeDef CANReceiver_start(volatile CANReceiver_TypeDef* pSelf){
 
 	if (pSelf == NULL){
 		return CANReceiver_Status_NullPointerError;
@@ -92,7 +92,7 @@ CANReceiver_Status_TypeDef CANReceiver_start(CANReceiver_TypeDef* pSelf){
 	return CANReceiver_Status_OK;
 }
 
-CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg){
+CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(volatile CANReceiver_TypeDef* pSelf, CANData_TypeDef* pRetMsg){
 
 	if ((pSelf == NULL) || (pRetMsg == NULL)){
 		return CANReceiver_Status_NullPointerError;
@@ -121,7 +121,7 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastFrame(CANReceiver_TypeDef* pSelf,
 	return CANReceiver_Status_OK;
 }
 
-CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(CANReceiver_TypeDef* pSelf, CANErrorData_TypeDef* pRetErrorData){
+CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(volatile CANReceiver_TypeDef* pSelf, CANErrorData_TypeDef* pRetErrorData){
 
 	if ((pSelf == NULL) || (pRetErrorData == NULL)){
 		return CANReceiver_Status_NullPointerError;
@@ -150,7 +150,7 @@ CANReceiver_Status_TypeDef CANReceiver_pullLastCANBusError(CANReceiver_TypeDef* 
 	return CANReceiver_Status_OK;
 }
 
-CANReceiver_Status_TypeDef CANReceiver_clear(CANReceiver_TypeDef* pSelf){
+CANReceiver_Status_TypeDef CANReceiver_clear(volatile CANReceiver_TypeDef* pSelf){
 
 	if (pSelf == NULL){
 		return CANReceiver_Status_NullPointerError;
@@ -173,7 +173,7 @@ CANReceiver_Status_TypeDef CANReceiver_clear(CANReceiver_TypeDef* pSelf){
 
 //< ----- Callback functions ----- >//
 
-CANReceiver_Status_TypeDef CANReceiver_RxCallback(CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData){
+CANReceiver_Status_TypeDef CANReceiver_RxCallback(volatile CANReceiver_TypeDef* pSelf, CANData_TypeDef* pData){
 
 	if (MSTimerDriver_getMSTime(pSelf->pMsTimerDriverHandler, &pData->msTimestamp) != MSTimerDriver_Status_OK){ //TODO trzeba tu wykorzystac ten czas z CANa
 		return CANReceiver_Status_MSTimerError;
@@ -197,7 +197,7 @@ void CANReceiver_RxCallbackWrapper(CANData_TypeDef* pData, void* pVoidSelf){
 
 }
 
-CANReceiver_Status_TypeDef CANReceiver_ErrorCallback(CANReceiver_TypeDef* pSelf, CANErrorCode_TypeDef errorcode){
+CANReceiver_Status_TypeDef CANReceiver_ErrorCallback(volatile CANReceiver_TypeDef* pSelf, CANErrorCode_TypeDef errorcode){
 
 	if (errorcode != CANErrorCode_None){
 

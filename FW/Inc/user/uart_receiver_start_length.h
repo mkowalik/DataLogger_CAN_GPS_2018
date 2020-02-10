@@ -28,7 +28,7 @@ typedef struct {
 
 typedef struct {
 
-	volatile UartDriver_TypeDef*						pUartDriver;
+	volatile UartDriver_TypeDef* volatile				pUartDriver;
 	volatile UartReceiverStartLength_State_TypeDef		state;
 
 	UartDriver_ByteReceivedCallbackIterator_TypeDef		uartDriverCallbackIterator;
@@ -63,7 +63,7 @@ typedef enum {
 
 typedef uint16_t UartReceiverStartLength_ReaderIterator_TypeDef;
 
-UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver);
+UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, volatile UartDriver_TypeDef* pUartDriver);
 UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_clear(volatile UartReceiverStartLength_TypeDef* pSelf);
 
 UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(

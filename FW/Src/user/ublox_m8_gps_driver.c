@@ -116,10 +116,10 @@ static GPSDriver_Status_TypeDef _GPSDriver_handleGNRMCSentence(volatile Ublox8MG
 
 GPSDriver_Status_TypeDef GPSDriver_init(
 		volatile Ublox8MGPSDriver_TypeDef* pSelf,
-		UartDriver_TypeDef* pUartDriverHandler,
+		volatile UartDriver_TypeDef* pUartDriverHandler,
 		UartReceiverStartTerm_TypeDef* pUartNMEAReceiverHandler,
 		UartReceiverStartLength_TypeDef* pUartUBXReceiverHandler,
-		MSTimerDriver_TypeDef* pMSTimer,
+		volatile MSTimerDriver_TypeDef* pMSTimer,
 		DODriver_TypeDef* pDOResetDriver,
 		Config_GPSFrequency_TypeDef frequency)
 {

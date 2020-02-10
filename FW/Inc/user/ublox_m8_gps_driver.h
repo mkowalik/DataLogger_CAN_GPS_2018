@@ -94,8 +94,8 @@ typedef struct {
 	volatile UartDriver_TypeDef* volatile					pUartDriverHandler;
 	volatile UartReceiverStartTerm_TypeDef* volatile		pUartNMEAReceiverHandler;
 	volatile UartReceiverStartLength_TypeDef* volatile		pUartUBXReceiverHandler;
-	volatile MSTimerDriver_TypeDef* volatile 				pMSTimer;
-	volatile DODriver_TypeDef* volatile						pDOResetDriver;
+	volatile MSTimerDriver_TypeDef* volatile				pMSTimer;
+	volatile DODriver_TypeDef*								pDOResetDriver;
 
 	volatile UartReceiverStartTerm_ReaderIterator_TypeDef	uartNMEAReaderIterator;
 	volatile bool											uartNMEAReaderIteratorSet;
@@ -113,10 +113,10 @@ typedef uint16_t GPSDriver_CallbackIterator_TypeDef;
 
 GPSDriver_Status_TypeDef GPSDriver_init (
 		volatile Ublox8MGPSDriver_TypeDef*	pSelf,
-		UartDriver_TypeDef*					pUartDriverHandler,
+		volatile UartDriver_TypeDef*		pUartDriverHandler,
 		UartReceiverStartTerm_TypeDef*		pUartReceiverTermHandler,
 		UartReceiverStartLength_TypeDef*	pUartReceiverLengthHandler,
-		MSTimerDriver_TypeDef*				pMSTimer,
+		volatile MSTimerDriver_TypeDef*		pMSTimer,
 		DODriver_TypeDef*					pDOResetDriver,
 		Config_GPSFrequency_TypeDef			frequency
 	);

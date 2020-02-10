@@ -54,7 +54,7 @@ static void checkHALErrorcode(uint32_t errorcodeHAL, uint32_t errorMask, CANErro
 
 //< ----- Public funtions ----- //>
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriver_TypeDef* pSelf, Config_TypeDef* pConfig, CAN_HandleTypeDef* pHcan, CAN_TypeDef* pCANInstance){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(volatile CANTransceiverDriver_TypeDef* pSelf, Config_TypeDef* pConfig, CAN_HandleTypeDef* pHcan, CAN_TypeDef* pCANInstance){
 
 	if ((pSelf == NULL) || (pConfig == NULL) || (pHcan == NULL) || (pCANInstance == NULL)){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -114,7 +114,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_init(CANTransceiverDriv
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTransceiverDriver_TypeDef* pSelf, const uint16_t* pFilters, uint16_t filtersNumber){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(volatile CANTransceiverDriver_TypeDef* pSelf, const uint16_t* pFilters, uint16_t filtersNumber){
 
 	if ((pSelf == NULL) || (pFilters == NULL)){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -150,7 +150,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_configFiltering(CANTran
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHandler(CANTransceiverDriver_TypeDef* pSelf, uint16_t ID, uint8_t DLC, uint8_t aData[8], uint16_t timestamp){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHandler(volatile CANTransceiverDriver_TypeDef* pSelf, uint16_t ID, uint8_t DLC, uint8_t aData[8], uint16_t timestamp){
 
 	if ((pSelf == NULL) || (aData == NULL)){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -175,7 +175,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_receivedMsgCallbackHand
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerReceiveCallbackToCall(CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANData_TypeDef* pData, void* arg), void* pArgument){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerReceiveCallbackToCall(volatile CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANData_TypeDef* pData, void* arg), void* pArgument){
 
 	if ((pSelf == NULL) || (pCallbackFunction == NULL) || (pArgument == NULL)){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -201,7 +201,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerReceiveCallback
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CANTransceiverDriver_TypeDef* pSelf){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(volatile CANTransceiverDriver_TypeDef* pSelf){
 
 	if (pSelf == NULL){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -253,7 +253,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_errorCallbackHandler(CA
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerErrorCallbackToCall(CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANErrorCode_TypeDef errorcode, void* arg), void* pArgument){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerErrorCallbackToCall(volatile CANTransceiverDriver_TypeDef* pSelf, void (*pCallbackFunction) (CANErrorCode_TypeDef errorcode, void* arg), void* pArgument){
 
 	if ((pSelf == NULL) || (pCallbackFunction == NULL) || (pArgument == NULL)){
 		return CANTransceiverDriver_Status_NullPointerError;
@@ -279,7 +279,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_registerErrorCallbackTo
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_start(CANTransceiverDriver_TypeDef* pSelf){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_start(volatile CANTransceiverDriver_TypeDef* pSelf){
 
 	if (HAL_CAN_ActivateNotification(pSelf->pHcan,	CAN_IT_RX_FIFO0_MSG_PENDING |
 													CAN_IT_RX_FIFO1_MSG_PENDING |
@@ -299,7 +299,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_start(CANTransceiverDri
 
 }
 
-CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTransceiverDriver_TypeDef* pSelf, const CANData_TypeDef* pData){
+CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(volatile CANTransceiverDriver_TypeDef* pSelf, const CANData_TypeDef* pData){
 	//TODO
 	UNUSED(pSelf);
 	UNUSED(pData);
@@ -309,7 +309,7 @@ CANTransceiverDriver_Status_TypeDef CANTransceiverDriver_transmitMsg(CANTranscei
 
 /****************************** Implementations of stm32f7xx_hal_can.h __weak functions placeholders ******************************/
 
-extern CANTransceiverDriver_TypeDef canTransceiverDriver;
+extern volatile CANTransceiverDriver_TypeDef canTransceiverDriver;
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
 
