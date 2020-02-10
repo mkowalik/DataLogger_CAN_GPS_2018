@@ -8,7 +8,7 @@
 #include "user/ms_timer_driver.h"
 #include "stm32f7xx_hal.h"
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf){
+MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf, bool startCounting){
 
 	if (pSelf == NULL){
 		return MSTimerDriver_Status_NullPointerError;
@@ -16,6 +16,9 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* 
 
 	pSelf->state = MSTimerDriver_State_Idle;
 
+	if (startCounting){
+		return MSTimerDriver_startCounting(pSelf);
+	}
 	return MSTimerDriver_Status_OK;
 }
 
@@ -33,14 +36,10 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_
 		return MSTimerDriver_Status_Error;
 	}
 
-	switch (pSelf->state){
-	case MSTimerDriver_State_Suspended:
+	if (pSelf->state == MSTimerDriver_State_Suspended){
 		pSelf->uiStartTickValue = pSelf->uiStartTickValue - (HAL_GetTick() - pSelf->uiStopTickValue);
-		break;
-	case MSTimerDriver_State_Idle:
-	default:
+	} else if (pSelf->state == MSTimerDriver_State_Idle){
 		pSelf->uiStartTickValue = HAL_GetTick();
-		break;
 	}
 
 	pSelf->state = MSTimerDriver_State_Running;
@@ -91,7 +90,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_T
 
 MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_TypeDef* pSelf, uint32_t* pRetTime){
 
-	if (pSelf == NULL || pRetTime == NULL){
+	if ((pSelf == NULL) || (pRetTime == NULL)){
 		return MSTimerDriver_Status_NullPointerError;
 	}
 
@@ -101,6 +100,7 @@ MSTimerDriver_Status_TypeDef MSTimerDriver_getMSTime(volatile MSTimerDriver_Type
 
 	switch (pSelf->state){
 	case MSTimerDriver_State_Idle:
+	case MSTimerDriver_State_NotInitialised:
 		*pRetTime = 0;
 		break;
 	case MSTimerDriver_State_Suspended:

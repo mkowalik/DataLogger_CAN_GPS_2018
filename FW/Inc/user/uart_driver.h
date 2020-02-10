@@ -48,7 +48,7 @@ typedef struct {
 	volatile UartDriver_State_TypeDef					state;
 	UART_HandleTypeDef* volatile						pUartHandler;
 	USART_TypeDef* volatile								pUartInstance;
-	MSTimerDriver_TypeDef* volatile						pMsTimerHandler;
+	volatile MSTimerDriver_TypeDef* volatile			pMsTimerHandler;
 
 	volatile bool										errorOccuredFlag;
 
@@ -63,7 +63,6 @@ typedef struct {
 
 	void											  (*callbacksByte[UART_DRIVER_MAX_CALLBACKS_NUMBER])(uint8_t dataByte, uint32_t timestamp, void* pArgs);
 	void* volatile										callbacksByteArgs[UART_DRIVER_MAX_CALLBACKS_NUMBER];
-//	volatile FIFOMultireadReaderIdentifier_TypeDef		callbacksByteReaders[UART_DRIVER_MAX_CALLBACK_NUMBER];
 } UartDriver_TypeDef;
 
 /*typedef enum {
@@ -79,20 +78,20 @@ typedef enum {
 
 typedef uint16_t UartDriver_ByteReceivedCallbackIterator_TypeDef;
 
-UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate);
+UartDriver_Status_TypeDef UartDriver_init(volatile UartDriver_TypeDef* pSelf, UART_HandleTypeDef* pUartHandler, USART_TypeDef* pUartInstance, volatile MSTimerDriver_TypeDef* pMsTimerHandler, uint32_t baudRate);
 
 UartDriver_Status_TypeDef UartDriver_getBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t* pRetBaudRate);
 UartDriver_Status_TypeDef UartDriver_setBaudRate(volatile UartDriver_TypeDef* pSelf, uint32_t baudRate);
 
-UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, uint8_t* pBuffer, uint16_t length, uint32_t timeout);
+UartDriver_Status_TypeDef UartDriver_sendBytesDMA(volatile UartDriver_TypeDef* pSelf, const uint8_t* pBuffer, uint16_t length, uint32_t timeout);
 
 UartDriver_Status_TypeDef UartDriver_receiveBytesTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pReceiveBuffer,
-		uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout); //TODO dorobic wersje z timeoutem
+		uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout);
 UartDriver_Status_TypeDef UartDriver_receiveNBytes(volatile UartDriver_TypeDef* pSelf, volatile uint8_t* pReceiveBuffer, uint16_t bytesToRead, uint32_t timeout);
 
-UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer,
+UartDriver_Status_TypeDef UartDriver_sendAndReceiveTerminationSign(volatile UartDriver_TypeDef* pSelf, const uint8_t* pSendBuffer,
 		uint16_t bytesToSend, uint8_t* pReceiveBuffer, uint16_t bufferSize, uint8_t terminationSign, uint32_t timeout);
-UartDriver_Status_TypeDef UartDriver_sendAndReceiveNBytes(volatile UartDriver_TypeDef* pSelf, uint8_t* pSendBuffer,
+UartDriver_Status_TypeDef UartDriver_sendAndReceiveNBytes(volatile UartDriver_TypeDef* pSelf, const uint8_t* pSendBuffer,
 		uint16_t bytesToSend, uint8_t* pReceiveBuffer, uint16_t bytesToRead, uint32_t timeout);
 
 UartDriver_Status_TypeDef UartDriver_setReceivedByteCallback(

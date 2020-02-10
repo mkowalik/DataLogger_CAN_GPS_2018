@@ -27,6 +27,7 @@ typedef enum {
 	FileWritingBuffer_Status_UnInitializedError,
 	FileWritingBuffer_Status_FlushingError,
 	FileWritingBuffer_Status_FileSystemError,
+	FileWritingBuffer_Status_NullPointerError,
 	FileWritingBuffer_Status_Error
 } FileWritingBuffer_Status_TypeDef;
 
@@ -43,13 +44,17 @@ FileWritingBuffer_Status_TypeDef FileWritingBuffer_deInit(FileWritingBuffer_Type
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_resetBuffer(FileWritingBuffer_TypeDef* pSelf);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeToFileSystem(FileWritingBuffer_TypeDef* pSelf);
 
-FileWritingBuffer_Status_TypeDef FileWritingBuffer_flushingThread(FileWritingBuffer_TypeDef* pSelf);
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_flush(FileWritingBuffer_TypeDef* pSelf);
 
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt8(FileWritingBuffer_TypeDef* pSelf, uint8_t value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt16(FileWritingBuffer_TypeDef* pSelf, uint16_t value);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt32(FileWritingBuffer_TypeDef* pSelf, uint32_t value);
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeUInt64(FileWritingBuffer_TypeDef* pSelf, uint64_t value);
+
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeInt8(FileWritingBuffer_TypeDef* pSelf, int8_t value);
+
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeChar(FileWritingBuffer_TypeDef* pSelf, char value);
-FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, char* string, uint16_t length);
+FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeString(FileWritingBuffer_TypeDef* pSelf, const char* pStringToWrite, uint16_t stringLength);
 FileWritingBuffer_Status_TypeDef FileWritingBuffer_writeFixedPoint32(FileWritingBuffer_TypeDef* pSelf, FixedPoint value);
 
 #endif /* USER_FILE_WRITING_BUFFER_H_ */

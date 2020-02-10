@@ -21,6 +21,7 @@ typedef enum {
 typedef enum {
 	LedDriver_Status_OK = 0,
 	LedDriver_Status_UnInitializedErrror,
+	LedDriver_Status_NullPointerErrror,
 	LedDriver_Status_Errror
 } LedDriver_Status_TypeDef;
 
@@ -29,14 +30,14 @@ typedef	uint16_t		LedDriver_Pin_TypeDef;
 
 typedef struct {
 	LedDriver_State_TypeDef	state;
-	LedDriver_Port_TypeDef*	port;
-	LedDriver_Pin_TypeDef*	pin;
+	LedDriver_Port_TypeDef*	pPort;
+	LedDriver_Pin_TypeDef*	pPin;
 	uint32_t				onTimeMs;
 	uint32_t				offTimeMs;
 	uint32_t				onOffTimeCounter;
 } LedDriver_TypeDef;
 
-LedDriver_Status_TypeDef LedDriver_init(LedDriver_TypeDef* pSelf, LedDriver_Port_TypeDef* port, LedDriver_Pin_TypeDef* pin);
+LedDriver_Status_TypeDef LedDriver_init(LedDriver_TypeDef* pSelf, LedDriver_Port_TypeDef* pPort, LedDriver_Pin_TypeDef* pPin);
 LedDriver_Status_TypeDef LedDriver_OnLed(LedDriver_TypeDef* pSelf);
 LedDriver_Status_TypeDef LedDriver_OffLed(LedDriver_TypeDef* pSelf);
 LedDriver_Status_TypeDef LedDriver_BlinkingLed(LedDriver_TypeDef* pSelf, uint32_t onTimeMs, uint32_t offTimeMs);

@@ -69,27 +69,27 @@
 
 /* USER CODE BEGIN PV */
 
-ConfigDataManager_TypeDef		configDataManager;
-DataSaver_TypeDef				dataSaver;
+ConfigDataManager_TypeDef				configDataManager;
+DataSaver_TypeDef						dataSaver;
 
-CANReceiver_TypeDef				canReceiver;
-RTCDriver_TypeDef				rtcDriver;
-GPSDriver_TypeDef				gpsDriver;
+RTCDriver_TypeDef						rtcDriver;
+GPSDriver_TypeDef						gpsDriver;
+volatile CANTransceiverDriver_TypeDef	canTransceiverDriver;
+volatile MSTimerDriver_TypeDef			msTimerDriver;
+DODriver_TypeDef						gpsResetDriver;
+volatile UartDriver_TypeDef				uartGpsDriver;
 
-ActionScheduler_TypeDef			actionScheduler;
+volatile CANReceiver_TypeDef			canReceiver;
 
-FileSystemWrapper_TypeDef		fileSystem;
+FileSystemWrapper_TypeDef				fileSystem;
 
-CANTransceiverDriver_TypeDef	canTransceiverDriver;
-MSTimerDriver_TypeDef			msTimerDriver;
+LedDriver_TypeDef						ledDebug1Driver;
+LedDriver_TypeDef						ledDebug2Driver;
 
-LedDriver_TypeDef				ledDebug1Driver;
-LedDriver_TypeDef				ledDebug2Driver;
+UartReceiverStartTerm_TypeDef			uartGpsNMEAReceiverTerm;
+UartReceiverStartLength_TypeDef			uartGpsUBXReceiverTerm;
 
-UartDriver_TypeDef				uartGpsDriver;
-UartReceiverStartTerm_TypeDef	uartGpsNMEAReceiverTerm;
-UartReceiverStartLength_TypeDef	uartGpsUBXReceiverTerm;
-DODriver_TypeDef				gpsResetDriver;
+ActionScheduler_TypeDef					actionScheduler;
 
 LedDriver_Pin_TypeDef ledDebug1Pin	= my_LED_DEBUG1_Pin;
 LedDriver_Pin_TypeDef ledDebug2Pin	= my_LED_DEBUG2_Pin;
@@ -105,7 +105,7 @@ static void MX_NVIC_Init(void);
 void FIFOTest(){
 
 	volatile FIFOMultiread_TypeDef						rxFifo = {0};
-	volatile UartReceiverStartTerm_FIFOElem_TypeDef				receiveBuffer[128];
+	volatile UartReceiverStartTerm_FIFOElem_TypeDef		receiveBuffer[128];
 
 	FIFOMultiread_init(&rxFifo, receiveBuffer, sizeof(UartReceiverStartTerm_FIFOElem_TypeDef), 128);
 	FIFOMultireadReader_TypeDef id;
@@ -189,7 +189,8 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
 #ifdef  USE_FULL_ASSERT
-	GPSDriver_test();
+	GPSDriver_UnitTests();
+	CANData_UnitTests();
 #endif
 
   /* USER CODE END SysInit */
@@ -219,10 +220,7 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (MSTimerDriver_init(&msTimerDriver) != MSTimerDriver_Status_OK){
-	  Error_Handler();
-  }
-  if (MSTimerDriver_startCounting(&msTimerDriver) != MSTimerDriver_Status_OK){
+  if (MSTimerDriver_init(&msTimerDriver, true) != MSTimerDriver_Status_OK){
 	  Error_Handler();
   }
 
@@ -234,12 +232,16 @@ int main(void)
 	  Error_Handler();
   }
 
+  if (ConfigDataManager_readConfig(&configDataManager) != ConfigDataManager_Status_OK){
+	  Error_Handler();
+  }
+
   Config_TypeDef* pConfig;
   if (ConfigDataManager_getConfigPointer(&configDataManager, &pConfig) != ConfigDataManager_Status_OK){
 	  Error_Handler();
   }
 
-  if (DataSaver_init(&dataSaver, pConfig, &fileSystem) != DataSaver_Status_OK){
+  if (DataSaver_init(&dataSaver, &configDataManager, &fileSystem) != DataSaver_Status_OK){
 	  Error_Handler();
   }
 
@@ -293,26 +295,11 @@ int main(void)
 	  Error_Handler();
   }
 
-  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &rtcDriver, &ledDebug2Driver) != ActionScheduler_Status_OK){
+  if (ActionScheduler_init(&actionScheduler, &configDataManager, &dataSaver, &canReceiver, &gpsDriver, &msTimerDriver, &rtcDriver, &ledDebug2Driver, &ledDebug1Driver) != ActionScheduler_Status_OK){
 	  Error_Handler();
   }
   if (ActionScheduler_startScheduler(&actionScheduler) != ActionScheduler_Status_OK){
 	  Error_Handler();
-  }
-
-  GPSDriver_State_TypeDef gpsState;
-  if ((retGps = GPSDriver_getState(&gpsDriver, &gpsState)) != GPSDriver_Status_OK){
-	  Warning_Handler("GPS initialization error");
-  }
-
-  if ((retGps == GPSDriver_Status_OK) && (gpsState == GPSDriver_State_Initialized)){
-	  if (LedDriver_OnLed(&ledDebug1Driver) != LedDriver_Status_OK){
-		  Warning_Handler("LED driver problem.");
-	  }
-  } else {
-	  if (LedDriver_OffLed(&ledDebug1Driver) != LedDriver_Status_OK){
-		  Warning_Handler("LED driver problem.");
-	  }
   }
 
   /* USER CODE END 2 */
@@ -432,7 +419,7 @@ static void MX_NVIC_Init(void)
 /* USER CODE BEGIN 4 */
 
 void Warning_Handler(char* description){
-
+	UNUSED(description);
 }
 
 static uint16_t errorInCounter = 0;
@@ -450,14 +437,15 @@ void Error_Handler(void)
   if (errorInCounter++ > 0){
 	  return;
   }
+
   while(1)
   {
-	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
-	  HAL_Delay(50);
 	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_RESET);
 	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_RESET);
-	  HAL_Delay(50);
+	  HAL_Delay(75);
+	  HAL_GPIO_WritePin(my_LED_DEBUG2_GPIO_Port, my_LED_DEBUG2_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(my_LED_DEBUG1_GPIO_Port, my_LED_DEBUG1_Pin, GPIO_PIN_SET);
+	  HAL_Delay(75);
   }
   /* USER CODE END Error_Handler_Debug */
 }

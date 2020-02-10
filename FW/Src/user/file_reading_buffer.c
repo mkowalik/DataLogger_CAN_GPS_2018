@@ -7,11 +7,14 @@
 
 #include "user/file_reading_buffer.h"
 
-
 /**
  * pFile - should be opened
  */
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_init(FileReadingBuffer_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile){
+
+	if ((pSelf == NULL) || (pFile == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state != FileReadingBuffer_State_UnInitialized){
 		return FileReadingBuffer_Status_Error;
@@ -32,6 +35,10 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_init(FileReadingBuffer_TypeDe
 
 static FileReadingBuffer_Status_TypeDef FileReadingBuffer_checkIfEmpty(FileReadingBuffer_TypeDef* pSelf){
 
+	if (pSelf == NULL){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->bytesLeft == 0){
 
 		FileSystemWrapper_Status_TypeDef status = FileSystemWrapper_readData(pSelf->pFile, pSelf->buffer, FILE_READING_BUFFER_SIZE, &(pSelf->bytesLeft));
@@ -49,6 +56,10 @@ static FileReadingBuffer_Status_TypeDef FileReadingBuffer_checkIfEmpty(FileReadi
 }
 
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt8(FileReadingBuffer_TypeDef* pSelf, uint8_t* pReturnValue){
+
+	if ((pSelf == NULL) || (pReturnValue == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state != FileReadingBuffer_State_Initialized){
 		return FileReadingBuffer_Status_UnInitializedError;
@@ -69,6 +80,10 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt8(FileReadingBuffer_T
 
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt16(FileReadingBuffer_TypeDef* pSelf, uint16_t* pReturnValue){
 
+	if ((pSelf == NULL) || (pReturnValue == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->state != FileReadingBuffer_State_Initialized){
 		return FileReadingBuffer_Status_UnInitializedError;
 	}
@@ -88,12 +103,98 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt16(FileReadingBuffer_
 		return status;
 	}
 
-	*pReturnValue |= (tempValue << 8);
+	*pReturnValue |= (((uint16_t)tempValue) << 8);
+
+	return FileReadingBuffer_Status_OK;
+}
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt32(FileReadingBuffer_TypeDef* pSelf, uint32_t* pReturnValue){
+
+	if ((pSelf == NULL) || (pReturnValue == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
+
+	if (pSelf->state != FileReadingBuffer_State_Initialized){
+		return FileReadingBuffer_Status_UnInitializedError;
+	}
+
+	uint16_t	tempValue = 0;
+	FileReadingBuffer_Status_TypeDef status;
+
+	*pReturnValue = 0;
+
+	if ((status = FileReadingBuffer_readUInt16(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= tempValue;
+
+	if ((status = FileReadingBuffer_readUInt16(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= (((uint32_t)tempValue) << 16);
+
+	return FileReadingBuffer_Status_OK;
+}
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt64(FileReadingBuffer_TypeDef* pSelf, uint64_t* pReturnValue){
+
+	if ((pSelf == NULL) || (pReturnValue == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
+
+	if (pSelf->state != FileReadingBuffer_State_Initialized){
+		return FileReadingBuffer_Status_UnInitializedError;
+	}
+
+	uint32_t	tempValue = 0;
+	FileReadingBuffer_Status_TypeDef status;
+
+	*pReturnValue = 0;
+
+	if ((status = FileReadingBuffer_readUInt32(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= tempValue;
+
+	if ((status = FileReadingBuffer_readUInt32(pSelf, &tempValue)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue |= (((uint64_t)tempValue) << 32);
+
+	return FileReadingBuffer_Status_OK;
+}
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readInt8(FileReadingBuffer_TypeDef* pSelf, int8_t* pReturnValue){
+
+	if ((pSelf == NULL) || (pReturnValue == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
+
+	if (pSelf->state != FileReadingBuffer_State_Initialized){
+		return FileReadingBuffer_Status_UnInitializedError;
+	}
+
+	FileReadingBuffer_Status_TypeDef status;
+	if ((status = FileReadingBuffer_checkIfEmpty(pSelf)) != FileReadingBuffer_Status_OK){
+		return status;
+	}
+
+	*pReturnValue = *((int8_t*)&(pSelf->buffer[(pSelf->iterator)%FILE_READING_BUFFER_SIZE])); //< reinterpret_cast like
+	pSelf->iterator++;
+	pSelf->bytesLeft--;
 
 	return FileReadingBuffer_Status_OK;
 }
 
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readChar(FileReadingBuffer_TypeDef* pSelf, char* pReturnValue){
+
+	if ((pSelf == NULL) || (pReturnValue == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state != FileReadingBuffer_State_Initialized){
 		return FileReadingBuffer_Status_UnInitializedError;
@@ -104,6 +205,10 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_readChar(FileReadingBuffer_Ty
 }
 
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readString(FileReadingBuffer_TypeDef* pSelf, char* pReturnString, uint16_t length){
+
+	if ((pSelf == NULL) || (pReturnString == NULL)){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
 
 	if (pSelf->state != FileReadingBuffer_State_Initialized){
 		return FileReadingBuffer_Status_UnInitializedError;
@@ -124,6 +229,10 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_readString(FileReadingBuffer_
 
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_skipBytes(FileReadingBuffer_TypeDef* pSelf, uint16_t length){
 
+	if (pSelf == NULL){
+		return FileReadingBuffer_Status_NullPointerError;
+	}
+
 	if (pSelf->state != FileReadingBuffer_State_Initialized){
 		return FileReadingBuffer_Status_UnInitializedError;
 	}
@@ -131,7 +240,7 @@ FileReadingBuffer_Status_TypeDef FileReadingBuffer_skipBytes(FileReadingBuffer_T
 	FileReadingBuffer_Status_TypeDef	status;
 	uint8_t								buffer;
 
-	for(uint32_t i = 0; i < length; i++){
+	for(uint16_t i = 0; i < length; i++){
 
 		if ((status = FileReadingBuffer_readUInt8(pSelf, &buffer)) != FileReadingBuffer_Status_OK){
 			return status;

@@ -10,16 +10,16 @@
 
 #include "user/uart_receiver_start_length.h"
 
-//< ----- Private functions definitions ----- >//
+//< ----- Private functions/IRQ Callbacks definitions ----- >//
 
 static void 									_UartReceiverStartLength_receivedByteCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs);
 static UartReceiverStartLength_Status_TypeDef	_UartReceiverStartLength_removeNotStartCharsFromQueueFront(volatile UartReceiverStartLength_TypeDef* pSelf, UartReceiverStartLength_ReaderIterator_TypeDef readerIt);
 
 //< ----- Public functions implementations ----- >//
 
-UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver){
+UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiverStartLength_TypeDef* pSelf, volatile UartDriver_TypeDef* pUartDriver){
 
-	if (pSelf == NULL || pUartDriver == NULL){
+	if ((pSelf == NULL) || (pUartDriver == NULL)) {
 		return UartReceiverStartLength_Status_NullPointerError;
 	}
 
@@ -33,11 +33,12 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiver
 	}
 
 	for (uint16_t i=0; i<UART_RECEIVER_START_LENGTH_MAX_READERS_NUMBER; i++){
-		pSelf->readerRegistered[i]		= false;
-		pSelf->startPatternLength[i]	= 0;
-		pSelf->sentenceLength[i]		= 0;
+		pSelf->readerRegistered[i]			= false;
+		pSelf->startPatternLength[i]		= 0;
+		pSelf->sentenceLength[i]			= 0;
 		memset((void*)&(pSelf->startPattern[i]), 0, sizeof(pSelf->startPattern[0][0]) * UART_RECEIVER_START_LENGTH_MAX_START_PATERN_LENGTH);
 		memset((void*)&(pSelf->startLengthFIFOReaders[i]), 0, sizeof(FIFOMultireadReader_TypeDef));
+		pSelf->receivedStartSignsNumber[i]	= 0;
 	}
 
 	if (UartDriver_setReceivedByteCallback(pSelf->pUartDriver, _UartReceiverStartLength_receivedByteCallback, (void*)pSelf, &pSelf->uartDriverCallbackIterator) != UartDriver_Status_OK){
@@ -49,6 +50,26 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_init(UartReceiver
 	return UartReceiverStartLength_Status_OK;
 }
 
+UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_clear(volatile UartReceiverStartLength_TypeDef* pSelf){
+
+	if (pSelf == NULL){
+		return UartReceiverStartLength_Status_NullPointerError;
+	}
+
+	if (pSelf->state == UartReceiverStartLength_State_UnInitialized || pSelf->state == UartReceiverStartLength_State_DuringInit){
+		return UartReceiverStartLength_Status_UnInitializedError;
+	}
+
+	if (FIFOMultiread_clear(&(pSelf->rxFifo)) != FIFOMultiread_Status_OK){
+		return UartReceiverStartLength_Status_FIFOError;
+	}
+	for (uint16_t i=0; i<UART_RECEIVER_START_LENGTH_MAX_READERS_NUMBER; i++){
+		pSelf->receivedStartSignsNumber[i]	= 0;
+	}
+
+	return UartReceiverStartLength_Status_OK;
+}
+
 UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 		volatile UartReceiverStartLength_TypeDef* pSelf,
 		volatile UartReceiverStartLength_ReaderIterator_TypeDef* pRetReaderIterator,
@@ -56,7 +77,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_registerReader(
 		const uint8_t* startPattern,
 		uint16_t sentenceLength){
 
-	if (pSelf == NULL || pRetReaderIterator == NULL || startPattern == NULL){
+	if ((pSelf == NULL) || (pRetReaderIterator == NULL) || (startPattern == NULL)){
 		return UartReceiverStartLength_Status_NullPointerError;
 	}
 
@@ -169,7 +190,7 @@ UartReceiverStartLength_Status_TypeDef UartReceiverStartLength_pullLastSentence(
 	volatile FIFOMultiread_Status_TypeDef				fifoStatus;
 	UartReceiverStartLength_Status_TypeDef				ret;
 
-	if (pSelf == NULL || pRetSentence == NULL || pRetTimestamp == NULL){
+	if ((pSelf == NULL) || (pRetSentence == NULL) || (pRetTimestamp == NULL)){
 		return UartReceiverStartLength_Status_NullPointerError;
 	}
 

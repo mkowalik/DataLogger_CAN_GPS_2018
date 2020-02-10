@@ -20,8 +20,9 @@ typedef enum {
 
 typedef enum {
 	FileReadingBuffer_Status_OK = 0,
-	FileReadingBuffer_Status_UnInitializedError,
 	FileReadingBuffer_Status_EndOfFile,
+	FileReadingBuffer_Status_UnInitializedError,
+	FileReadingBuffer_Status_NullPointerError,
 	FileReadingBuffer_Status_Error
 } FileReadingBuffer_Status_TypeDef;
 
@@ -34,8 +35,14 @@ typedef struct {
 } FileReadingBuffer_TypeDef;
 
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_init(FileReadingBuffer_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile);
-FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt8(FileReadingBuffer_TypeDef* pSelf, uint8_t* pReturnValue);
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt8 (FileReadingBuffer_TypeDef* pSelf, uint8_t* pReturnValue);
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt16(FileReadingBuffer_TypeDef* pSelf, uint16_t* pReturnValue);
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt32(FileReadingBuffer_TypeDef* pSelf, uint32_t* pReturnValue);
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readUInt64(FileReadingBuffer_TypeDef* pSelf, uint64_t* pReturnValue);
+
+FileReadingBuffer_Status_TypeDef FileReadingBuffer_readInt8(FileReadingBuffer_TypeDef* pSelf, int8_t* pReturnValue);
+
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readChar(FileReadingBuffer_TypeDef* pSelf, char* pReturnValue);
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_readString(FileReadingBuffer_TypeDef* pSelf, char* pReturnString, uint16_t length);
 FileReadingBuffer_Status_TypeDef FileReadingBuffer_skipBytes(FileReadingBuffer_TypeDef* pSelf, uint16_t length);

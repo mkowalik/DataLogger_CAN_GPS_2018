@@ -8,20 +8,43 @@
 #include <string.h>
 #include <user/uart_receiver_start_term.h>
 
-//< ----- Private functions definitions ----- >//
+//< ----- Private functions/IRQ Callbacks definitions ----- >//
 
 static void UartReceiverStartTerm_receivedByteCallback(uint8_t dataByte, uint32_t timestamp, void* pArgs);
+static UartReceiverStartTerm_Status_TypeDef _UartReceiverStartTerm_proceedClear(volatile UartReceiverStartTerm_TypeDef* pSelf);
+
+//< ----- Private functions/IRQ Callbacks implementations ----- >//
+static UartReceiverStartTerm_Status_TypeDef _UartReceiverStartTerm_proceedClear(volatile UartReceiverStartTerm_TypeDef* pSelf){
+
+	if (pSelf->state != UartReceiverStartTerm_State_ToBeCleared){
+		return UartReceiverStartTerm_Status_OK;
+	}
+
+	if (FIFOMultiread_clear(&(pSelf->rxFifo)) != FIFOMultiread_Status_OK){
+		return UartReceiverStartTerm_Status_FIFOError; //< Ignore sign an wait for next opportunity to clear FIFO
+	}
+
+	for (uint16_t i=0; i<UART_RECEIVER_START_TERM_MAX_READERS_NUMBER; i++){
+		pSelf->receivedStartSignsNumber[i]				= 0;
+		pSelf->receivedTerminationSignsNumber[i]		= 0;
+	}
+
+	pSelf->state = pSelf->stateAfterClear;
+
+	return UartReceiverStartTerm_Status_OK;
+}
 
 //< ----- Public functions implementations ----- >//
 
-UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_init(UartReceiverStartTerm_TypeDef* pSelf, UartDriver_TypeDef* pUartDriver){
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_init(UartReceiverStartTerm_TypeDef* pSelf, volatile UartDriver_TypeDef* pUartDriver){
 
-	if (pSelf == NULL || pUartDriver == NULL){
+	if ((pSelf == NULL) || (pUartDriver == NULL)) {
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 
-	pSelf->state		= UartReceiverStartTerm_State_DuringInit;
-	pSelf->pUartDriver	= pUartDriver;
+	pSelf->state			= UartReceiverStartTerm_State_DuringInit;
+	pSelf->stateAfterClear	= UartReceiverStartTerm_State_Initialized;
+	pSelf->pUartDriver		= pUartDriver;
 
 	if (FIFOMultiread_init((FIFOMultiread_TypeDef*)&pSelf->rxFifo, (void*)pSelf->receiveBuffer, sizeof(UartReceiverStartTerm_FIFOElem_TypeDef), UART_RECEIVER_START_TERM_BUFFER_SIZE) != FIFOMultiread_Status_OK){
 		return UartReceiverStartTerm_Status_FIFOError;
@@ -51,7 +74,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_registerReader(
 		uint8_t startSign,
 		uint8_t terminationSign){
 
-	if (pSelf == NULL || pRetReaderIterator == NULL){
+	if ((pSelf == NULL) || (pRetReaderIterator == NULL)) {
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 
@@ -159,7 +182,12 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartRec
 	}
 
 	if (pSelf->state != UartReceiverStartTerm_State_Receiving){
-		return UartReceiverStartTerm_Status_ReceiverNotReceivingError;
+		return UartReceiverStartTerm_Status_ReceiverNotReceivingStateError;
+	}
+
+	UartReceiverStartTerm_Status_TypeDef ret = UartReceiverStartTerm_Status_OK;
+	if (UartReceiverStartTerm_clear(pSelf) != UartReceiverStartTerm_Status_OK){
+		return ret;
 	}
 
 	pSelf->state	= UartReceiverStartTerm_State_Initialized;
@@ -167,17 +195,45 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_stop(volatile UartRec
 	return UartReceiverStartTerm_Status_OK;
 }
 
-UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(volatile UartReceiverStartTerm_TypeDef* pSelf, UartReceiverStartTerm_ReaderIterator_TypeDef readerIt, uint8_t* pRetSentence, uint16_t* pRetLength, uint32_t* pRetTimestamp){
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_clear(volatile UartReceiverStartTerm_TypeDef* pSelf){
 
-	volatile UartReceiverStartTerm_FIFOElem_TypeDef	elemBuffer;
-	volatile FIFOMultiread_Status_TypeDef			fifoStatus;
-
-	if (pSelf == NULL || pRetSentence == NULL || pRetLength == NULL){
+	if (pSelf == NULL){
 		return UartReceiverStartTerm_Status_NullPointerError;
 	}
 
 	if (pSelf->state == UartReceiverStartTerm_State_UnInitialized || pSelf->state == UartReceiverStartTerm_State_DuringInit){
 		return UartReceiverStartTerm_Status_UnInitializedErrror;
+	}
+
+	pSelf->stateAfterClear	= pSelf->state;
+	pSelf->state			= UartReceiverStartTerm_State_ToBeCleared;
+
+	return UartReceiverStartTerm_Status_OK;
+}
+
+UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(
+		volatile UartReceiverStartTerm_TypeDef* pSelf,
+		UartReceiverStartTerm_ReaderIterator_TypeDef readerIt,
+		uint8_t* pRetSentenceBuffer,
+		uint16_t sentenceBufferSize,
+		uint16_t* pRetLength,
+		uint32_t* pRetTimestamp)
+{
+
+	volatile UartReceiverStartTerm_FIFOElem_TypeDef	elemBuffer;
+	volatile FIFOMultiread_Status_TypeDef			fifoStatus	= FIFOMultiread_Status_OK;
+	UartReceiverStartTerm_Status_TypeDef			ret			= UartReceiverStartTerm_Status_OK;
+
+	if ((pSelf == NULL) || (pRetSentenceBuffer == NULL) || (pRetLength == NULL)) {
+		return UartReceiverStartTerm_Status_NullPointerError;
+	}
+
+	if (pSelf->state == UartReceiverStartTerm_State_UnInitialized || pSelf->state == UartReceiverStartTerm_State_DuringInit){
+		return UartReceiverStartTerm_Status_UnInitializedErrror;
+	}
+
+	if (pSelf->state == UartReceiverStartTerm_State_ToBeCleared){
+		return UartReceiverStartTerm_Status_Empty;
 	}
 
 	if (readerIt >= UART_RECEIVER_START_TERM_MAX_READERS_NUMBER){
@@ -230,7 +286,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(vola
 			}
 
 			if (elemBuffer.dataByte == pSelf->startSignVal[readerIt]){ //< found start sign
-				pRetSentence[(*pRetLength)++]	= elemBuffer.dataByte;
+				pRetSentenceBuffer[(*pRetLength)++]	= elemBuffer.dataByte;
 				if (pRetTimestamp != NULL){
 					*pRetTimestamp				= elemBuffer.msTime;
 				}
@@ -254,8 +310,12 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(vola
 				}
 				pSelf->receivedStartSignsNumber[readerIt]--;
 			}
-
-			pRetSentence[(*pRetLength)++] = elemBuffer.dataByte;
+			if ((*pRetLength) < sentenceBufferSize){
+				pRetSentenceBuffer[(*pRetLength)++] = elemBuffer.dataByte;
+			} else {
+				(*pRetLength)++;
+				ret = UartReceiverStartTerm_Status_BufferTooShortError;
+			}
 
 			if (elemBuffer.dataByte == pSelf->terminationSignVal[readerIt]){ //< found termination sign
 				pSelf->receivedTerminationSignsNumber[readerIt]--;
@@ -266,7 +326,7 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(vola
 		return UartReceiverStartTerm_Status_Empty;
 	}
 
-	return UartReceiverStartTerm_Status_OK;
+	return ret;
 }
 
 
@@ -295,6 +355,13 @@ static void UartReceiverStartTerm_receivedByteCallback(uint8_t dataByte, uint32_
 
 	if (pSelf->state != UartReceiverStartTerm_State_Receiving){
 		return;
+	}
+
+	UartReceiverStartTerm_Status_TypeDef ret = UartReceiverStartTerm_Status_OK;
+	if (pSelf->state == UartReceiverStartTerm_State_ToBeCleared){
+		if ((ret = _UartReceiverStartTerm_proceedClear(pSelf)) != UartReceiverStartTerm_Status_OK){
+			return;
+		}
 	}
 
 	byteWithTimestamp.dataByte	= dataByte;

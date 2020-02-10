@@ -36,7 +36,7 @@ typedef struct {
 	bool					invertLogic;
 } DODriver_TypeDef;
 
-DODriver_Status_TypeDef DODriver_init(volatile DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* port, DODriver_Pin_TypeDef* pin, bool invertLogic);
+DODriver_Status_TypeDef DODriver_init(volatile DODriver_TypeDef* pSelf, DODriver_Port_TypeDef* pPort, DODriver_Pin_TypeDef* pPin, bool invertLogic);
 DODriver_Status_TypeDef DODriver_SetHigh(volatile DODriver_TypeDef* pSelf);
 DODriver_Status_TypeDef DODriver_SetLow(volatile DODriver_TypeDef* pSelf);
 DODriver_Status_TypeDef DODriver_Toggle(volatile DODriver_TypeDef* pSelf);

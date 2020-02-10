@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-void SenderThread::init(QSpinBox* rpm, QSpinBox* clt, QDoubleSpinBox* batt, QSpinBox* fuel, QDoubleSpinBox* oil, QSpinBox* gear, EUSB2CAN_CanSpeed canBitrate){
+void SenderThread::init(QCheckBox* activate, QSpinBox* rpm, QSpinBox* clt, QDoubleSpinBox* batt, QSpinBox* fuel, QDoubleSpinBox* oil, QSpinBox* gear, EUSB2CAN_CanSpeed canBitrate){
+    this->activate = activate;
     this->rpm = rpm;
     this->clt = clt;
     this->batt = batt;
@@ -19,6 +20,10 @@ int counter = 0;
 
 void SenderThread::run(){
     while (1){
+
+        if (!activate->isChecked()){
+            continue;
+        }
 
         EUSB2CAN_CanMsg msg;
         EUSB2CAN_Status s;
@@ -136,7 +141,7 @@ void SenderThread::run(){
         s = canHandle.write(&msg);
         s = canHandle.flush();
 
-        QThread::msleep(10);
+        QThread::msleep(5);
     }
 }
 

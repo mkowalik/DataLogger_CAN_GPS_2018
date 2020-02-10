@@ -8,6 +8,8 @@
 #ifndef MS_TIMER_DRIVER_H_
 #define MS_TIMER_DRIVER_H_
 
+#include <stdbool.h>
+
 #include "stdint.h"
 
 typedef enum {
@@ -30,7 +32,7 @@ typedef struct  {
 	uint32_t					uiStopTickValue;
 } MSTimerDriver_TypeDef;
 
-MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf);
+MSTimerDriver_Status_TypeDef MSTimerDriver_init(volatile MSTimerDriver_TypeDef* pSelf, bool startCounting);
 MSTimerDriver_Status_TypeDef MSTimerDriver_startCounting(volatile MSTimerDriver_TypeDef* pSelf);
 MSTimerDriver_Status_TypeDef MSTimerDriver_stopCounting(volatile MSTimerDriver_TypeDef* pSelf);
 MSTimerDriver_Status_TypeDef MSTimerDriver_resetCounter(volatile MSTimerDriver_TypeDef* pSelf);

@@ -35,12 +35,18 @@ typedef enum {
 	FileSystemWrapper_Status_TOO_MANY_OPEN_FILES,	/* (18) Number of open files > _FS_SHARE */
 	FileSystemWrapper_Status_INVALID_PARAMETER,		/* (19) Given parameter is invalid */
 	FileSystemWrapper_Status_NotInitializedError,
+	FileSystemWrapper_Status_NullPointerError,
 	FileSystemWrapper_Status_Error
 } FileSystemWrapper_Status_TypeDef;
 
+typedef enum {
+	FileSystemWrapper_State_NotInitialized = 0,
+	FileSystemWrapper_State_Initialized
+} FileSystemWrapper_State_TypeDef;
+
 typedef struct {
-	volatile FATFS		sFatFS;
-	volatile uint8_t	bInitialized;
+	volatile FATFS								sFatFS;
+	volatile FileSystemWrapper_State_TypeDef	state;
 } FileSystemWrapper_TypeDef;
 
 typedef struct {
@@ -49,12 +55,12 @@ typedef struct {
 } FileSystemWrapper_File_TypeDef;
 
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_init(FileSystemWrapper_TypeDef* pSelf);
-FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pFile, char* pFilename);
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_open(FileSystemWrapper_TypeDef* pSelf, FileSystemWrapper_File_TypeDef* pRetFile, const char* pFilename);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_close(FileSystemWrapper_File_TypeDef* pFile);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_sync(FileSystemWrapper_File_TypeDef* pFile);
 
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_putString(FileSystemWrapper_File_TypeDef* pFile, const char* pBuffer);
 FileSystemWrapper_Status_TypeDef FileSystemWrapper_writeBinaryData(FileSystemWrapper_File_TypeDef* pFile, const void* pBuffer, uint32_t uiBytesToWrite, uint32_t* pBytesWritten);
-FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, void* pBuffer, uint32_t uiBytesToRead, uint32_t* pBytesRead);
+FileSystemWrapper_Status_TypeDef FileSystemWrapper_readData(FileSystemWrapper_File_TypeDef* pFile, const void* pBuffer, uint32_t uiBytesToRead, uint32_t* pBytesRead);
 
 #endif /* FILE_SYSTEM_WRAPPER_H_ */
