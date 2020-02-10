@@ -29,6 +29,7 @@ typedef enum {
 typedef enum {
 	FIFOMultiread_State_UnInitialized = 0,
 	FIFOMultiread_State_Ready,
+	FIFOMultiread_State_ToBeCleared,
 } FIFOMultiread_State_TypeDef;
 
 typedef struct {
@@ -36,6 +37,7 @@ typedef struct {
 	volatile uint8_t						elementSize;
 	volatile uint32_t						queueLength;
 	volatile FIFOMultiread_State_TypeDef	state;
+	volatile FIFOMultiread_State_TypeDef	stateAfterClear;
 	volatile uint32_t						headIndex[FIFO_MULTIREAD_MAX_READERS];
 	volatile uint32_t						tailIndex;
 	volatile bool							readerActive[FIFO_MULTIREAD_MAX_READERS];

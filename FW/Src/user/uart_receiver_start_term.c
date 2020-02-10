@@ -270,10 +270,6 @@ UartReceiverStartTerm_Status_TypeDef UartReceiverStartTerm_pullLastSentence(
 		}
 	}
 
-	if (pSelf->receivedStartSignsNumber[readerIt] < pSelf->receivedTerminationSignsNumber[readerIt]){ //TODO debug
-		asm("nop");
-	}
-
 	//< ----- handling sentences with start and termination sign ----- >//
 
 	if (pSelf->receivedStartSignsNumber[readerIt] > 0 && pSelf->receivedTerminationSignsNumber[readerIt] > 0){
