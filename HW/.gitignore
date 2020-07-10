@@ -1,0 +1,13 @@
+**/History/
+
+**/__Previews/
+
+*.log
+
+*.DXPPrf
+
+**/Project Logs*
+
+*[Pp]review*
+
+~$*

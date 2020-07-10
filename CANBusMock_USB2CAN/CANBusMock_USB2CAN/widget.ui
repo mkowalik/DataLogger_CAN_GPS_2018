@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Widget</class>
+ <widget class="QWidget" name="Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>345</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Widget</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="6" column="1">
+    <widget class="QSpinBox" name="spinBox_Gear">
+     <property name="maximum">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDoubleSpinBox" name="doubleSpinBox_battVoltage">
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <double>20.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="value">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Batt Voltage</string>
+     </property>
+     <property name="buddy">
+      <cstring>doubleSpinBox_battVoltage</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QSpinBox" name="spinBox_FuelLevel">
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="value">
+      <number>50</number>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2" colspan="2">
+    <widget class="QSlider" name="sliderOil">
+     <property name="maximum">
+      <number>120</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>CLT</string>
+     </property>
+     <property name="buddy">
+      <cstring>spinBox_CLT</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Oil Pressure</string>
+     </property>
+     <property name="buddy">
+      <cstring>doubleSpinBox_oilPres</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2" colspan="2">
+    <widget class="QSlider" name="sliderBatt">
+     <property name="maximum">
+      <number>200</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>100</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QDoubleSpinBox" name="doubleSpinBox_oilPres">
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <double>12.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="value">
+      <double>2.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Fuel Level</string>
+     </property>
+     <property name="buddy">
+      <cstring>spinBox_FuelLevel</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QLCDNumber" name="lcdGear">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="midLineWidth">
+      <number>0</number>
+     </property>
+     <property name="smallDecimalPoint">
+      <bool>false</bool>
+     </property>
+     <property name="segmentStyle">
+      <enum>QLCDNumber::Flat</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2" colspan="2">
+    <widget class="QSlider" name="sliderFuel">
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="value">
+      <number>50</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QSpinBox" name="spinBox_CLT">
+     <property name="minimum">
+      <number>-40</number>
+     </property>
+     <property name="maximum">
+      <number>250</number>
+     </property>
+     <property name="value">
+      <number>30</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" colspan="2">
+    <widget class="QSlider" name="sliderRPM">
+     <property name="maximum">
+      <number>15000</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="spinBox_RPM">
+     <property name="maximum">
+      <number>15000</number>
+     </property>
+     <property name="singleStep">
+      <number>100</number>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="3">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>183</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Gear</string>
+     </property>
+     <property name="buddy">
+      <cstring>spinBox_Gear</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" colspan="2">
+    <widget class="QSlider" name="sliderCLT">
+     <property name="minimum">
+      <number>-40</number>
+     </property>
+     <property name="maximum">
+      <number>250</number>
+     </property>
+     <property name="value">
+      <number>30</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>RPM</string>
+     </property>
+     <property name="buddy">
+      <cstring>spinBox_RPM</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QCheckBox" name="activate_checkBox">
+     <property name="text">
+      <string>ACTIVATE</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>spinBox_RPM</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>sliderRPM</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>102</x>
+     <y>39</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>170</x>
+     <y>38</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_CLT</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>sliderCLT</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>92</x>
+     <y>88</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>187</x>
+     <y>88</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_FuelLevel</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>sliderFuel</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>98</x>
+     <y>171</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>189</x>
+     <y>177</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_Gear</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>lcdGear</receiver>
+   <slot>display(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>100</x>
+     <y>271</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>165</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sliderRPM</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBox_RPM</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>251</x>
+     <y>31</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>97</x>
+     <y>39</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sliderCLT</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBox_CLT</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>265</x>
+     <y>84</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>103</x>
+     <y>85</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sliderFuel</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBox_FuelLevel</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>208</x>
+     <y>171</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>106</x>
+     <y>171</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

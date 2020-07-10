@@ -1,0 +1,21 @@
+[DesignatorManager]
+LogicalDesignator0=P2
+LogicalPartID0=1
+DocumentName0=EL-23 Main.SchDoc
+ChannelName0=EL-23 Main
+UniqueID0=\FQYLDXLI
+PhysicalDesignator0=P2
+PhysicalDesignatorLocked0=0
+LogicalDesignator1=P1
+LogicalPartID1=1
+DocumentName1=EL-23 Main.SchDoc
+ChannelName1=EL-23 Main
+UniqueID1=\YNFTTWLV
+PhysicalDesignator1=P1
+PhysicalDesignatorLocked1=0
+
+[SheetNumberManager]
+SheetNumberOrder=Display Order
+SheetNumberMethod=Increasing
+
+
