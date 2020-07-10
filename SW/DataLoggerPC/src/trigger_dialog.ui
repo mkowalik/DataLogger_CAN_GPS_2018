@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TriggerDialog</class>
+ <widget class="QDialog" name="TriggerDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>439</width>
+    <height>241</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>350</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Configuration Trigger</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="0" column="0">
+      <widget class="QLabel" name="triggerName_label">
+       <property name="text">
+        <string>Trigger name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>triggerName_lineEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="triggerName_lineEdit"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="compareOperator_label">
+       <property name="text">
+        <string>Compare operator:</string>
+       </property>
+       <property name="buddy">
+        <cstring>compareOperator_comboBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="compareOperator_comboBox"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="signalRawValue_label">
+       <property name="text">
+        <string>Signal raw const value to compare:</string>
+       </property>
+       <property name="buddy">
+        <cstring>rawConstValue_spinBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="signal_label">
+       <property name="text">
+        <string>Value of which signal to compare:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="1">
+        <widget class="QLabel" name="frame_label_3">
+         <property name="text">
+          <string>Signal name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>signal_comboBox</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="frame_label">
+         <property name="text">
+          <string>Frame name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>frame_comboBox</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="signal_comboBox"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QComboBox" name="frame_comboBox"/>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="rawConstValue_spinBox">
+       <property name="showGroupSeparator" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="maximum">
+        <number>2147483647</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="symbolicConstValue_doubleSpinBox">
+       <property name="showGroupSeparator" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="minimum">
+        <double>-18446744073709551616.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>18446744073709551616.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="signalSymbolicValue_label">
+       <property name="text">
+        <string>Signal symbolic const value to compare:</string>
+       </property>
+       <property name="buddy">
+        <cstring>symbolicConstValue_doubleSpinBox</cstring>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="formulaRender_lineEdit">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>79</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>triggerName_lineEdit</tabstop>
+  <tabstop>frame_comboBox</tabstop>
+  <tabstop>signal_comboBox</tabstop>
+  <tabstop>compareOperator_comboBox</tabstop>
+  <tabstop>formulaRender_lineEdit</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>TriggerDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>231</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>TriggerDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>334</x>
+     <y>231</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

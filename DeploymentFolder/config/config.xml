@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>AGH Racing Logger Application</Name>
+    <Version>0.2.1</Version>
+    <Title>AGH Racing Logger Application</Title>
+    <Publisher>AGH Racing - Michal Kowalik</Publisher>
+    <!-- Directory name is used in component.xml -->
+    <StartMenuDir>AGH Racing</StartMenuDir>
+    <TargetDir>@HomeDir@/AGH Racing</TargetDir>
+</Installer>

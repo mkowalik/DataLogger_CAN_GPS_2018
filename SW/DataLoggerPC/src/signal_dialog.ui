@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SignalDialog</class>
+ <widget class="QDialog" name="SignalDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>249</width>
+    <height>355</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Configuration Signal</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="8" column="0">
+    <widget class="QLabel" name="comment_label">
+     <property name="text">
+      <string>Comment:</string>
+     </property>
+     <property name="buddy">
+      <cstring>comment_lineEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="5">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>66</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="4" column="2" colspan="3">
+    <widget class="QSpinBox" name="lengthBits_spinBox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>64</number>
+     </property>
+     <property name="value">
+      <number>8</number>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2" colspan="4">
+    <widget class="QLineEdit" name="unit_lineEdit"/>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="divider_label">
+     <property name="text">
+      <string>Divider:</string>
+     </property>
+     <property name="buddy">
+      <cstring>divider_spinBox</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0" colspan="5">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="multiplier_label">
+     <property name="text">
+      <string>Multiplier:</string>
+     </property>
+     <property name="buddy">
+      <cstring>multiplier_spinBox</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="unit_label">
+     <property name="text">
+      <string>Unit:</string>
+     </property>
+     <property name="buddy">
+      <cstring>unit_lineEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" colspan="4">
+    <widget class="QLineEdit" name="signalName_lineEdit"/>
+   </item>
+   <item row="9" column="2" colspan="2">
+    <widget class="QSpinBox" name="multiplier_spinBox">
+     <property name="minimum">
+      <number>-32768</number>
+     </property>
+     <property name="maximum">
+      <number>32767</number>
+     </property>
+     <property name="value">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2" colspan="3">
+    <widget class="QSpinBox" name="startBit_spinBox">
+     <property name="maximum">
+      <number>63</number>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" colspan="3">
+    <widget class="QCheckBox" name="signalIDAuto_checkBox">
+     <property name="text">
+      <string>Auto</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+     <property name="tristate">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="5">
+    <spacer name="horizontalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>66</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="9" column="5">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>66</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="signalName_label">
+     <property name="text">
+      <string>Signal Name:</string>
+     </property>
+     <property name="buddy">
+      <cstring>signalName_lineEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="5">
+    <widget class="QLineEdit" name="startByteBit_lineEdit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="signalID_label">
+     <property name="text">
+      <string>Signal ID:</string>
+     </property>
+     <property name="buddy">
+      <cstring>signalID_spinBox</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QCheckBox" name="bigEndian_checkBox">
+     <property name="text">
+      <string>Big Endian</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="offset_label">
+     <property name="text">
+      <string>Offset:</string>
+     </property>
+     <property name="buddy">
+      <cstring>offset_spinBox</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="2" colspan="4">
+    <widget class="QLineEdit" name="comment_lineEdit"/>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="length_label">
+     <property name="text">
+      <string>Length in bits:</string>
+     </property>
+     <property name="buddy">
+      <cstring>lengthBits_spinBox</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="2" colspan="2">
+    <widget class="QSpinBox" name="offset_spinBox">
+     <property name="minimum">
+      <number>-32768</number>
+     </property>
+     <property name="maximum">
+      <number>32767</number>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QSpinBox" name="signalID_spinBox">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="maximum">
+      <number>65535</number>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2" colspan="2">
+    <widget class="QSpinBox" name="divider_spinBox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>65535</number>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="signed_checkBox">
+     <property name="text">
+      <string>signed</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="startBit_label">
+     <property name="text">
+      <string>Start bit:</string>
+     </property>
+     <property name="buddy">
+      <cstring>startBit_spinBox</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="5">
+    <widget class="QLineEdit" name="lengthByteBit_lineEdit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="5">
+    <widget class="QLabel" name="byteBit_label">
+     <property name="text">
+      <string>[ byte.bit ]</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>signalID_spinBox</tabstop>
+  <tabstop>signalIDAuto_checkBox</tabstop>
+  <tabstop>signalName_lineEdit</tabstop>
+  <tabstop>startBit_spinBox</tabstop>
+  <tabstop>lengthBits_spinBox</tabstop>
+  <tabstop>signed_checkBox</tabstop>
+  <tabstop>bigEndian_checkBox</tabstop>
+  <tabstop>unit_lineEdit</tabstop>
+  <tabstop>comment_lineEdit</tabstop>
+  <tabstop>multiplier_spinBox</tabstop>
+  <tabstop>divider_spinBox</tabstop>
+  <tabstop>offset_spinBox</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>SignalDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>239</x>
+     <y>335</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>SignalDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>124</x>
+     <y>324</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>124</x>
+     <y>177</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
