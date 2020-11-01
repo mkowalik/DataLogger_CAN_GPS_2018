@@ -41,6 +41,7 @@ SOURCES += \
     AGHUtils/ReadingClass.cpp \
     AGHUtils/WritingClass.cpp \
     configure_logger_sd_dialog.cpp \
+    conversion_warnings_dialog.cpp \
     convertfile_thread.cpp \
     downloaddatasd_dialog.cpp \
     downloadingprogress_dialog.cpp \
@@ -73,7 +74,9 @@ HEADERS += \
     AGHUtils/RawDataParser.h \
     AGHUtils/ReadingClass.h \
     AGHUtils/WritingClass.h \
+    QStringIntMap.h \
     configure_logger_sd_dialog.h \
+    conversion_warnings_dialog.h \
     convertfile_thread.h \
     downloaddatasd_dialog.h \
     downloadingprogress_dialog.h \
@@ -86,6 +89,7 @@ HEADERS += \
     AGHData/SingleCANErrorData.h
 
 FORMS += \
+    conversion_warnings_dialog.ui \
     downloaddatasd_dialog.ui \
     mainwindow.ui \
     downloadingprogress_dialog.ui \

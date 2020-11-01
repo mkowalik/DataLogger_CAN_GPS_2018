@@ -19,6 +19,17 @@ class ConfigSignal : public WritableToBin, public ReadableFromBin {
 public:
     static constexpr unsigned int SIGNAL_MAX_LENGTH_BITS = 32;
     static constexpr unsigned int SIGNAL_ID_MAX_VALUE    = UINT16_MAX;
+
+    class SignalExceedsDataDLCException : public std::invalid_argument {
+    public:
+        SignalExceedsDataDLCException(string s);
+    };
+
+    class SignalExceedsFrameDefinitionDLCException : public std::invalid_argument {
+    public:
+        SignalExceedsFrameDefinitionDLCException(string s);
+    };
+
 private:
     ConfigSignal(ConfigFrame* pParentFrame, ReadingClass& reader);
     ConfigSignal(ConfigFrame*   pParentFrame,

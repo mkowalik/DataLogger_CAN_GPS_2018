@@ -7,6 +7,9 @@
 #include "AGHData/CSVWriterFrameByFrame.h"
 
 #include <cstring>
+#include <memory>
+#include <map>
+#include <string>
 
 using namespace std;
 
@@ -61,52 +64,72 @@ void DataFileClass::readFromBin(ReadingClass& reader) {
     startTime.tm_min  = static_cast<int>(reader.reading_uint8());
     startTime.tm_sec  = static_cast<int>(reader.reading_uint8());
 
+    unsigned int prevMsTime;
+    unsigned int prevFrameID;
+
     while(!reader.eof()){
         unsigned int msTime   = reader.reading_uint32();
         unsigned int frameID  = reader.reading_uint16();
-        if (frameID == DataFileClass::GPS_DATA_ID){
-            SingleGPSFrameData* pGPSDataRow = new SingleGPSFrameData(msTime, reader);
-            dataRows.push_back(DataRow(pGPSDataRow));
-        } else if (frameID == DataFileClass::CAN_ERROR_ID){
-            SingleCANErrorData* pCanErrorRow = new SingleCANErrorData(msTime, reader);
-            dataRows.push_back(DataRow(pCanErrorRow));
-        } else {
-            ConfigFrame* pConfigFrame = pConfig->getFrameWithId(frameID);
-            SingleCANFrameData* pCANDataRow = new SingleCANFrameData(msTime, pConfigFrame, reader);
-            dataRows.push_back(DataRow(pCANDataRow));
+        try {
+            if (frameID == DataFileClass::GPS_DATA_ID){
+                SingleGPSFrameData* pGPSDataRow = new SingleGPSFrameData(msTime, reader);
+                dataRows.push_back(DataRow(pGPSDataRow));
+            } else if (frameID == DataFileClass::CAN_ERROR_ID){
+                SingleCANErrorData* pCanErrorRow = new SingleCANErrorData(msTime, reader);
+                dataRows.push_back(DataRow(pCanErrorRow));
+            } else {
+                ConfigFrame* pConfigFrame = pConfig->getFrameWithId(frameID);
+                SingleCANFrameData* pCANDataRow = new SingleCANFrameData(msTime, pConfigFrame, reader);
+                dataRows.push_back(DataRow(pCANDataRow));
+            }
+            prevFrameID = frameID;
+            prevMsTime = msTime;
+        }  catch (std::logic_error e) {
+            msTime = 0;
+            throw e;
         }
     }
 }
 
-void DataFileClass::write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator, bool writeOnlyChangedValues){
+/**
+ * @brief DataFileClass::write_to_csv
+ * @param mode
+ * @param writer
+ * @param decimalSeparator
+ * @param writeOnlyChangedValues
+ * @return Returns vector with warnings occured during conversion.
+ */
+std::map<std::string, unsigned int> DataFileClass::write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator, bool writeOnlyChangedValues){
 
-    CSVWriter* pCSVWriter = nullptr;
+    std::unique_ptr<CSVWriter> pCSVWriter;
 
     switch (mode) {
     case WritableToCSV::FileTimingMode::EventMode:
-        pCSVWriter = new CSVWriterEventMode(decimalSeparator, writeOnlyChangedValues, pConfig, writer);
+        pCSVWriter = std::make_unique<CSVWriterEventMode>(decimalSeparator, writeOnlyChangedValues, pConfig, writer);
         break;
     case WritableToCSV::FileTimingMode::StaticPeriod10HzMode:
-        pCSVWriter = new CSVWriterStaticFreq(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 100);
+        pCSVWriter = std::make_unique<CSVWriterStaticFreq>(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 100);
         break;
     case WritableToCSV::FileTimingMode::StaticPeriod100HzMode:
-        pCSVWriter = new CSVWriterStaticFreq(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 10);
+        pCSVWriter = std::make_unique<CSVWriterStaticFreq>(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 10);
         break;
     case WritableToCSV::FileTimingMode::StaticPeriod250HzMode:
-        pCSVWriter = new CSVWriterStaticFreq(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 4);
+        pCSVWriter = std::make_unique<CSVWriterStaticFreq>(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 4);
         break;
     case WritableToCSV::FileTimingMode::StaticPeriod500HzMode:
-        pCSVWriter = new CSVWriterStaticFreq(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 2);
+        pCSVWriter = std::make_unique<CSVWriterStaticFreq>(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 2);
         break;
     case WritableToCSV::FileTimingMode::StaticPeriod1000HzMode:
-        pCSVWriter = new CSVWriterStaticFreq(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 1);
+        pCSVWriter = std::make_unique<CSVWriterStaticFreq>(decimalSeparator, writeOnlyChangedValues, pConfig, writer, 1);
         break;
     case WritableToCSV::FileTimingMode::FrameByFrameMode:
-        pCSVWriter = new CSVWriterFrameByFrame(decimalSeparator, pConfig, writer);
+        pCSVWriter = std::make_unique<CSVWriterFrameByFrame>(decimalSeparator, pConfig, writer);
         break;
     }
 
     pCSVWriter->writeToCSV(*this);
+
+    return pCSVWriter->getWarnings();
 }
 
 DataFileClass::~DataFileClass(){

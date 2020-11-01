@@ -44,24 +44,31 @@ void ConvertFileThread::run(){
 
         qDebug() << csvFilename;
 
+        QStringIntMap warnings;
         try {
             DataFileClass dataFile;
             ReadingClass reader(actualFile.absoluteFilePath().toStdString(), rawDataParser);
             dataFile.readFromBin(reader);
 
             WritingClass writer(csvFilename.toStdString(), rawDataParser);
-            dataFile.write_to_csv(this->timingMode, writer, decimalSeparator, writeOnlyChangedValues);
+            std::map<std::string, unsigned int> warningsRaw = dataFile.write_to_csv(this->timingMode, writer, decimalSeparator, writeOnlyChangedValues);
+
+            std::for_each(warningsRaw.begin(), warningsRaw.end(), [&](auto p){warnings.insert(QString::fromStdString(p.first), p.second);});
 
             qDebug() << "DONE!";
-        } catch (std::logic_error e){
+        } catch (std::logic_error& e){
             emit errorWhileConvertingPreviousFile(QString(e.what()));
             qDebug() << "EXCEPTION!";
         }
+
+        emit warningsWhileConvertingPreviousFile(warnings);
+
         filesList.pop_front();
         filesConverted++;
 
         emit actualProgress((filesConverted * 100) / filesToConvert);
     }
+    exit();
 }
 
 void ConvertFileThread::cancelExecution(){

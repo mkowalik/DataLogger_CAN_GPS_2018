@@ -24,10 +24,26 @@ void CSVSignalsWriter::writeSingleRow(unsigned int msTime,
     for (const ConfigSignal* pSignal: this->columsOrderVector){
         if (actualCANFramesToWriteMap.find(pSignal->getParentFrame()) != actualCANFramesToWriteMap.end()){
             const SingleCANFrameData* pActualFrame = actualCANFramesToWriteMap.at(pSignal->getParentFrame());
-            if (pSignal->getDivider() != 1){
-                writer.write_double_to_string(pSignal->getSymbolicValueFromFramePayload(pActualFrame->getRawData()), CSVSignalsWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
-            } else {
-                writer.write_int_to_string(pSignal->getSymbolicIntValueFromFramePayload(pActualFrame->getRawData()), false);
+            try {
+                if (pSignal->getDivider() != 1){
+                    writer.write_double_to_string(pSignal->getSymbolicValueFromFramePayload(pActualFrame->getRawData()), CSVSignalsWriter::CSV_DOUBLE_DECIMAL_FIGURES, this->decimalSeparator, false);
+                } else {
+                    writer.write_int_to_string(pSignal->getSymbolicIntValueFromFramePayload(pActualFrame->getRawData()), false);
+                }
+            } catch (ConfigSignal::SignalExceedsDataDLCException& e) {
+                string warn =
+                        "Signal: " +
+                        pSignal->getSignalName() +
+                        " definition exceeds DLC of received frame: " +
+                        pSignal->getParentFrame()->getFrameName() +
+                        " [" +
+                        std::to_string(pSignal->getParentFrame()->getFrameID()) +
+                        "]";
+                if (warnings.find(warn) != warnings.end()){
+                    warnings[warn]++;
+                } else {
+                    warnings[warn] = 1;
+                }
             }
         }
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);

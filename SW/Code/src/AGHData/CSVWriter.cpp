@@ -48,3 +48,8 @@ std::string CSVWriter::errorCodeToString(CANErrorCode errorCode)
     }
     return ret;
 }
+
+std::map<std::string, unsigned int> CSVWriter::getWarnings()
+{
+    return warnings;
+}

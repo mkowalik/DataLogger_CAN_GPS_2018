@@ -34,30 +34,32 @@ DownloadDataSDDialog::DownloadDataSDDialog(RawDataParser& rawDataParser, QWidget
 {
     ui->setupUi(this);
     convertFileThread = new ConvertFileThread(rawDataParser, this);
-    filesDownloadDialog = new FilesDownloadDialog(this);
+    downloadInProgressDialog = new DownloadInProgressDialog(this);
 
     ui->outputDataLayoutComboBox->clear();
     for (auto& str: outputDataLayoutOptionsString){
         ui->outputDataLayoutComboBox->addItem(str);
     }
 
-    connect(convertFileThread, SIGNAL(actualProgress(int)), filesDownloadDialog, SLOT(updateProgressBar(int)));
-    connect(convertFileThread, SIGNAL(actualFileConverting(QString, QString)), filesDownloadDialog, SLOT(addFileToList(QString, QString)));
-    connect(convertFileThread, SIGNAL(errorWhileConvertingPreviousFile(QString)), filesDownloadDialog, SLOT(errorInLastFile(QString)));
-    connect(convertFileThread, SIGNAL(finished()), filesDownloadDialog, SLOT(downloadingComplete()));
+    connect(convertFileThread, SIGNAL(actualProgress(int)), downloadInProgressDialog, SLOT(updateProgressBar(int)));
+    connect(convertFileThread, SIGNAL(actualFileConverting(QString, QString)), downloadInProgressDialog, SLOT(addFileToList(QString, QString)));
+    connect(convertFileThread, SIGNAL(errorWhileConvertingPreviousFile(QString)), downloadInProgressDialog, SLOT(errorInLastFile(QString)));
+    connect(convertFileThread, SIGNAL(finished()), downloadInProgressDialog, SLOT(downloadingComplete()));
     connect(convertFileThread, SIGNAL(fatalErrorSignal()), this, SLOT(fatalErrorInConvertingThreadSlot()));
-    connect(convertFileThread, SIGNAL(started()), filesDownloadDialog, SLOT(convertingThreadStarted()));
+    connect(convertFileThread, SIGNAL(started()), downloadInProgressDialog, SLOT(convertingThreadStarted()));
+    qRegisterMetaType<QStringIntMap>("QStringIntMap");
+    connect(convertFileThread, SIGNAL(warningsWhileConvertingPreviousFile(QStringIntMap)), downloadInProgressDialog, SLOT(warningsInLastFile(QStringIntMap)));
 }
 
 DownloadDataSDDialog::~DownloadDataSDDialog()
 {
     delete ui;
-    delete filesDownloadDialog;
+    delete downloadInProgressDialog;
     delete convertFileThread;
 }
 
 void DownloadDataSDDialog::fatalErrorInConvertingThreadSlot(){
-    filesDownloadDialog->close();
+    downloadInProgressDialog->close();
     QMessageBox::warning(this, "Converting error", "Fatal error while converting data files.");
 }
 
@@ -160,13 +162,13 @@ void DownloadDataSDDialog::on_convertSelectedButton_clicked()
 
         convertFileThread->setDestinationDirectory(ui->destinationDirComboBox->currentText());
         convertFileThread->start();
-        if (!filesDownloadDialog->exec()){
+        if (!downloadInProgressDialog->exec()){
             convertFileThread->cancelExecution();
             convertFileThread->wait(threadWaitTimeout);
         }
 
         convertFileThread->cancelExecution();
-        filesDownloadDialog->cleanUp();
+        downloadInProgressDialog->cleanUp();
     } catch (const std::logic_error& e){
         QMessageBox::warning(this, "Error", e.what());
     } catch (const std::exception& e){

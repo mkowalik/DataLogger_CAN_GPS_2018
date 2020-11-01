@@ -142,10 +142,10 @@ void ConfigSignal::setStartBit(unsigned int startBit){
 
 void ConfigSignal::setLengthBits(unsigned int lengthBits){
     if (lengthBits > (pParentFrame->getExpextedDLC() * 8)){
-        throw std::invalid_argument("Given length exceed expected DLC of the frame in which this signals is defined.");
+        throw SignalExceedsFrameDefinitionDLCException("Given length exceed expected DLC of the frame in which this signals is defined.");
     }
     if (this->getStartBit() + lengthBits > (pParentFrame->getExpextedDLC() * 8)){
-        throw std::invalid_argument("Signal with given position and length exeeds expected DLC of the frame in which this signals is defined.");
+        throw SignalExceedsFrameDefinitionDLCException("Signal with given position and length exeeds expected DLC of the frame in which this signals is defined.");
     }
     this->lengthBits = lengthBits;
 }
@@ -248,7 +248,7 @@ unsigned long ConfigSignal::convertSymbolicValueToRaw(double value) const
 unsigned long ConfigSignal::getRawValueFromFramePayload(std::vector<unsigned char> framePayload) const {
 
     if (getStartBit() + getLengthBits() > (framePayload.size() * 8)){
-        throw std::invalid_argument("Signal with given position and length exeeds DLC of the frame.");
+        throw SignalExceedsDataDLCException("Signal with given position and length exeeds DLC of the frame.");
     }
 
     unsigned int bitsLeft       = getLengthBits();
@@ -346,3 +346,6 @@ void ConfigSignal::readFromBin(ReadingClass& reader){
 
 ConfigSignal::~ConfigSignal(){
 }
+
+ConfigSignal::SignalExceedsDataDLCException::SignalExceedsDataDLCException(string s) : std::invalid_argument (s){}
+ConfigSignal::SignalExceedsFrameDefinitionDLCException::SignalExceedsFrameDefinitionDLCException(string s) : std::invalid_argument (s){}

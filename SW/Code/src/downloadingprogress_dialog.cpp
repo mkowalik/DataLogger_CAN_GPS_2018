@@ -1,11 +1,16 @@
 #include "downloadingprogress_dialog.h"
 #include "ui_downloadingprogress_dialog.h"
+#include "conversion_warnings_dialog.h"
+
+#include "QStringIntMap.h"
+
 #include <QPushButton>
+#include <QColor>
 
 static const QString startingString = "Downloading and converting files...";
 static const QString doneString = "CONVERTED!";
 
-FilesDownloadDialog::FilesDownloadDialog(QWidget *parent) :
+DownloadInProgressDialog::DownloadInProgressDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::FilesDownloadDialog)
 {
@@ -13,15 +18,16 @@ FilesDownloadDialog::FilesDownloadDialog(QWidget *parent) :
     cleanUp();
 }
 
-void FilesDownloadDialog::updateProgressBar(int progressBarValue){
+void DownloadInProgressDialog::updateProgressBar(int progressBarValue){
     ui->progressBar->setValue(progressBarValue);
 }
 
-void FilesDownloadDialog::addFileToList(QString sourceFileName, QString destinationFileName){
-    ui->filesListWidget->addItem(sourceFileName + " -> " + destinationFileName);
+void DownloadInProgressDialog::addFileToList(QString sourceFileName, QString destinationFileName){
+    QListWidgetItem* item = new QListWidgetItem(sourceFileName + " -> " + destinationFileName);
+    ui->filesListWidget->addItem(item);
 }
 
-void FilesDownloadDialog::errorInLastFile(QString reasonDescription){
+void DownloadInProgressDialog::errorInLastFile(QString reasonDescription){
     ui->filesListWidget->item(ui->filesListWidget->count()-1)->setForeground(Qt::red);
     if (reasonDescription.length() > 0){
         QString text = ui->filesListWidget->item(ui->filesListWidget->count()-1)->text();
@@ -31,13 +37,28 @@ void FilesDownloadDialog::errorInLastFile(QString reasonDescription){
     }
 }
 
-void FilesDownloadDialog::downloadingComplete(){
+void DownloadInProgressDialog::warningsInLastFile(QStringIntMap warnings){
+    if (warnings.size() > 0){
+        ui->filesListWidget->item(ui->filesListWidget->count()-1)->setForeground(QColor(255,165,0));
+        QListWidgetItem* pLastItem = ui->filesListWidget->item(ui->filesListWidget->count()-1);
+        pLastItem->setText(ui->filesListWidget->item(ui->filesListWidget->count()-1)->text() +
+                           QString::fromStdString("\n") +
+                           QString(warnings.size()) +
+                           " conversion warnings. Click to see details"
+                    );
+        QVariant v;
+        v.setValue<QStringIntMap>(warnings);
+        pLastItem->setData(Qt::UserRole, v);
+    }
+}
+
+void DownloadInProgressDialog::downloadingComplete(){
     ui->downloadingLabel->setText(doneString);
     ui->closeCancelButtonBox->button(QDialogButtonBox::Close)->setEnabled(true);
     ui->closeCancelButtonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
 }
 
-void FilesDownloadDialog::convertingThreadStarted(){
+void DownloadInProgressDialog::convertingThreadStarted(){
     ui->progressBar->setValue(0);
     ui->filesListWidget->clear();
     ui->downloadingLabel->setText(startingString);
@@ -45,7 +66,7 @@ void FilesDownloadDialog::convertingThreadStarted(){
     ui->closeCancelButtonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
 }
 
-void FilesDownloadDialog::cleanUp()
+void DownloadInProgressDialog::cleanUp()
 {
     ui->progressBar->setValue(0);
     ui->filesListWidget->clear();
@@ -54,6 +75,13 @@ void FilesDownloadDialog::cleanUp()
     ui->closeCancelButtonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
 }
 
-FilesDownloadDialog::~FilesDownloadDialog(){
+DownloadInProgressDialog::~DownloadInProgressDialog(){
     delete ui;
+}
+
+void DownloadInProgressDialog::on_filesListWidget_itemClicked(QListWidgetItem *item)
+{
+    QStringIntMap warnings = item->data(Qt::UserRole).value<QStringIntMap>();
+    ConversionWarningsDialog dialog(warnings, this);
+    dialog.exec();
 }

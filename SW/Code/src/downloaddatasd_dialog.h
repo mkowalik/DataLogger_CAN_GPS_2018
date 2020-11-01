@@ -33,7 +33,7 @@ private:
     static const QStringList outputDataLayoutOptionsString;
     static const QList<WritableToCSV::FileTimingMode> outputDataLayoutOptionsTimingMode;
     Ui::DownloadDataSDDialog *ui;
-    FilesDownloadDialog * filesDownloadDialog;
+    DownloadInProgressDialog * downloadInProgressDialog;
     ConvertFileThread * convertFileThread;
 
     QString sourceDir;

@@ -95,6 +95,26 @@ void CSVWriterFrameByFrame::writeCANData(const SingleCANFrameData* pCanFrame){
     for (unsigned int i = (pCanFrame!=nullptr) ? pCanFrame->getFrameDLC() : 0; i < ConfigFrame::MAX_DLC_VALUE; i++){
         writer.write_char(CSVWriter::CSV_COLUMNS_SEPARATOR);
     }
+
+    if (pCanFrame != nullptr){
+        if (pCanFrame->getFrameDLC() != pCanFrame->getFrameConfig()->getExpextedDLC()){
+            string warn =
+                    "Received frame: " +
+                    pCanFrame->getFrameConfig()->getFrameName() +
+                    "[" +
+                    to_string(pCanFrame->getFrameConfig()->getFrameID()) +
+                    "] length is different than defined expeced DLC of this frame in the configuration. " +
+                    to_string(pCanFrame->getFrameDLC()) +
+                    "bytes instead of expected" +
+                    to_string(pCanFrame->getFrameConfig()->getExpextedDLC()) +
+                    " bytes";
+            if (warnings.find(warn) != warnings.end()){
+                warnings[warn]++;
+            } else {
+                warnings[warn] = 1;
+            }
+        }
+    }
 }
 
 void CSVWriterFrameByFrame::writeCANError(const SingleCANErrorData* pCanError){

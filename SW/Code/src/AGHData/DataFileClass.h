@@ -39,14 +39,14 @@ public:
 
     DataFileClass();
 
-    const Config&                       getConfig() const;
-    const tm                            getStartTime() const;
+    const Config&                               getConfig() const;
+    const tm                                    getStartTime() const;
 
-    virtual void                        readFromBin(ReadingClass& reader) override;
+    virtual void                                readFromBin(ReadingClass& reader) override;
 
-    const vector<DataRow>&              getDataRows() const {return this->dataRows;}
+    const vector<DataRow>&                      getDataRows() const {return this->dataRows;}
 
-    virtual void                        write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator, bool writeOnlyChangedValues);
+    virtual std::map<std::string, unsigned int> write_to_csv(WritableToCSV::FileTimingMode mode, WritingClass& writer, char decimalSeparator, bool writeOnlyChangedValues);
 
     ~DataFileClass() override;
 
